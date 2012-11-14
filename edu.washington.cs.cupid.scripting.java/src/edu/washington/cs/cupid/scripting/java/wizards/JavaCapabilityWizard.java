@@ -137,6 +137,7 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		builder.append("import edu.washington.cs.cupid.capability.AbstractCapability;").append(separator);
 		builder.append("import edu.washington.cs.cupid.capability.CapabilityJob;").append(separator);
+		builder.append("import edu.washington.cs.cupid.jobs.ImmediateJob;").append(separator);
 		
 		for (String clazz : Sets.newHashSet(paramType.getName(), returnType.getName())){
 			builder.append("import " + clazz + ";").append(separator);

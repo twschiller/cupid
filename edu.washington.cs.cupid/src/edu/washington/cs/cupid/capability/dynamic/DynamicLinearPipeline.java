@@ -121,40 +121,39 @@ public class DynamicLinearPipeline implements ICapability, Serializable{
 				
 				List<Object> intermediateResults = Lists.newArrayList();
 				intermediateResults.add(result);
-				
-				try{
 
-					for (ICapability capability : capabilities){
-						if (monitor.isCanceled()){
-							return CapabilityStatus.makeCancelled();
-						}
-
-						CapabilityJob subtask = capability.getJob(result);
-						monitor.subTask(subtask.getName());
-						subtask.schedule();
-						try {
-							subtask.join();
-						} catch (InterruptedException e) {
-							monitor.done();
-							return CapabilityStatus.makeError(e);
-						}
-						
-						CapabilityStatus status = ((CapabilityStatus)subtask.getResult());
-						
-						if (status.getCode() == Status.OK){
-							result = status.value();
-							intermediateResults.add(result);
-							monitor.worked(1);
-						}else{
-							monitor.done();
-							return CapabilityStatus.makeError(status.getException());
-						}
+				for (ICapability capability : capabilities){
+					if (monitor.isCanceled()){
+						return CapabilityStatus.makeCancelled();
 					}
-				}catch(Exception e){
-					monitor.done();
-					return CapabilityStatus.makeError(e);
+
+					CapabilityJob<?,?> subtask = capability.getJob(result);
+					
+					if (subtask == null){
+						throw new RuntimeException("Capability " + capability.getName() + " produced null job");
+					}
+					
+					monitor.subTask(subtask.getName());
+					subtask.schedule();
+					try {
+						subtask.join();
+					} catch (InterruptedException e) {
+						monitor.done();
+						return CapabilityStatus.makeError(e);
+					}
+
+					CapabilityStatus status = ((CapabilityStatus)subtask.getResult());
+
+					if (status.getCode() == Status.OK){
+						result = status.value();
+						intermediateResults.add(result);
+						monitor.worked(1);
+					}else{
+						monitor.done();
+						return CapabilityStatus.makeError(status.getException());
+					}
 				}
-				
+
 				monitor.done();
 				return CapabilityStatus.makeOk(result);
 			}

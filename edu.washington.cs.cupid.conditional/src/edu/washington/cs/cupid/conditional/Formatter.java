@@ -14,6 +14,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -243,27 +244,27 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				CapabilityJob job = (CapabilityJob) event.getJob();
 				CapabilityStatus<Boolean> status = (CapabilityStatus<Boolean>) job.getResult();
 			
-				if (status.isOK() && status.value()){
-
-					// apply the formatting rule
-					Display.getDefault().asyncExec(new Runnable(){
-						@Override
-						public void run() {
-							synchronized(originalFormats){
-
-								if (!item.isDisposed()){
-									if (!originalFormats.containsKey(item)){
-										System.out.println("Saving original format " + item.getText() + " (" + item.hashCode() + ")");
-										originalFormats.put(item, getFormat(item));
+				if (status.getCode() == Status.OK ){
+					if (status.value()){
+						// apply the formatting rule
+						Display.getDefault().asyncExec(new Runnable(){
+							@Override
+							public void run() {
+								synchronized(originalFormats){
+									
+									if (!item.isDisposed()){
+										if (!originalFormats.containsKey(item)){
+											System.out.println("Saving original format " + item.getText() + " (" + item.hashCode() + ")");
+											originalFormats.put(item, getFormat(item));
+										}
+										System.out.println("Formatting " + item.getText() + " (" + item.hashCode() + ") with rule " + rule.getName());
+										applyFormat(item, rule.getFormat());
 									}
-									System.out.println("Formatting " + item.getText() + " (" + item.hashCode() + ") with rule " + rule.getName());
-									applyFormat(item, rule.getFormat());
+
 								}
-
 							}
-						}
-					});
-
+						});
+					}
 				}
 			}
 		});
@@ -294,6 +295,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			try {
 				capability = Activator.findPredicate(rule);
 			} catch (Exception e) {
+				continue;
 				// TODO error information needs to be aggregated and passed up the line
 			}
 

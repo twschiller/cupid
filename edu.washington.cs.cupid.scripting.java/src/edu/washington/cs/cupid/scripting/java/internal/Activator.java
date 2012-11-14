@@ -42,7 +42,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	
 	private IProject cupidProject = null;
 	
-	private List<ICapability<?,?>> dynamic = Lists.newArrayList();
+	private static List<ICapability<?,?>> dynamic = Lists.newArrayList();
 	
 	private static final ChangeNotifier notifier = new ChangeNotifier();
 	
@@ -84,6 +84,8 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 		}
 		
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+	
+		//loadDynamicCapabilities();
 	}
 
 	public IProject getCupidProject(){

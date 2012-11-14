@@ -110,7 +110,6 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	public synchronized Set<ICapability<?, Boolean>> getPredicates() {
 		Set<ICapability<?,Boolean>> result = Sets.newIdentityHashSet();
 		for (ICapability<?,?> capability : capabilities){
-			
 			if (CapabilityExecutor.isResultCompatible(capability, TypeToken.of(Boolean.class))){
 				result.add((ICapability<?, Boolean>) capability);
 			}

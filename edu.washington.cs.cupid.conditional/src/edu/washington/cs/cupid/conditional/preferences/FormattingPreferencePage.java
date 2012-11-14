@@ -71,7 +71,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	/**
      * True iff the user hasn't selected a capability yet for {@link active}, the selected item
      */
-    private boolean containsSelectEntry = false;
+    private boolean containsSentinalEntry = false;
 	
 	/**
 	 * List of currently available predicates; currently updated each time the user 
@@ -86,6 +86,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	
 	@Override
 	public void init(IWorkbench workbench) {
+		available = Lists.newArrayList(CupidPlatform.getCapabilityRegistry().getPredicates());
 	}
 
 	private void createEditForm(Composite parent, final TableItem item){
@@ -149,67 +150,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		Label lCapability = new Label(parent, SWT.NONE);
 		lCapability.setText("Capability:");
-		
-		final Combo cCapability = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
-		
-		available = Lists.newArrayList(CupidPlatform.getCapabilityRegistry().getPredicates());
-		
-		if (available.isEmpty()){
-			cCapability.add("No predicates available");
-			cCapability.setText("No predicates available");
-		}else{
-			@SuppressWarnings("rawtypes")
-			ICapability forRule = null;
-			
-			if (rule.getCapabilityId() != null){
-				try {
-					forRule = Activator.findPredicate(rule);
-				} catch (NoSuchCapabilityException e1) {
-					cCapability.add("Unknown capability: " + rule.getCapabilityId());
-					cCapability.setText("Unknown capability: " + rule.getCapabilityId());
-				} catch (MalformedCapabilityException e1) {
-					cCapability.add("Invalid predicate: " + rule.getCapabilityId());
-					cCapability.setText("Invalid predicate: " + rule.getCapabilityId());
-				}
-			}
-		
-			if (forRule == null){
-				cCapability.add("Select predicate");
-				cCapability.setText("Select predicate");
-				containsSelectEntry = true;
-			}
-			
-			for (ICapability<?,Boolean> capability : available ){
-				cCapability.add(capability.getName());
-			}
-			
-			// TODO handle formats with capabilities that don't exist
-			
-			if (forRule != null){
-				cCapability.add(forRule.getName());
-				cCapability.setText(forRule.getName());
-				containsSelectEntry = false;
-			}
-		}
-		
-		cCapability.addModifyListener(new ModifyListener(){
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if (!available.isEmpty()){
-					if (containsSelectEntry){
-						if (cCapability.getSelectionIndex() != 0){
-							rule.setCapabilityId(available.get(cCapability.getSelectionIndex() - 1).getUniqueId());
-							cCapability.remove(0);
-							containsSelectEntry = false;
-						}
-					}else{
-						rule.setCapabilityId(available.get(cCapability.getSelectionIndex()).getUniqueId());
-					}
-				}
-			}
-		});
-		
-		cCapability.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		createPredicateList(parent, rule);
 		
 		Label lForeground = new Label(parent, SWT.NONE);
 		lForeground.setText("Foreground:");
@@ -269,6 +210,76 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		parent.layout(true);
 		composite.layout(true);
+	}
+	
+	/**
+	 * Add an entry to the combo box, and select it
+	 * @param combo the combo box
+	 * @param text the text to add and select
+	 */
+	private static void addAndSet(Combo combo, String text){
+		combo.add(text);
+		combo.setText(text);
+	}
+	
+	/**
+	 * Populate the predicate option list for the formatting rules
+	 * @param parent the parent widget
+	 * @param rule the formatting rule
+	 */
+	private void createPredicateList(Composite parent, final FormattingRule rule){
+		final Combo cCapability = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
+
+		if (available.isEmpty()){
+			addAndSet(cCapability, "No predicates available");
+		}else{
+			ICapability<?,?> forRule = null;
+
+			if (rule.getCapabilityId() != null){
+				try {
+					forRule = Activator.findPredicate(rule);
+					containsSentinalEntry = false;
+				} catch (NoSuchCapabilityException e) {
+					addAndSet(cCapability, "Unknown capability");
+					containsSentinalEntry = true;
+				} catch (MalformedCapabilityException e) {
+					addAndSet(cCapability, "Invalid predicate");
+					containsSentinalEntry = true;
+				}
+			}else{
+				addAndSet(cCapability, "Select predicate");
+				containsSentinalEntry = true;
+			}
+
+			for (ICapability<?,Boolean> capability : available ){
+				if (forRule == capability){
+					addAndSet(cCapability, capability.getName());
+				}else{
+					cCapability.add(capability.getName());
+				}
+			}
+
+			// TODO handle formats with capabilities that don't exist
+		}
+
+		cCapability.addModifyListener(new ModifyListener(){
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (!available.isEmpty()){
+					if (containsSentinalEntry){
+						if (cCapability.getSelectionIndex() > 0){
+							rule.setCapabilityId(available.get(cCapability.getSelectionIndex() - 1).getUniqueId());
+							cCapability.remove(0);
+							containsSentinalEntry = false;
+						}
+					}else{
+						rule.setCapabilityId(available.get(cCapability.getSelectionIndex()).getUniqueId());
+					}
+				}
+			}
+		});
+
+		cCapability.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
 	@Override

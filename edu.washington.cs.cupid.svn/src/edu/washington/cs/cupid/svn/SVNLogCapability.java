@@ -59,6 +59,8 @@ public class SVNLogCapability extends AbstractCapability<IResource, List<SVNLogE
 
 					final List<SVNLogEntry> entries = Lists.newArrayList();
 
+					
+					
 					try {
 						log.doLog(info.getURL(), new String[]{""}, SVNRevision.create(0), SVNRevision.create(0), SVNRevision.HEAD, true, false, -1, new ISVNLogEntryHandler(){
 							@Override

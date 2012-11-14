@@ -487,6 +487,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 */
 	public static boolean isCompatible(ICapability<?,?> capability, TypeToken<?> argumentType){
 		
+		if (capability == null){
+			throw new IllegalArgumentException("Capability cannot be null");
+		}else if (capability.getParameterType() == null){
+			throw new IllegalArgumentException("Capability " + capability.getName() + " has null parameter type");
+		}
+		
 		Type paramType = capability.getParameterType().getType();
 		
 		if (capability.getParameterType().getRawType().equals(Integer.class) && argumentType.getRawType().equals(int.class)){

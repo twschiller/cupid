@@ -1,6 +1,5 @@
 package edu.washington.cs.cupid.standard;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;

@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.TypeException;
 
 public class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>>{
 	private static final long serialVersionUID = 1L;
@@ -44,12 +46,13 @@ public class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>>{
 		return "Get the '" + field + "' of type " + type.toString();
 	}
 
+	@SuppressWarnings("serial") // not serializable since it contains a type variable
 	@Override
 	public TypeToken<List<I>> getParameterType() {
 		return new TypeToken<List<I>>(){}.where(new TypeParameter<I>(){}, type);
 	}
 
-	@Override
+	@SuppressWarnings("serial") // not serializable since it contains a type variable
 	public TypeToken<List<V>> getReturnType() {
 		return new TypeToken<List<V>>(){}.where(new TypeParameter<V>(){}, result);
 	}
@@ -57,15 +60,21 @@ public class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>>{
 	@Override
 	public CapabilityJob<List<I>,List<V>> getJob(final List<I> input) {
 		return new CapabilityJob<List<I>,List<V>>(this, input){
+			@SuppressWarnings("unchecked") // FP: cast of result to V is checked
 			@Override
 			protected CapabilityStatus<List<V>> run(IProgressMonitor monitor) {
 				List<V> result = Lists.newArrayList();
 				
 				try{
 					for (I x : input){
-						Object out = x.getClass().getMethod(field).invoke(x);
-						// TODO check the conversion
-						result.add((V) out);
+						Method method = x.getClass().getMethod(field);
+					
+						if (ListGetter.this.result.isAssignableFrom(method.getGenericReturnType())){
+							Object out = method.invoke(x);
+							result.add((V) out);
+						}else{
+							throw new TypeException(TypeToken.of(method.getGenericReturnType()), ListGetter.this.result);
+						}
 					}
 					
 					return CapabilityStatus.makeOk(result);

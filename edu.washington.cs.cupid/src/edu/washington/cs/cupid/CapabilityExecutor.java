@@ -41,6 +41,7 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.MalformedCapabilityException;
+import edu.washington.cs.cupid.capability.TypeException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
 import edu.washington.cs.cupid.internal.Utility;
@@ -164,11 +165,21 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param input the input
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
+	@SuppressWarnings("unchecked") // FP: result is checked dynamically using capabilities return type
 	private <I,T> T getIfPresent(ICapability<I,T> capability, I input){
 		synchronized(resultCaches){
 			try {
 				Cache<Object,Object> cCache = resultCaches.get(input, cacheFactory);
-				return (T) cCache.getIfPresent(capability);
+				
+				Object cached = cCache.getIfPresent(capability);
+				
+				if (cached == null){
+					return null;
+				}else if (capability.getReturnType().isAssignableFrom(cached.getClass())){
+					return (T) cached;
+				}else{
+					throw new TypeException(capability.getReturnType(), TypeToken.of(cached.getClass()));
+				}
 			} catch (ExecutionException e) {
 				CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.WARNING, "error creating capability cache"));
 				return null;
@@ -354,11 +365,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					// cancel obsolete jobs
-					// TODO why is this variable unused?
-					Set<CapabilityJob> invalidRunningJobs = Sets.newHashSet();
 					for (Object input : running.rowKeySet()){
 						if (resource.isConflicting(schedulingRule(input))){
-							for (CapabilityJob job : running.row(input).values()){
+							for (CapabilityJob<?,?> job : running.row(input).values()){
 								job.cancel();
 							}
 						}
@@ -431,8 +440,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		public void done(IJobChangeEvent event) {
 			synchronized(running){
 				synchronized(canceling){
-					CapabilityStatus result = (CapabilityStatus) event.getResult();
-					CapabilityJob job = (CapabilityJob) event.getJob();
+					CapabilityStatus<?> result = (CapabilityStatus<?>) event.getResult();
+					CapabilityJob<?,?> job = (CapabilityJob<?,?>) event.getJob();
 					running.remove(job.getInput(), result.value());
 					canceling.add(job);
 				}

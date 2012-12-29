@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.internal.CupidActivator;
 
@@ -41,7 +42,7 @@ public abstract class CapabilityJob<I, V> extends Job{
 	public final I getInput() {
 		return input;
 	}
-
+	
 	/**
 	 * @return the associated capability
 	 */

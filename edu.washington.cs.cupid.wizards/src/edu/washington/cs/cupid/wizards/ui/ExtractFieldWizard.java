@@ -1,7 +1,5 @@
 package edu.washington.cs.cupid.wizards.ui;
 
-import java.io.IOException;
-
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
@@ -25,20 +23,19 @@ public class ExtractFieldWizard extends Wizard{
 	
 	@Override
 	public boolean performFinish() {
-		Getter<?,?> pipe = page.getGetter();
 		try {
+			Getter<?, ?> pipe = page.getGetter();
 			Activator.getDefault().getHydrationService().store(pipe);
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
 			return true;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			ErrorDialog.openError(
 					this.getShell(), 
 					"Error Creating Capability", 
-					"Error creating capability " + pipe.getName(), 
+					"Error creating capability", // TODO add more descriptive error message?
 					new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating capability", e));
 			
 			return false;
 		}
 	}
-
 }

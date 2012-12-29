@@ -6,7 +6,6 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-import edu.washington.cs.cupid.wizards.ui.CreatePipelineWizard;
 import edu.washington.cs.cupid.wizards.ui.ExtractFieldWizard;
 
 /**

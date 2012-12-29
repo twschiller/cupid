@@ -237,8 +237,8 @@ public class MappingPage extends WizardPage {
 			if (keySet == null){
 				return null;
 			}else{
-				ICapability capability = element instanceof ICapability 
-						?  (ICapability) element
+				ICapability<?,?> capability = element instanceof ICapability 
+						?  (ICapability<?,?>) element
 						:  ((DerivedCapability) element).getCapability();
 				
 				if (CapabilityExecutor.isCompatible(capability, keySet.getParameterType())){

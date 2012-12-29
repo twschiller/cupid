@@ -3,11 +3,6 @@ package edu.washington.cs.cupid.heatmap.internal;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import edu.washington.cs.cupid.capability.ChangeNotifier;
-import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
-import edu.washington.cs.cupid.capability.ICapabilityPublisher;
-import edu.washington.cs.cupid.capability.ICapabilityChangeNotifier;
-
 /**
  * The activator class controls the plug-in life cycle
  */
@@ -18,8 +13,6 @@ public class Activator extends AbstractUIPlugin{
 
 	// The shared instance
 	private static Activator plugin;
-	
-	
 	
 	/**
 	 * The constructor

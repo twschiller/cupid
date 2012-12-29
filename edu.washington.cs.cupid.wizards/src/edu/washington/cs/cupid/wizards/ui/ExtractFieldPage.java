@@ -136,18 +136,9 @@ public class ExtractFieldPage extends WizardPage {
 		}
 	}
 	
-	public Getter getGetter(){
-		Class<?> clazz;
-		try {
-			clazz = Activator.getDefault().getBundle().loadClass(type.getText());
-		} catch (ClassNotFoundException e) {
-			return null;
-		}
-		
-		try {
-			return new Getter(method, TypeToken.of(clazz), TypeToken.of(clazz.getMethod(method).getReturnType()));
-		} catch (Exception e) {
-			return null;
-		}
+	@SuppressWarnings({ "rawtypes", "unchecked" }) // type is determined dynamically by text
+	public Getter<?,?> getGetter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
+		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
+		return new Getter(method, TypeToken.of(clazz), TypeToken.of(clazz.getMethod(method).getReturnType()));
 	}
 }

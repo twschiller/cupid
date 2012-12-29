@@ -19,6 +19,7 @@ import edu.washington.cs.cupid.capability.ICapability;
  * Capability that returns all Mylyn Tasks
  * @author Todd Schiller
  */
+@SuppressWarnings("restriction")
 public class MylynTaskCapability extends AbstractCapability<ICapability.Unit, List<AbstractTask>>{
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view

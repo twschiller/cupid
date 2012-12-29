@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="edu.washington.cs.cupid.eclipse.core"
+      label="Cupid for Eclipse"
+      version="1.0.0.0"
+      provider-name="University of Washington PLSE">
+
+   <description url="http://www.cupidplugin.com/description">
+      [Enter Feature Description here.]
+   </description>
+
+   <copyright url="http://www.cupidplugin.com/copyright">
+      [Enter Copyright Description here.]
+   </copyright>
+
+   <license url="https://www.gnu.org/copyleft/gpl.html">
+      [Enter License Description here.]
+   </license>
+
+   <plugin
+         id="edu.washington.cs.cupid"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.chart"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.heatmap"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.jdt"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.junit"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.pipes"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.resources"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

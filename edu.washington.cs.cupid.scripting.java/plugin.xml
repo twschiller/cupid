@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="edu.washington.cs.cupid.publish">
+      <client
+            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
+      </client>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            canFinishEarly="false"
+            category="edu.washington.cs.cupid.scripting.wizards"
+            class="edu.washington.cs.cupid.scripting.java.wizards.JavaCapabilityWizard"
+            icon="icons/cup_add.png"
+            id="edu.washington.cs.cupid.scripting.java.wizard"
+            name="Java Capability">
+      </wizard>
+      <category
+            id="edu.washington.cs.cupid.scripting.wizards"
+            name="Cupid">
+      </category>
+   </extension>
+
+</plugin>

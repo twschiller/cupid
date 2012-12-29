@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="edu.washington.cs.cupid.publish">
+      <client
+            class="edu.washington.cs.cupid.junit.internal.Activator">
+      </client>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="edu.washington.cs.cupid.preferences"
+            class="edu.washington.cs.cupid.junit.preferences.JUnitPreferencePage"
+            id="edu.washington.cs.cupid.junit.preferences.JUnitPreferencePage"
+            name="JUnit">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="edu.washington.cs.cupid.junit.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+
+</plugin>

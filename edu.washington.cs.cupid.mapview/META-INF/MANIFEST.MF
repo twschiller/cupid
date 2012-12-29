@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Map View
+Bundle-SymbolicName: edu.washington.cs.cupid.mapview;singleton:=true
+Bundle-Version: 1.0.0.0
+Bundle-Activator: edu.washington.cs.cupid.mapview.internal.Activator
+Bundle-Vendor: University of Washington PLSE
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ edu.washington.cs.cupid;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Import-Package: org.eclipse.draw2d,
+ org.eclipse.zest.core.viewers,
+ org.eclipse.zest.core.widgets,
+ org.eclipse.zest.layouts,
+ org.eclipse.zest.layouts.algorithms
+Bundle-ClassPath: lib/guava-11.0.2.jar,
+ .

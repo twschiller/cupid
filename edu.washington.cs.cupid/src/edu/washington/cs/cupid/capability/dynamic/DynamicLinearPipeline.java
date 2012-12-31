@@ -1,19 +1,14 @@
 package edu.washington.cs.cupid.capability.dynamic;
 
-import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
@@ -24,29 +19,28 @@ import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
  * @author Todd Schiller
  */
 @SuppressWarnings("rawtypes")
-public class DynamicLinearPipeline implements ICapability, Serializable{
+public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
 	// TODO handle concurrent modifications to capability bindings
 	
 	private static final long serialVersionUID = 1L;
 	
-	private final String name;
-	private final String description;
 	private final List<Object> capabilities;
 
 	public DynamicLinearPipeline(String name, String description, List<Object> capabilities) {
-		super();
-		this.name = name;
-		this.description = description;
+		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
 
-	private List<ICapability<?,?>> current() throws NoSuchCapabilityException{
+	private List<ICapability<?,?>> inorder() throws NoSuchCapabilityException{
+		Map<String, ICapability<?,?>> map = super.current();
+		
 		List<ICapability<?,?>> result = Lists.newArrayList();
+	
 		for (Object capability : capabilities){
 			if (capability instanceof ICapability){
 				result.add((ICapability) capability);
 			}else if (capability instanceof String){
-				result.add(CupidPlatform.getCapabilityRegistry().findCapability((String) capability));
+				result.add(map.get((String) capability));
 			}else{
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
@@ -73,30 +67,22 @@ public class DynamicLinearPipeline implements ICapability, Serializable{
 		return builder.toString();	
 	}
 
-	@Override
-	public String getName() {
-		return name;
-	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public String getDescription() {
-		return description;
-	}
-
-
-	@Override
-	public TypeToken getParameterType() {
+	public TypeToken<I> getParameterType() {
 		try {
-			return current().get(0).getParameterType();
+			return (TypeToken<I>) current().get(0).getParameterType();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public TypeToken getReturnType() {
+	public TypeToken<V> getReturnType() {
 		try {
-			return current().get(capabilities.size()-1).getReturnType();
+			return (TypeToken<V>) current().get(capabilities.size()-1).getReturnType();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -114,7 +100,7 @@ public class DynamicLinearPipeline implements ICapability, Serializable{
 
 				List<ICapability<?, ?>> capabilities;
 				try {
-					capabilities = current();
+					capabilities = inorder();
 				} catch (NoSuchCapabilityException e) {
 					return CapabilityStatus.makeError(e);
 				}
@@ -159,60 +145,4 @@ public class DynamicLinearPipeline implements ICapability, Serializable{
 			}
 		};
 	}
-
-	@Override
-	public boolean isPure() {
-		try {
-			return Iterables.all(current(), new Predicate<ICapability<?,?>>(){
-				@Override
-				public boolean apply(ICapability<?, ?> capability) {
-					return capability.isPure();
-				}
-			});
-		} catch (NoSuchCapabilityException e) {
-			throw new DynamicBindingException(e);
-		}
-	}
-
-	@Override
-	public boolean isLocal() {
-		try {
-			return Iterables.all(current(), new Predicate<ICapability<?,?>>(){
-				@Override
-				public boolean apply(ICapability<?, ?> capability) {
-					return capability.isLocal();
-				}
-			});
-		} catch (NoSuchCapabilityException e) {
-			throw new DynamicBindingException(e);
-		}
-	}
-
-	@Override
-	public boolean isTransient() {
-		try {
-			return Iterables.any(current(), new Predicate<ICapability<?,?>>(){
-				@Override
-				public boolean apply(ICapability<?, ?> capability) {
-					return capability.isPure();
-				}
-			});
-		} catch (NoSuchCapabilityException e) {
-			throw new DynamicBindingException(e);
-		}
-	}
-
-	@Override
-	public Set<String> getDynamicDependencies() {
-		Set<String> dependencies = Sets.newHashSet();
-		
-		for (Object capability : capabilities){
-			if (capability instanceof String){
-				dependencies.add((String)capability);
-			}
-		}
-	
-		return dependencies;	
-	}
-
 }

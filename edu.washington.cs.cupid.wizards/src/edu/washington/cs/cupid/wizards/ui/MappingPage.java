@@ -24,7 +24,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
@@ -43,19 +42,32 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
+import edu.washington.cs.cupid.wizards.internal.ValueMapping;
 
 public class MappingPage extends WizardPage {
 
+	private static final String DEFAULT_NAME = "My Mapping";
+	private static final String DEFAULT_DESCRIPTION = "A mapping between values";
+	private static final String VALUE_SENTINAL = "<Value>";
+	
 	//
 	// Views
 	//
-
+	
+	private Text nameEntry;
+	private Text descriptionEntry;
+	
 	private Text objectType;
 	private TreeViewer keyTree;
 	private Combo keyLinkCombo;
 
 	private TreeViewer valueTree;
 	private Combo valueLinkCombo;
+	
+	private Button objectSelect;
+	
+	private Group typeGroup;
+	private Group capabilityGroup;
 	
 	//
 	// Model
@@ -79,9 +91,9 @@ public class MappingPage extends WizardPage {
 		setTitle("New Mapping");
 		setMessage("Select a key and value collection followed by the fields to link");
 		
-		Composite composite = new Composite(parent, SWT.NONE);
+		Composite dialog = new Composite(parent, SWT.NONE);
 		GridData data = new GridData(GridData.FILL_BOTH);
-		composite.setLayoutData(data);
+		dialog.setLayoutData(data);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -89,10 +101,58 @@ public class MappingPage extends WizardPage {
 		layout.horizontalSpacing = 10;
 		layout.marginWidth = 10;
 		layout.marginHeight = 10;
-		composite.setLayout(layout);
+		dialog.setLayout(layout);
 		
-		buildKeyTree(composite);
-		buildValueTree(composite);
+		createMetaGroup(dialog);
+		
+		Composite selectRow = new Composite(dialog, SWT.NONE);
+		
+		GridData selectRowData = new GridData();
+		selectRowData.horizontalAlignment = SWT.CENTER;
+		selectRow.setLayoutData(selectRowData);
+		
+		RowLayout selectRowLayout = new RowLayout();
+		selectRowLayout.center = true;
+		selectRow.setLayout(selectRowLayout);
+		
+		Label useLabel = new Label(selectRow, SWT.LEFT);
+		useLabel.setText("Key Type:");
+		
+	    Button useType = new Button(selectRow, SWT.RADIO);
+		useType.setSelection(true);
+		useType.setText("Object");
+		useType.addSelectionListener(new SelectionListener(){
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				keyAsType = true;
+				updateKey();
+				enableKeys();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// NO OP
+			}
+		});
+		
+		Button useCapability = new Button(selectRow, SWT.RADIO);
+		useCapability.setText("Capability Output");
+		useCapability.addSelectionListener(new SelectionListener(){
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				keyAsType = false;
+				updateKey();
+				enableKeys();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// NO OP
+			}
+		});
+
+		createValueGroup(dialog);
+		createKeyGroup(dialog);
 		
 		keyTree.addSelectionChangedListener(new ISelectionChangedListener(){
 			@Override
@@ -108,28 +168,41 @@ public class MappingPage extends WizardPage {
 				valueLinks = links(getElementType(valueSet));
 				
 				valueLinkCombo.removeAll();
+				
+				valueLinkCombo.add(VALUE_SENTINAL);
 				for (Method m : valueLinks){
 					valueLinkCombo.add(m.getName());
 				}
+				valueLinkCombo.setText(VALUE_SENTINAL);
 			}
 		});
 	
-		buildInjection(composite);
-	
-		setControl(composite);
+		createInjectionGroup(dialog);
+		enableKeys();
+		setControl(dialog);
 	}
 	
+	private void enableKeys(){
+		objectType.setEnabled(keyAsType);
+		objectSelect.setEnabled(keyAsType);
+		typeGroup.setEnabled(keyAsType);
+		
+		keyTree.getTree().setEnabled(!keyAsType);
+		capabilityGroup.setEnabled(!keyAsType);
+	}
 	
 	private void updateKey(){
 		if (keyAsType){
 			keyType = typeFromString(objectType.getText());
 		}else{
 			keySet = selectedCapability(keyTree);
-			keyType = getElementType(keySet);
+			keyType = keySet == null ? null : getElementType(keySet);
 		}
 		
 		keyLinkCombo.removeAll();
 		keyLinks = Lists.newArrayList();
+		
+		keyLinkCombo.add(VALUE_SENTINAL);
 		
 		if (keyType != null){
 			keyLinks = links(keyType);
@@ -139,13 +212,17 @@ public class MappingPage extends WizardPage {
 			}
 		}
 		
+		keyLinkCombo.setText(VALUE_SENTINAL);
+		
 		valueTree.refresh();
 	}
 	
 	private ICapability<?,?> selectedCapability(TreeViewer viewer){
 		Object selected = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
-		
-		if (selected instanceof ICapability){
+	
+		if (selected == null){
+			return null;
+		}else if (selected instanceof ICapability){
 			return (ICapability<?,?>) selected;
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();
@@ -170,74 +247,22 @@ public class MappingPage extends WizardPage {
 		return TypeToken.of(param);
 	}
 	
-	private void buildKeyTree(Composite composite){
-		Group group = new Group(composite, SWT.SHADOW_ETCHED_IN);
-		group.setText("Map Keys");
-		
-		GridData data = new GridData(GridData.FILL_BOTH);
-		data.minimumHeight = 300;
-		group.setLayoutData(data);
+	private void createTypeKeyGroup(Composite composite){
+	    typeGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+	    GridData data = new GridData(GridData.FILL_HORIZONTAL);
+		typeGroup.setLayoutData(data);
+	    typeGroup.setText("Map Key");
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
-		group.setLayout(layout);
+		layout.numColumns = 3;
+		typeGroup.setLayout(layout);
 		
-		Composite selectRow = new Composite(group, SWT.NONE);
-		RowLayout selectRowLayout = new RowLayout();
-		selectRowLayout.center = true;
-		selectRow.setLayout(selectRowLayout);
-		
-		Label useLabel = new Label(selectRow, SWT.LEFT);
-		useLabel.setText("Key Type:");
-		
-		Button useType = new Button(selectRow, SWT.RADIO);
-		useType.setSelection(true);
-		useType.setText("Object");
-		useType.addSelectionListener(new SelectionListener(){
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				keyAsType = true;
-				updateKey();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// NO OP
-			}
-		});
-		
-		Button useCapability = new Button(selectRow, SWT.RADIO);
-		useCapability.setText("Capability Output");
-		useCapability.addSelectionListener(new SelectionListener(){
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				keyAsType = false;
-				updateKey();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// NO OP
-			}
-		});
-		
-		Composite objectRow = new Composite(group, SWT.NONE);
-		GridData objectRowData = new GridData(GridData.FILL_HORIZONTAL);
-		objectRow.setLayoutData(objectRowData);
-		
-		RowLayout objectRowLayout = new RowLayout();
-		objectRowLayout.center = true;
-		objectRow.setLayout(objectRowLayout);
-		
-		Label objectLabel = new Label(objectRow, SWT.LEFT);
+		Label objectLabel = new Label(typeGroup, SWT.LEFT);
 		objectLabel.setText("Object Type:");
 		
-		objectType = new Text(objectRow, SWT.LEFT | SWT.BORDER);
+		objectType = new Text(typeGroup, SWT.LEFT | SWT.BORDER);
 		objectType.setText("java.lang.Object");
-		RowData objectTypeData = new RowData();
-		// TODO the control isn't grabbing the space properly
-		data.grabExcessHorizontalSpace = true;
-		objectType.setLayoutData(objectTypeData);
+		objectType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		objectType.addModifyListener(new ModifyListener(){
 			@Override
@@ -246,13 +271,23 @@ public class MappingPage extends WizardPage {
 			}
 		});
 		
-		Button objectSelect = new Button(objectRow, SWT.PUSH);
+	    objectSelect = new Button(typeGroup, SWT.PUSH);
 		objectSelect.setText("Select");
 		
-		Label treeLabel = new Label(group, SWT.LEFT);
-		treeLabel.setText("Capability:");
+	}
+	
+	private void createCapabilityKeyGroup(Composite composite){
+		capabilityGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+		GridData data = new GridData(GridData.FILL_BOTH);
+		data.minimumHeight = 200;
+		capabilityGroup.setLayoutData(data);
+		capabilityGroup.setText("Map Key");
 		
-		keyTree = new TreeViewer(group, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 1;
+		capabilityGroup.setLayout(layout);
+		
+		keyTree = new TreeViewer(capabilityGroup, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		keyTree.setContentProvider(new TreeContentProvider());
 		keyTree.setLabelProvider(new KeyTreeLabelProvider());
 		
@@ -262,6 +297,12 @@ public class MappingPage extends WizardPage {
 		keyTree.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		keyTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilitiesForOutput(TypeToken.of(Collection.class)));
+
+	}
+	
+	private void createKeyGroup(Composite composite){
+		createTypeKeyGroup(composite);
+		createCapabilityKeyGroup(composite);
 	}
 	
 	private static ArrayList<Method> links(TypeToken<?> type){
@@ -276,10 +317,11 @@ public class MappingPage extends WizardPage {
 		return result;
 	}
 	
-	private void buildValueTree(Composite composite){
+	private void createValueGroup(Composite composite){
 		Group group = new Group(composite, SWT.SHADOW_ETCHED_IN);
 		GridData data = new GridData(GridData.FILL_BOTH);
 		data.minimumHeight = 300;
+		data.verticalSpan = 3;
 		group.setText("Map Values");
 		group.setLayoutData(data);
 		
@@ -299,21 +341,31 @@ public class MappingPage extends WizardPage {
 		valueTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilitiesForOutput(TypeToken.of(Collection.class)));
 	}
 
-	private void buildInjection(Composite composite){
+	private void createInjectionGroup(Composite composite){
 		Group group = new Group(composite, SWT.SHADOW_ETCHED_IN);
 		GridData data = new GridData(GridData.FILL_BOTH);
 		data.horizontalSpan = 2;
 		group.setText("Mapping Function");
 		group.setLayoutData(data);
-		
-		RowLayout layout = new RowLayout();
-		layout.center = true;
+	
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 5;
 		group.setLayout(layout);
 		
 		new Label(group, SWT.LEFT).setText("Where");
 		keyLinkCombo = new Combo(group, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		keyLinkCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		keyLinkCombo.add(VALUE_SENTINAL);
+		keyLinkCombo.setText(VALUE_SENTINAL);
+		
 		new Label(group, SWT.LEFT).setText("of key equals");
 		valueLinkCombo = new Combo(group, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		valueLinkCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			
+		valueLinkCombo.add(VALUE_SENTINAL);
+		valueLinkCombo.setText(VALUE_SENTINAL);
+		
 		new Label(group, SWT.LEFT).setText("of value");
 	}
 	
@@ -340,6 +392,34 @@ public class MappingPage extends WizardPage {
 		}else{
 			return true;
 		}
+	}
+	
+	private void createMetaGroup(Composite parent){
+		Group metaGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
+		GridData data = new GridData(GridData.FILL_HORIZONTAL);
+		data.horizontalSpan = 2;
+		metaGroup.setText("Meta Information");
+		metaGroup.setLayoutData(data);
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 4;
+		metaGroup.setLayout(layout);
+		
+		Label nameLabel = new Label(metaGroup, SWT.LEFT);
+		nameLabel.setText("Name:");
+		
+		nameEntry = new Text(metaGroup, SWT.SINGLE | SWT.BORDER);
+		nameEntry.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		nameEntry.setText(DEFAULT_NAME);
+		
+		Label descriptionLabel = new Label(metaGroup, SWT.LEFT);
+		descriptionLabel.setText("Description:");
+		
+		descriptionEntry = new Text(metaGroup, SWT.SINGLE | SWT.BORDER);
+		descriptionEntry.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		descriptionEntry.setText(DEFAULT_DESCRIPTION);
+		
+		metaGroup.pack();
 	}
 	
 	private class ValuesLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider{
@@ -436,6 +516,25 @@ public class MappingPage extends WizardPage {
 			}else{
 				return false;
 			}
+		}
+	}
+	
+	private String pullComboLink(Combo box){
+		return box.getText().equals(VALUE_SENTINAL) ? null : box.getText();
+		
+	}
+	
+	public ICapability<?,?> getCapability(){
+		String name = nameEntry.getText();
+		String description = descriptionEntry.getText();
+		
+		if (keyAsType){
+			return new ValueMapping(name, description,
+					keyType, pullComboLink(keyLinkCombo),
+					valueSet.getUniqueId(), valueSet.getReturnType(), pullComboLink(valueLinkCombo));
+			
+		}else{
+			throw new RuntimeException("Support for input capabilities is not implemented");
 		}
 	}
 }

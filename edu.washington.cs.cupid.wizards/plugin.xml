@@ -29,6 +29,7 @@
                id="edu.cs.washington.cs.cupid.wizards.actions.ExtractFieldAction"
                label="&amp;Create Extract Field Capability"
                state="false"
+               style="push"
                toolbarPath="cupidGroup"
                tooltip="Create Extract Field Capability">
          </action>

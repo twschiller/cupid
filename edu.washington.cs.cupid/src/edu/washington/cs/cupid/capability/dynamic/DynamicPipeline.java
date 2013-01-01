@@ -12,21 +12,22 @@ import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 
 /**
  * A pipeline
  * @author Todd Schiller
  */
-public abstract class DynamicPipeline<I,V> implements ICapability<I,V>, Serializable{
+public abstract class DynamicPipeline<I,V> implements ISerializableCapability<I,V>{
 
 	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	private final String description;
-	private final Set<Object> capabilities;
+	private final Set<Serializable> capabilities;
 	
-	public DynamicPipeline(String name, String description, Collection<Object> capabilities){
+	public DynamicPipeline(String name, String description, Collection<Serializable> capabilities){
 		this.name = name;
 		this.description = description;
 		this.capabilities = Sets.newHashSet(capabilities);
@@ -57,6 +58,15 @@ public abstract class DynamicPipeline<I,V> implements ICapability<I,V>, Serializ
 		return result;
 	}
 	
+	public ICapability<?,?> get(Serializable key) throws NoSuchCapabilityException{
+		if (key instanceof String){
+			return current().get((String) key);
+		}else if (key instanceof ICapability){
+			return (ICapability<?,?>) key;
+		}else{
+			throw new IllegalArgumentException();
+		}
+	}
 
 	@Override
 	public boolean isPure() {

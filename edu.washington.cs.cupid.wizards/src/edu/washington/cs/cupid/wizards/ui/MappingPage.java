@@ -40,7 +40,10 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ISerializableCapability;
+import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
 import edu.washington.cs.cupid.wizards.internal.Activator;
+import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 import edu.washington.cs.cupid.wizards.internal.ValueMapping;
 
@@ -75,9 +78,9 @@ public class MappingPage extends WizardPage {
 	
 	private boolean keyAsType = true;
 	private TypeToken<?> keyType;
-	private ICapability<?,?> keySet;
 	
-	private ICapability<?,?> valueSet;
+	private ISerializableCapability<?,?> keySet;
+	private ISerializableCapability<?,?> valueSet;
 	
 	private ArrayList<Method> valueLinks;
 	private ArrayList<Method> keyLinks;
@@ -217,13 +220,15 @@ public class MappingPage extends WizardPage {
 		valueTree.refresh();
 	}
 	
-	private ICapability<?,?> selectedCapability(TreeViewer viewer){
+	private ISerializableCapability<?,?> selectedCapability(TreeViewer viewer){
 		Object selected = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 	
 		if (selected == null){
 			return null;
+		}else if (selected instanceof ISerializableCapability){
+			return (ISerializableCapability<?,?>) selected;
 		}else if (selected instanceof ICapability){
-			return (ICapability<?,?>) selected;
+			return new DynamicLinearPipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();
 		}else{
@@ -487,6 +492,7 @@ public class MappingPage extends WizardPage {
 
 		@Override
 		public Object[] getElements(Object inputElement) {
+			@SuppressWarnings("unchecked")
 			Collection<ICapability<?,?>> xs = (Collection<ICapability<?,?>>) inputElement;
 			return xs.toArray();
 		}
@@ -524,17 +530,29 @@ public class MappingPage extends WizardPage {
 		
 	}
 	
-	public ICapability<?,?> getCapability(){
+	public boolean hasKeyAsType(){
+		return keyAsType;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public ValueMapping<?,?> getValueMapping(){
 		String name = nameEntry.getText();
 		String description = descriptionEntry.getText();
 		
-		if (keyAsType){
-			return new ValueMapping(name, description,
-					keyType, pullComboLink(keyLinkCombo),
-					valueSet.getUniqueId(), valueSet.getReturnType(), pullComboLink(valueLinkCombo));
-			
-		}else{
-			throw new RuntimeException("Support for input capabilities is not implemented");
-		}
+		return new ValueMapping(name, description,
+				keyType, pullComboLink(keyLinkCombo),
+				valueSet.getUniqueId(), valueSet.getReturnType(), pullComboLink(valueLinkCombo));
+		
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public CapabilityMapping<?,?,?> getCapabilityMapping(){
+		String name = nameEntry.getText();
+		String description = descriptionEntry.getText();
+		
+		return new CapabilityMapping(name, description,
+				keySet.getParameterType(),
+				keySet, keySet.getReturnType(), pullComboLink(keyLinkCombo),
+				valueSet, valueSet.getReturnType(), pullComboLink(valueLinkCombo));
 	}
 }

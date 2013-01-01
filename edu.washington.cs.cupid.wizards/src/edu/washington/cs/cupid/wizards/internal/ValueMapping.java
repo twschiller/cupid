@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
@@ -18,7 +19,7 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.dynamic.DynamicPipeline;
 
-public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
+public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Set<V>>> {
 
 	private static final long serialVersionUID = 1L;
 	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.mapping.value";
@@ -36,7 +37,7 @@ public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
 			TypeToken<I> inputType, String keyLink,
 			String valueGenerator, TypeToken<V> valueType, String valueLink){
 		
-		super(name, description, Sets.<Object>newHashSet(valueGenerator));
+		super(name, description, Sets.<Serializable>newHashSet(valueGenerator));
 		this.valueGenerator = valueGenerator;
 		this.keyLink = keyLink;
 		this.valueType = valueType;
@@ -55,8 +56,8 @@ public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
 
 	@SuppressWarnings("serial")
 	@Override
-	public TypeToken<Map<I,Collection<V>>> getReturnType() {
-		 return new TypeToken<Map<I,Collection<V>>>(getClass()){}
+	public TypeToken<Map<I,Set<V>>> getReturnType() {
+		 return new TypeToken<Map<I,Set<V>>>(getClass()){}
 		 	.where(new TypeParameter<I>(){}, inputType)
 		 	.where(new TypeParameter<V>(){}, valueType);
 	}
@@ -78,7 +79,7 @@ public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
 	public CapabilityJob getJob(Object input) {
 		return new CapabilityJob(this, input){
 			@Override
-			protected CapabilityStatus<Map<I, Collection<V>>> run(IProgressMonitor monitor) {
+			protected CapabilityStatus<Map<I, Set<V>>> run(IProgressMonitor monitor) {
 				try{
 					Object key = link(input, keyLink);
 					
@@ -100,7 +101,7 @@ public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
 					
 					if (status.getCode() == Status.OK){
 
-						Collection<V> collection = Lists.newArrayList();
+						Set<V> collection = Sets.newHashSet();
 						
 						for (V v : status.value()){
 							if (key.equals(link(v, valueLink))){
@@ -108,7 +109,7 @@ public class ValueMapping<I,V> extends DynamicPipeline<I,Map<I,Collection<V>>> {
 							}
 						}
 						
-						Map<I, Collection<V>> result = Maps.newHashMap();
+						Map<I, Set<V>> result = Maps.newHashMap();
 						result.put((I) input, collection);
 						
 						return CapabilityStatus.makeOk(result);

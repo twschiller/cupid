@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.capability.dynamic;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +25,9 @@ public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
 	
 	private static final long serialVersionUID = 1L;
 	
-	private final List<Object> capabilities;
+	private final List<Serializable> capabilities;
 
-	public DynamicLinearPipeline(String name, String description, List<Object> capabilities) {
+	public DynamicLinearPipeline(String name, String description, List<Serializable> capabilities) {
 		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
@@ -56,23 +57,26 @@ public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
 			if (capability instanceof ICapability){
 				builder.append(((ICapability) capability).getUniqueId());
 			}else if (capability instanceof String){
-				builder.append(((String)capability) + ";");
+				builder.append(((String)capability));
 			}else{
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
 			
-			builder.append(capability + ";");
+			builder.append(";");
 		}
 		builder.append("]");
 		return builder.toString();	
 	}
 
+	private ICapability<?,?> get(int index) throws NoSuchCapabilityException{
+		return get(capabilities.get(index));
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public TypeToken<I> getParameterType() {
 		try {
-			return (TypeToken<I>) current().get(0).getParameterType();
+			return (TypeToken<I>) get(0).getParameterType();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -82,7 +86,7 @@ public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
 	@Override
 	public TypeToken<V> getReturnType() {
 		try {
-			return (TypeToken<V>) current().get(capabilities.size()-1).getReturnType();
+			return (TypeToken<V>) get(capabilities.size()-1).getReturnType();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}

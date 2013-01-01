@@ -128,10 +128,25 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ISelect
 			MapView.this.showBusy(true);
 			
 			final StructuredSelection all = ((StructuredSelection) selection);
-			
-			final Object input = all.getFirstElement();
+		
+			Object input = all.getFirstElement();
+		
+			if (input == null){
+				return;
+			}
 			
 			if (CapabilityExecutor.isCompatible(capability, input)){
+				// NO OP
+			}else{
+				for (Object o : CapabilityExecutor.corresponding(input)){
+					input = null;
+					if (CapabilityExecutor.isCompatible(capability, o)){
+						input = o;
+					}
+				}
+			}
+			
+			if (input != null){
 				CapabilityExecutor.asyncExec(capability, CapabilityExecutor.getCompatible(capability, input), MapView.this, new NullJobListener(){
 					@Override
 					public void done(IJobChangeEvent event) {

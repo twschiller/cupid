@@ -52,6 +52,7 @@ public class MappingPage extends WizardPage {
 	private static final String DEFAULT_NAME = "My Mapping";
 	private static final String DEFAULT_DESCRIPTION = "A mapping between values";
 	private static final String VALUE_SENTINAL = "<Value>";
+	private static final String DEFAULT_KEY_TYPE = "java.lang.Object";
 	
 	//
 	// Views
@@ -85,8 +86,13 @@ public class MappingPage extends WizardPage {
 	private ArrayList<Method> valueLinks;
 	private ArrayList<Method> keyLinks;
 	
-	protected MappingPage() {
+	protected MappingPage(){
 		super("Mapping");
+	}
+	
+	protected MappingPage(TypeToken<?> startingType) {
+		super("Mapping");
+		this.keyType = startingType;
 	}
 
 	@Override
@@ -182,6 +188,7 @@ public class MappingPage extends WizardPage {
 	
 		createInjectionGroup(dialog);
 		enableKeys();
+		updateKey();
 		setControl(dialog);
 	}
 	
@@ -266,7 +273,7 @@ public class MappingPage extends WizardPage {
 		objectLabel.setText("Object Type:");
 		
 		objectType = new Text(typeGroup, SWT.LEFT | SWT.BORDER);
-		objectType.setText("java.lang.Object");
+		objectType.setText(keyType != null ? keyType.toString() : DEFAULT_KEY_TYPE);
 		objectType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		objectType.addModifyListener(new ModifyListener(){
@@ -541,7 +548,7 @@ public class MappingPage extends WizardPage {
 		
 		return new ValueMapping(name, description,
 				keyType, pullComboLink(keyLinkCombo),
-				valueSet.getUniqueId(), valueSet.getReturnType(), pullComboLink(valueLinkCombo));
+				valueSet, valueSet.getReturnType(), pullComboLink(valueLinkCombo));
 		
 	}
 	

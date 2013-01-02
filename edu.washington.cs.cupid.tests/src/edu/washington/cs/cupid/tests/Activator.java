@@ -32,7 +32,7 @@ public class Activator implements BundleActivator, ICapabilityPublisher {
 //				new LongRunningCapability(), 
 //				new MethodCapabilityTest(),
 				new MapCapabilityTest(),
-//				new ClassTest(),
+				new ClassTest(),
 		};
 	}
 

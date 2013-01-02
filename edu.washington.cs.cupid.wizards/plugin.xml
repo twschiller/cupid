@@ -55,7 +55,7 @@
             id="edu.washington.cs.cupid.wizards.contribution1"
             objectClass="java.lang.Object">
          <menu
-               id="edu.washington.cs.cupid.wizards.menu1"
+               id="edu.washington.cs.cupid.wizards.menu"
                label="Cupid"
                path="additions">
             <separator
@@ -65,9 +65,16 @@
          <action
                class="edu.washington.cs.cupid.wizards.popup.actions.NewExtractCapabilityAction"
                enablesFor="1"
-               id="edu.washington.cs.cupid.wizards.extract"
+               id="edu.washington.cs.cupid.wizards.extract.capability"
                label="Extract Capability"
-               menubarPath="edu.washington.cs.cupid.wizards.menu1/group1">
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.NewMappingCapabilityAction"
+               enablesFor="1"
+               id="edu.washington.cs.cupid.wizards.extract.action"
+               label="Create Mapping"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
       </objectContribution>
    </extension>

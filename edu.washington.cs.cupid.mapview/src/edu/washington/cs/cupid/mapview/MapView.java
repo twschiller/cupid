@@ -33,13 +33,15 @@ import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.mapview.internal.GraphLabelProvider;
 import edu.washington.cs.cupid.mapview.internal.GraphNodeContentProvider;
+import edu.washington.cs.cupid.select.CupidSelectionService;
+import edu.washington.cs.cupid.select.ICupidSelectionListener;
 
 /**
  * A view that displays the output of a capability as a map for the current selection.
  * @author Todd Schiller
  * @see http://www.vogella.com/articles/EclipseZest/article.html
  */
-public class MapView extends ViewPart implements IZoomableWorkbenchPart, ISelectionListener{
+public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidSelectionListener{
 	
 	/**
 	 * The ID of the view as specified by the extension.
@@ -59,13 +61,10 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ISelect
 	
 	private GraphViewer viewer;
 	
-	private ISelectionService selectionService;
-	
 	public void createPartControl(Composite parent) {
 		viewer = new GraphViewer(parent, SWT.BORDER);
 		
-		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionService.addPostSelectionListener(this);
+		CupidSelectionService.addListener(this);
 		
 		refreshCapabilities();
 		
@@ -122,50 +121,42 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ISelect
 	
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {	
-		if (capability != null && selection instanceof StructuredSelection){
-			MapView.this.showBusy(true);
+	private void showMapping(Object input){
+		MapView.this.showBusy(true);
 			
-			final StructuredSelection all = ((StructuredSelection) selection);
+		if (input == null || capability == null){
+			return;
+		}
 		
-			Object input = all.getFirstElement();
-		
-			if (input == null){
-				return;
-			}
-			
-			if (CapabilityExecutor.isCompatible(capability, input)){
-				// NO OP
-			}else{
-				for (Object o : CapabilityExecutor.corresponding(input)){
-					input = null;
-					if (CapabilityExecutor.isCompatible(capability, o)){
-						input = o;
-					}
+		if (CapabilityExecutor.isCompatible(capability, input)){
+			// NO OP
+		}else{
+			for (Object o : CapabilityExecutor.corresponding(input)){
+				input = null;
+				if (CapabilityExecutor.isCompatible(capability, o)){
+					input = o;
 				}
 			}
-			
-			if (input != null){
-				CapabilityExecutor.asyncExec(capability, CapabilityExecutor.getCompatible(capability, input), MapView.this, new NullJobListener(){
-					@Override
-					public void done(IJobChangeEvent event) {
-						CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
-						
-						if (status.value() != null && status.isOK()){
-							buildMap((Map)status.value());
-						}
-					
-						MapView.this.showBusy(false);
-					}
-				});
+		}
 		
-			}
+		if (input != null){
+			CapabilityExecutor.asyncExec(capability, CapabilityExecutor.getCompatible(capability, input), MapView.this, new NullJobListener(){
+				@Override
+				public void done(IJobChangeEvent event) {
+					CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
+					
+					if (status.value() != null && status.isOK()){
+						buildMap((Map)status.value());
+					}
+				
+					MapView.this.showBusy(false);
+				}
+			});
+	
 		}
 	}
 	
-	
-	
+
 	/**
 	 * Add the list of available capabilities to the view's menu
 	 */
@@ -199,6 +190,32 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ISelect
 			}
 		});
 	}
+	
+	@Override
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {	
+		if (selection instanceof StructuredSelection){
+			// TODO handle multiple selected elements
+			final StructuredSelection all = ((StructuredSelection) selection);
+			showMapping(all.getFirstElement());
+		}else{
+			// TODO handle other selection types
+		}
+	}
+	
+	@Override
+	public void selectionChanged(IWorkbenchPart part, Object data) {
+		showMapping(data);
+	}
 
+	@Override
+	public void selectionChanged(IWorkbenchPart part, Object[] data) {
+		// TODO handle multiple selected objects
+		showMapping(data[0]);
+	}
 
+	@Override
+	public void dispose() {
+		CupidSelectionService.removeListener(this);
+		super.dispose();
+	}
 }

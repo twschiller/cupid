@@ -6,29 +6,20 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Status;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 
-public class CapabilityMapping<I,K,V> implements ISerializableCapability<I,Map<K,Set<V>>> {
+public class CapabilityMapping<I,K,V> extends AbstractMapping<I,K,V> {
 
 	private static final long serialVersionUID = 1L;
 	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.mapping.capability";
-	
-	private String name;
-	private String description;
-	
-	private TypeToken<K> keyType;
-	private TypeToken<I> inputType;
-	private TypeToken<V> valueType;
-	
+
 	private ISerializableCapability<I, Collection<K>> inputGenerator;
 	private ISerializableCapability<I, Collection<V>> valueGenerator;
 	private String keyLink;
@@ -40,41 +31,23 @@ public class CapabilityMapping<I,K,V> implements ISerializableCapability<I,Map<K
 			TypeToken<I> inputType,
 			ISerializableCapability<I, Collection<K>> inputGenerator, TypeToken<K> keyType , String keyLink,
 			ISerializableCapability<I, Collection<V>> valueGenerator, TypeToken<V> valueType, String valueLink){
-		
-		this.name = name;
-		this.description = description;
-		this.inputType = inputType;
+		super(name, description, inputType, keyType, valueType);
 		
 		this.inputGenerator = inputGenerator;
-		this.keyType = keyType;
 		this.keyLink = keyLink;
-		
 		this.valueGenerator = valueGenerator;
-		this.valueType = valueType;
 		this.valueLink = valueLink;
 	}
 	
 	@Override
 	public String getUniqueId() {
-		return BASE_ID + ".[" + inputType.getRawType().getName() + "].[" + valueGenerator + "]"; 
+		return BASE_ID + ".[" + inputType.toString() + "].[" + inputGenerator.getUniqueId() + "].[" + valueGenerator.getUniqueId() + "]"; 
 	}
 
-	@Override
-	public TypeToken<I> getParameterType() {
-		return inputType;
-	}
-
-	@SuppressWarnings("serial")
-	@Override
-	public TypeToken<Map<K,Set<V>>> getReturnType() {
-		 return new TypeToken<Map<K,Set<V>>>(getClass()){}
-		 	.where(new TypeParameter<K>(){}, keyType)
-		 	.where(new TypeParameter<V>(){}, valueType);
-	}
 
 	@Override
 	public Set<String> getDynamicDependencies() {
-		return  Sets.union(inputGenerator.getDynamicDependencies(), valueGenerator.getDynamicDependencies());
+		return Sets.union(inputGenerator.getDynamicDependencies(), valueGenerator.getDynamicDependencies());
 	}
 
 	private Object link(Object value, String valueLink) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
@@ -83,20 +56,7 @@ public class CapabilityMapping<I,K,V> implements ISerializableCapability<I,Map<K
 				: value.getClass().getMethod(valueLink).invoke(value);
 	}
 	
-	private <R> R runSubtask(CapabilityJob<?, R> subtask, IProgressMonitor monitor) throws Throwable{
-		
-		subtask.schedule();
-		subtask.join();
-		
-		CapabilityStatus<R> status = ((CapabilityStatus<R>)subtask.getResult());
-		
-		if (status.getCode() == Status.OK){
-			return status.value();
-		}else{
-			throw status.getException();
-		}
-	}
-	
+
 	
 	@Override
 	public CapabilityJob<I, Map<K, Set<V>>> getJob(I input) {		
@@ -142,16 +102,6 @@ public class CapabilityMapping<I,K,V> implements ISerializableCapability<I,Map<K
 				}
 			}
 		};
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public String getDescription() {
-		return description;
 	}
 
 	@Override

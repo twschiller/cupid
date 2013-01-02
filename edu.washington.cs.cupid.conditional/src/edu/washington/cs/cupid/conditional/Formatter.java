@@ -143,13 +143,11 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	
 	@Override
 	public void partActivated(IWorkbenchPartReference partRef) {
-		System.out.println("Part Activated: " + partRef.getPartName());
 		applyFormattingRules(partRef);
 	}
 
 	@Override
 	public void partVisible(IWorkbenchPartReference partRef) {
-		System.out.println("Part Visible: " + partRef.getPartName());
 		applyFormattingRules(partRef);
 	}
 
@@ -279,10 +277,10 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		Object input = data(item);
 		
 		if (input == null){
-			System.out.println("No input associated with " + item + "; text: " + item.getText());
+			//System.out.println("No input associated with " + item + "; text: " + item.getText());
 			return;
 		}else{
-			System.out.println("Applying formatting rules to " + item);
+			//System.out.println("Applying formatting rules to " + item);
 		}
 		
 		int matches = 0;
@@ -305,7 +303,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			}
 		}
 		
-		System.out.println(input.getClass().getSimpleName() + " has " + matches + " predicates");
+		//System.out.println(input.getClass().getSimpleName() + " has " + matches + " predicates");
 	}
 	
 	/**
@@ -399,7 +397,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		if (e.getSource() instanceof Item){
 			Item item = (Item) e.getSource();
 			
-			System.out.println("Disposing " + item.getText() + " (" + item.hashCode() + ")");
+			//System.out.println("Disposing " + item.getText() + " (" + item.hashCode() + ")");
 			
 			synchronized(activeObjects){
 				Object input = activeItems.get(item);	

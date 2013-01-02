@@ -41,6 +41,8 @@ import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.preferences.SelectionInspectorPreferencePage;
+import edu.washington.cs.cupid.select.CupidSelectionService;
+import edu.washington.cs.cupid.select.ICupidSelectionListener;
 
 /**
  * View that shows capabilities (and their outputs) that apply to the current workbench selection.
@@ -62,9 +64,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	private TableViewer viewer;
 	
 	private ViewContentProvider contentProvider;
-	
-	private ISelectionService selectionService;
-	
+		
 	private long reapThresholdInSeconds;
 	
 	/**
@@ -93,8 +93,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		
-		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionService.addPostSelectionListener(contentProvider);
+		CupidSelectionService.addListener(contentProvider);
 		
 		inspectorFamilies = Maps.newConcurrentMap();
 		
@@ -102,7 +101,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		reapThresholdInSeconds = preferences.getInt(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS);
 		preferences.addPropertyChangeListener(this);
 		
-		viewer.setInput(selectionService.getSelection());
+		//viewer.setInput(selectionService.getSelection());
 	}
 	
 	/**
@@ -197,62 +196,74 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		}
 	}
 	
-	private class ViewContentProvider implements IStructuredContentProvider, ISelectionListener {
-		private ISelection selection;
+	private class ViewContentProvider implements IStructuredContentProvider, ICupidSelectionListener {
+		private Object selection;
 		private TableViewer view;
 		
 		@Override
 		public void inputChanged(Viewer v, Object oldSelection, Object newSelection) {
-			selection = (ISelection) newSelection;
+			selection = newSelection;
 			view = (TableViewer) v;
 			v.refresh();
 		}
 		
 		@Override
 		public void dispose() {
-			selectionService.removePostSelectionListener(this);
+			CupidSelectionService.removeListener(this);
 		}
 	
 		@Override
-		public Object[] getElements(Object inputElement) {
+		public Object[] getElements(Object argument) {
 			Set<String> hidden = Sets.newHashSet(
 					CupidActivator.getDefault().getPreferenceStore().getString(
 							PreferenceConstants.P_INSPECTOR_HIDE).split(SelectionInspectorPreferencePage.SEPARATOR));
-			
-			
-			if (selection instanceof StructuredSelection){
-				Object argument = ((StructuredSelection) selection).getFirstElement();
-				
-				if (argument == null){
-					return new Object[]{};
-				}
-				
-				List<Object> rows = Lists.newArrayList();
-				
-				for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()))){
-					if (!hidden.contains(capability.getUniqueId())){
-						rows.add(new InspectorRow(capability, argument));
-					}
-				}
-				
-				for (Object other : CapabilityExecutor.corresponding(argument)){
-					for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(other.getClass()))){
-						if (!hidden.contains(capability.getUniqueId())){
-							rows.add(new InspectorRow(capability, other));
-						}
-					}
-				}
-				
-				return rows.toArray(new Object[]{});
-			}else{
+
+			if (argument == null){
 				return new Object[]{};
 			}
+
+			List<Object> rows = Lists.newArrayList();
+
+			for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()))){
+				if (!hidden.contains(capability.getUniqueId())){
+					rows.add(new InspectorRow(capability, argument));
+				}
+			}
+
+			for (Object other : CapabilityExecutor.corresponding(argument)){
+				for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(other.getClass()))){
+					if (!hidden.contains(capability.getUniqueId())){
+						rows.add(new InspectorRow(capability, other));
+					}
+				}
+			}
+
+			return rows.toArray(new Object[]{});
 		}
 
 		@Override
 		public void selectionChanged(IWorkbenchPart part, final ISelection selection) {
 			cancelOldJobs();
-			viewer.setInput(selection);
+			if (selection instanceof StructuredSelection){
+				// TODO handle multiple data case
+				Object argument = ((StructuredSelection) selection).getFirstElement();
+				viewer.setInput(argument);
+			}else{
+				// TODO handle other selection types
+			}
+		}
+
+		@Override
+		public void selectionChanged(IWorkbenchPart part, Object data) {
+			cancelOldJobs();
+			viewer.setInput(data);
+		}
+
+		@Override
+		public void selectionChanged(IWorkbenchPart part, Object[] data) {
+			// TODO handle multiple data case
+			cancelOldJobs();
+			viewer.setInput(data[0]);
 		}
 	}
 	

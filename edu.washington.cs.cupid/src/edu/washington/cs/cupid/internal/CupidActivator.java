@@ -6,12 +6,19 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.IPageListener;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.shadow.ShadowProjectManager;
 import edu.washington.cs.cupid.standard.MostFrequent;
 
@@ -37,6 +44,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	private static CupidActivator plugin;
 	
 	private final ShadowProjectManager shadowManager = new ShadowProjectManager();
+	private CupidSelectionService selectionManager;
 	
 	public CupidActivator() {
 	}
@@ -49,7 +57,7 @@ public class CupidActivator extends AbstractUIPlugin{
 		registerPublisherExtensions();
 		
 		CupidPlatform.getCapabilityRegistry().registerStaticCapability(new MostFrequent());
-		
+	
 //      TWS: disabled while getting pure plug-ins to work
 //		for (IProject p :  ResourcesPlugin.getWorkspace().getRoot().getProjects() ){
 //			if (!p.isHidden() && !ProjectSynchronizer.isShadowProject(p)){
@@ -59,6 +67,46 @@ public class CupidActivator extends AbstractUIPlugin{
 //				sync.stop();
 //			}
 //		}
+		
+		selectionManager = CupidSelectionService.getInstance();
+		
+		final IWorkbench workbench = PlatformUI.getWorkbench();
+		
+		for (IWorkbenchWindow window : workbench.getWorkbenchWindows()){
+			window.getSelectionService().addSelectionListener(selectionManager);
+		}
+		
+		workbench.getDisplay().asyncExec(new Runnable(){
+			@Override
+			public void run() {
+				IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+				
+				for (IWorkbenchPage page : window.getPages()){
+					for (IViewReference view : page.getViewReferences()){
+						selectionManager.injectListeners(view);
+					}
+					
+					page.addPartListener(selectionManager);
+				}
+				
+				window.addPageListener(new IPageListener(){
+					@Override
+					public void pageActivated(IWorkbenchPage page) {
+						page.addPartListener(selectionManager);
+					}
+					@Override
+					public void pageClosed(IWorkbenchPage page) {
+						page.removePartListener(selectionManager);
+					}
+					@Override
+					public void pageOpened(IWorkbenchPage page) {
+						page.addPartListener(selectionManager);
+					}
+				});
+			}
+		});
+
+		
 	}
 
 	/**

@@ -4,16 +4,25 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
+import com.google.common.reflect.TypeToken;
+
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
 import edu.washington.cs.cupid.wizards.internal.ValueMapping;
 
 public class MappingWizard extends Wizard{
-	private MappingPage page = new MappingPage();
+	private MappingPage page;
+	
+	public MappingWizard(TypeToken<?> keyType){
+		this.setWindowTitle("New Mapping Capability");
+		page = new MappingPage(keyType);
+		this.addPage(page);
+	}
 	
 	public MappingWizard(){
 		this.setWindowTitle("New Mapping Capability");
+		page = new MappingPage();
 		this.addPage(page);
 	}
 	

@@ -14,6 +14,7 @@ import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 
 public class SchedulingRuleRegistry implements ISchedulingRuleRegistry{
 
+	@SuppressWarnings("rawtypes")
 	private Map<Class, ICupidSchedulingRule> registry = Maps.newHashMap();
 
 	public static class NullSchedulingRule implements ISchedulingRule{
@@ -33,6 +34,7 @@ public class SchedulingRuleRegistry implements ISchedulingRuleRegistry{
 		registry.put(rule.getRuleClass(), rule);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public ISchedulingRule getSchedulingRule(Object object) {
 		Class<?> rt = object.getClass();

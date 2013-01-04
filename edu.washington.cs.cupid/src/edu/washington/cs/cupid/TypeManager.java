@@ -132,7 +132,9 @@ public final class TypeManager {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object getCompatible(ICapability<?,?> capability, Object argument){
-		if (isJavaCompatible(capability.getParameterType(), TypeToken.of(argument.getClass()))){
+		if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)){
+			return argument;
+		}else if (isJavaCompatible(capability.getParameterType(), TypeToken.of(argument.getClass()))){
 			return argument;
 		}else{
 			@SuppressWarnings("rawtypes")

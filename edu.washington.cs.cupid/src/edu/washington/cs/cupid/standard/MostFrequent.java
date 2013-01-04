@@ -15,7 +15,6 @@ import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 
 public class MostFrequent<V> extends GenericAbstractCapability<List<V>, V>{
 	
-	// TODO does type erasure break this?
 	// TODO make efficient
 	
 	public MostFrequent(){

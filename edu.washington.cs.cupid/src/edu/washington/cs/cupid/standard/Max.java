@@ -5,28 +5,37 @@ import java.util.Collections;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 
-@SuppressWarnings("rawtypes")
-public class Max<V extends Comparable> extends AbstractCapability<Collection<V>, V>{
-	
-	// TODO does type erasure break this?
+public class Max<V extends Comparable<V>> extends GenericAbstractCapability<Collection<V>, V>{
 	
 	public Max(){
 		super(
 				"Max", 
 				"edu.washington.cs.cupid.standard.max",
 				"Get the maximum element in a collection",
-				new TypeToken<Collection<V>>(){}, new TypeToken<V>(){},
 				Flag.PURE);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public CapabilityJob<Collection<V>, V> getJob(Collection<V> input) {
 		return new ImmediateJob<Collection<V>, V> (this, input, (V) Collections.max(input) );
+	}
+
+	@Override
+	public TypeToken<Collection<V>> getParameterType() {
+		return new TypeToken<Collection<V>>(getClass()){
+			private static final long serialVersionUID = 1L;
+		};
+	}
+
+	@Override
+	public TypeToken<V> getReturnType() {
+		return new TypeToken<V>(getClass()){
+			private static final long serialVersionUID = 1L;
+		};
 	}
 
 }

@@ -61,6 +61,12 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		addLabel(container, "&Name:");
 		nameText = new Text(container, SWT.BORDER | SWT.SINGLE);
 		initText(nameText, 2);
+		nameText.addModifyListener(new ModifyListener(){
+			@Override
+			public void modifyText(ModifyEvent e) {
+				validateName();
+			}
+		});
 		
 		addLabel(container, "&Description:");
 		descriptionText = new Text(container, SWT.BORDER | SWT.SINGLE);
@@ -135,7 +141,7 @@ public class JavaCapabilityWizardPage extends WizardPage {
 			dialog = JavaUI.createTypeDialog(this.getShell(), 
 					null,
 					Activator.getDefault().getCupidProject(),
-					IJavaElementSearchConstants.CONSIDER_TYPES,
+					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES ,
 					false);
 		} catch (JavaModelException e) {
 			return null;
@@ -210,6 +216,17 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		}
 		
 		updateStatus(null);
+	}
+	
+	private void validateName(){
+		String name =  nameText.getText();
+		boolean isValid = name.matches("[a-zA-Z][a-zA-Z1-9 ]*");
+		
+		if (isValid){
+			updateStatus(null);
+		}else{
+			updateStatus("Invalid capability name");
+		}
 	}
 
 	private void updateStatus(String message) {

@@ -50,7 +50,11 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 		page = new JavaCapabilityWizardPage(selection);
 		addPage(page);
 	}
-
+	
+	private String formClassName(String name){
+		return name.replaceAll(" ", "");
+	}
+	
 	/**
 	 * This method is called when 'Finish' button is pressed in
 	 * the wizard. We will create an operation and run it
@@ -104,13 +108,15 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 	 */
 
 	private void doFinish(String name, String id, String description, Class<?> parameterType, Class<?> returnType, IProgressMonitor monitor) throws Exception{
-		
+				
 		// create a sample file
+		String className = formClassName(name);
+		
 		monitor.beginTask("Creating " + name, 2);
 		
 		IProject cupid = Activator.getDefault().getCupidProject();
 		
-		final IFile file = cupid.getFolder("src").getFile(new Path(name + ".java"));
+		final IFile file = cupid.getFolder("src").getFile(new Path(className + ".java"));
 		
 		file.create(openContents(name, id, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
 	
@@ -131,6 +137,7 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 	}
 	
 	private InputStream openContents(String name, String id, String description, Class<?> paramType, Class<?> returnType, String charSet) throws UnsupportedEncodingException, ParserConfigurationException, TransformerException{
+		String className = formClassName(name);
 		String separator = System.getProperty("line.separator");
 		
 		StringBuilder builder = new StringBuilder();
@@ -143,11 +150,11 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 			builder.append("import " + clazz + ";").append(separator);
 		}
 		
-		builder.append("public class " + name + " extends AbstractCapability<" + paramType.getSimpleName() + "," + returnType.getSimpleName() + ">{").append(separator);
+		builder.append("public class " + className + " extends AbstractCapability<" + paramType.getSimpleName() + "," + returnType.getSimpleName() + ">{").append(separator);
 		
 		String [] ctorLines = new String[]{
-				"public " + name + "(){",
-				"\tsuper(\"" + name + "\", \"" + id + "\",",
+				"public " + className + "(){",
+				"\tsuper(\"" + className + "\", \"" + id + "\",",
 				"\t\"" + description + "\",",
 				"\t" + paramType.getSimpleName() + ".class, " + returnType.getSimpleName() + ".class,",
 				"\tFlag.PURE, Flag.LOCAL);",

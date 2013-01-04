@@ -11,9 +11,9 @@
          <menu
                label="Cupid"
                id="cupidMenu">
-            <separator
+            <groupMarker
                   name="cupidGroup">
-            </separator>
+            </groupMarker>
          </menu>
          <action
                class="edu.washington.cs.cupid.wizards.actions.CreateMappingAction"

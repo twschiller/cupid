@@ -1,5 +1,7 @@
 package edu.washington.cs.cupid.internal;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
@@ -15,13 +17,19 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.google.common.collect.Lists;
+
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.shadow.ShadowProjectManager;
+import edu.washington.cs.cupid.standard.Count;
+import edu.washington.cs.cupid.standard.Empty;
+import edu.washington.cs.cupid.standard.Max;
 import edu.washington.cs.cupid.standard.MostFrequent;
+import edu.washington.cs.cupid.standard.NonEmpty;
 import edu.washington.cs.cupid.types.ITypeAdapter;
 import edu.washington.cs.cupid.types.ITypeAdapterPublisher;
 
@@ -42,7 +50,6 @@ public class CupidActivator extends AbstractUIPlugin{
 	
 	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter";
 	
-	
 	/**
 	 * The shared instance
 	 */
@@ -51,6 +58,8 @@ public class CupidActivator extends AbstractUIPlugin{
 	private final ShadowProjectManager shadowManager = new ShadowProjectManager();
 	
 	private CupidSelectionService selectionManager;
+	
+//	private SearchablePluginsManager pluginsManager;
 	
 	public CupidActivator() {
 	}
@@ -63,8 +72,19 @@ public class CupidActivator extends AbstractUIPlugin{
 		registerPublisherExtensions();
 		registerTypeAdapterExtensions();
 		
-		CupidPlatform.getCapabilityRegistry().registerStaticCapability(new MostFrequent());
-	
+		// register standard capabilities
+		@SuppressWarnings("rawtypes")
+		List<ICapability> standard = Lists.<ICapability>newArrayList(
+				new Count(),
+				new Empty(),
+				new Max(),
+				new MostFrequent(),
+				new NonEmpty());
+		
+		for (ICapability<?,?> capability : standard){
+			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			
+		}
+		
 //      TWS: disabled while getting pure plug-ins to work
 //		for (IProject p :  ResourcesPlugin.getWorkspace().getRoot().getProjects() ){
 //			if (!p.isHidden() && !ProjectSynchronizer.isShadowProject(p)){
@@ -113,7 +133,6 @@ public class CupidActivator extends AbstractUIPlugin{
 			}
 		});
 
-		
 	}
 
 	private void registerTypeAdapterExtensions(){

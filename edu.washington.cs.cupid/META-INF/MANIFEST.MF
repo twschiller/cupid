@@ -34,3 +34,6 @@ Bundle-ClassPath: lib/TimeOperations.jar,
  .,
  lib/guava-12.0.1.jar,
  lib/gson-2.2.2.jar
+Import-Package: org.eclipse.jdt.launching,
+ org.eclipse.pde.core,
+ org.eclipse.pde.internal.core.util

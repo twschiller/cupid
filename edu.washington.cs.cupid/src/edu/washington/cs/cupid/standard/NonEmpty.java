@@ -6,22 +6,34 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 
-@SuppressWarnings("rawtypes")
-public class NonEmpty extends AbstractCapability<Collection<?>, Boolean> {
+public class NonEmpty<V> extends GenericAbstractCapability<Collection<V>, Boolean> {
 
 	public NonEmpty(){
 		super(
 				"NonEmpty", 
 				"edu.washington.cs.cupid.standard.nonempty",
 				"True if the input is non empty",
-				Types.GENERIC_COLLECTION, TypeToken.of(Boolean.class),
 				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<Collection<?>, Boolean> getJob(Collection input) {
-		return new ImmediateJob<Collection<?>, Boolean> (this, input, !input.isEmpty());
+	public CapabilityJob<Collection<V>, Boolean> getJob(Collection<V> input) {
+		return new ImmediateJob<Collection<V>, Boolean> (this, input, !input.isEmpty());
 	}
+
+	@Override
+	public TypeToken<Collection<V>> getParameterType() {
+		return new TypeToken<Collection<V>>(getClass()){
+			private static final long serialVersionUID = 1L;
+		};
+	}
+
+	@Override
+	public TypeToken<Boolean> getReturnType() {
+		return TypeToken.of(Boolean.class);
+	}
+
 }

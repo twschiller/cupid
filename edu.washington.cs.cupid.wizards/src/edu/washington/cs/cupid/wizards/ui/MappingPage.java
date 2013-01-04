@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.TreeColumn;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;

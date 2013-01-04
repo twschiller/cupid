@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.CapabilityExecutor;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
@@ -72,7 +72,7 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	public synchronized Set<ICapability<?,?>> getCapabilities(TypeToken<?> type){
 		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
 		for (ICapability<?,?> capability : capabilities){
-			if (CapabilityExecutor.isCompatible(capability, type)){
+			if (TypeManager.isCompatible(capability, type)){
 				result.add(capability);
 			}
 		}
@@ -84,8 +84,8 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
 		for (ICapability<?,?> capability : capabilities){
 			
-			if (CapabilityExecutor.isCompatible(capability, inputType) &&
-				CapabilityExecutor.isResultCompatible(capability, outputType)){
+			if (TypeManager.isCompatible(capability, inputType) &&
+				TypeManager.isJavaCompatible(outputType, capability.getReturnType())){
 			
 				result.add(capability);
 			}
@@ -98,7 +98,7 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
 		for (ICapability<?,?> capability : capabilities){
 			
-			if (CapabilityExecutor.isResultCompatible(capability, outputType)){
+			if (TypeManager.isJavaCompatible(outputType, capability.getReturnType())){
 				result.add(capability);
 			}
 		}
@@ -110,7 +110,7 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	public synchronized Set<ICapability<?, Boolean>> getPredicates() {
 		Set<ICapability<?,Boolean>> result = Sets.newIdentityHashSet();
 		for (ICapability<?,?> capability : capabilities){
-			if (CapabilityExecutor.isResultCompatible(capability, TypeToken.of(Boolean.class))){
+			if (TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())){
 				result.add((ICapability<?, Boolean>) capability);
 			}
 		}

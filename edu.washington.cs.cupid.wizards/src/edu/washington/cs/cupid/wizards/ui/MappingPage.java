@@ -39,6 +39,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
@@ -400,7 +401,7 @@ public class MappingPage extends WizardPage {
 		if (keyAsType){
 			return generator.getParameterType().equals(ICapability.UNIT_TOKEN);
 		}else if (keySet != null){
-			return CapabilityExecutor.isCompatible(generator, keySet.getParameterType());
+			return TypeManager.isCompatible(generator, keySet.getParameterType());
 		}else{
 			return true;
 		}

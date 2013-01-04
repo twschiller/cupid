@@ -23,8 +23,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
@@ -35,6 +33,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.internal.CupidActivator;
@@ -226,15 +225,9 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 
 			for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()))){
 				if (!hidden.contains(capability.getUniqueId())){
-					rows.add(new InspectorRow(capability, argument));
-				}
-			}
-
-			for (Object other : CapabilityExecutor.corresponding(argument)){
-				for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(other.getClass()))){
-					if (!hidden.contains(capability.getUniqueId())){
-						rows.add(new InspectorRow(capability, other));
-					}
+					
+					Object adapted = TypeManager.getCompatible(capability, argument);
+					rows.add(new InspectorRow(capability, adapted));
 				}
 			}
 

@@ -16,11 +16,14 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.shadow.ShadowProjectManager;
 import edu.washington.cs.cupid.standard.MostFrequent;
+import edu.washington.cs.cupid.types.ITypeAdapter;
+import edu.washington.cs.cupid.types.ITypeAdapterPublisher;
 
 /**
  * Activator and life-cycle manager for Cupid
@@ -37,6 +40,8 @@ public class CupidActivator extends AbstractUIPlugin{
 	
 	public static final String CAPABILITY_ID = "edu.washington.cs.cupid.capability"; //$NON-NLS-1$
 	
+	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter";
+	
 	
 	/**
 	 * The shared instance
@@ -44,6 +49,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	private static CupidActivator plugin;
 	
 	private final ShadowProjectManager shadowManager = new ShadowProjectManager();
+	
 	private CupidSelectionService selectionManager;
 	
 	public CupidActivator() {
@@ -55,6 +61,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	
 		registerCapabilityExtensions();
 		registerPublisherExtensions();
+		registerTypeAdapterExtensions();
 		
 		CupidPlatform.getCapabilityRegistry().registerStaticCapability(new MostFrequent());
 	
@@ -109,6 +116,24 @@ public class CupidActivator extends AbstractUIPlugin{
 		
 	}
 
+	private void registerTypeAdapterExtensions(){
+		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
+				.getConfigurationElementsFor(CupidActivator.TYPE_ADAPTER_ID);
+
+		for (IConfigurationElement extension : extensions){
+			try {
+				
+				ITypeAdapterPublisher publisher = ((ITypeAdapterPublisher) extension.createExecutableExtension("adapter"));
+				
+				for (ITypeAdapter<?,?> adapter : publisher.publish()){
+					TypeManager.getTypeAdapterRegistry().registerAdapter(adapter);
+				}
+			} catch (CoreException ex) {
+				logError("Error registering capabilities for extension " + extension.getName(), ex);
+			}
+		}
+	}
+	
 	/**
 	 * Register static capabilities
 	 */

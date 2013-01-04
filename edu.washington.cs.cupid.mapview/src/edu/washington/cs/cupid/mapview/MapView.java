@@ -26,6 +26,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
@@ -127,20 +128,9 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 		if (input == null || capability == null){
 			return;
 		}
-		
-		if (CapabilityExecutor.isCompatible(capability, input)){
-			// NO OP
-		}else{
-			for (Object o : CapabilityExecutor.corresponding(input)){
-				input = null;
-				if (CapabilityExecutor.isCompatible(capability, o)){
-					input = o;
-				}
-			}
-		}
-		
-		if (input != null){
-			CapabilityExecutor.asyncExec(capability, CapabilityExecutor.getCompatible(capability, input), MapView.this, new NullJobListener(){
+			
+		if (input != null && TypeManager.isCompatible(capability, input)){
+			CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, input), MapView.this, new NullJobListener(){
 				@Override
 				public void done(IJobChangeEvent event) {
 					CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
@@ -172,7 +162,7 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 					dropDownMenu.removeAll();
 					
 					for (final ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
-						if (CapabilityExecutor.isResultCompatible(capability, ACCEPT)){
+						if (TypeManager.isJavaCompatible(ACCEPT, capability.getReturnType())){
 							dropDownMenu.add(new Action(capability.getName()){
 								@Override
 								public void run() {

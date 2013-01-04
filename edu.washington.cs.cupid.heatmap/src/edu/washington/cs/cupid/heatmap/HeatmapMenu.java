@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 
 /**
@@ -31,7 +31,7 @@ public class HeatmapMenu extends CompoundContributionItem{
 			Map<String,String> parameters = Maps.newHashMap();
 			parameters.put("cupid.heatmap.pipeline", capability.getUniqueId());
 			
-			if (CapabilityExecutor.isResultCompatible(capability, TypeToken.of(Number.class))){
+			if (TypeManager.isJavaCompatible(TypeToken.of(Number.class), capability.getReturnType())){
 				CommandContributionItemParameter ccip = new CommandContributionItemParameter(
 						PlatformUI.getWorkbench(), "",
 						"cupid.heatmap.toggle",

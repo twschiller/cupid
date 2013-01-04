@@ -80,12 +80,6 @@ public class MarkerManager {
 				for (ICapability<?,?> capability : registry.getCapabilities(TypeToken.of(input.getClass()), IMarkerBuilder.MARKER_RESULT )){
 					asyncAddMarkers(capability, input, input);
 				}
-				
-				for (Object other : CapabilityExecutor.corresponding(input)){
-					for (ICapability<?,?> capability : registry.getCapabilities(TypeToken.of(other.getClass()), IMarkerBuilder.MARKER_RESULT)){
-						asyncAddMarkers(capability, input, other);
-					}
-				}
 			}
 		}
 

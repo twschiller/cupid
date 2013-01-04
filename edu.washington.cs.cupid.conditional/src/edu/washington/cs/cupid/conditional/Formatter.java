@@ -51,6 +51,7 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 
 /**
@@ -88,6 +89,8 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	private Class<?> partPaneClazz = null;
 	private Method getPaneMethod = null;
 	private Method getControlMethod = null;
+	
+	private final ISchedulingRuleRegistry scheduler = CapabilityExecutor.getSchedulingRuleRegistry();
 	
 	public Formatter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
 		workbenchPartReferenceClazz = Class.forName("org.eclipse.ui.internal.WorkbenchPartReference");
@@ -422,7 +425,9 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 					Set<Object> inputs = Sets.newHashSet(activeObjects.keySet());
 
 					for (Object input : inputs){
-						if (resource.isConflicting(CapabilityExecutor.schedulingRule(input))){
+						
+						
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
 							
 							Collection<Item> items = activeObjects.get(input);
 							

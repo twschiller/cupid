@@ -4,6 +4,7 @@
    <extension-point id="edu.washington.cs.cupid.publish" name="Publish Capability" schema="schema/publish.exsd"/>
    <extension-point id="edu.washington.cs.cupid.capability" name="Capability" schema="schema/capability.exsd"/>
    <extension-point id="edu.washington.cs.cupid.type.adapter" name="Type Adapter Publisher" schema="schema/type-adapter.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.scheduling.rule" name="Scheduling Rule" schema="schema/schedule-rule.exsd"/>
  
    <extension
          point="org.eclipse.ui.views">

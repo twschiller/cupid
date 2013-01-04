@@ -19,10 +19,12 @@ import org.osgi.framework.BundleContext;
 
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.jobs.ICupidSchedulingRule;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.shadow.ShadowProjectManager;
 import edu.washington.cs.cupid.standard.Count;
@@ -48,7 +50,9 @@ public class CupidActivator extends AbstractUIPlugin{
 	
 	public static final String CAPABILITY_ID = "edu.washington.cs.cupid.capability"; //$NON-NLS-1$
 	
-	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter";
+	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter"; //$NON-NLS-1$
+	
+	public static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.scheduling.rule"; //$NON-NLS-1$
 	
 	/**
 	 * The shared instance
@@ -71,6 +75,7 @@ public class CupidActivator extends AbstractUIPlugin{
 		registerCapabilityExtensions();
 		registerPublisherExtensions();
 		registerTypeAdapterExtensions();
+		registerSchedulingRuleExtensions();
 		
 		// register standard capabilities
 		@SuppressWarnings("rawtypes")
@@ -135,6 +140,23 @@ public class CupidActivator extends AbstractUIPlugin{
 
 	}
 
+	
+	private void registerSchedulingRuleExtensions(){
+		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
+				.getConfigurationElementsFor(CupidActivator.SCHEDULING_RULE_ID);
+
+		for (IConfigurationElement extension : extensions){
+			try {
+				
+				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension("rule"));
+				CapabilityExecutor.getSchedulingRuleRegistry().registerSchedulingRule(rule);
+				
+			} catch (CoreException ex) {
+				logError("Error registering scheduling rules for extension " + extension.getName(), ex);
+			}
+		}
+	}
+	
 	private void registerTypeAdapterExtensions(){
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.TYPE_ADAPTER_ID);

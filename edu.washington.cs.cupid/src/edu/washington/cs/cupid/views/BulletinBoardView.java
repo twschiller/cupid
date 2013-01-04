@@ -2,15 +2,19 @@ package edu.washington.cs.cupid.views;
 
 import java.util.List;
 
+
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
@@ -18,6 +22,7 @@ import org.eclipse.ui.part.ViewPart;
 import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
@@ -52,13 +57,7 @@ public class BulletinBoardView extends ViewPart  {
 		
 		@Override
 		public Object[] getElements(Object parent) {
-			List<String> names = Lists.newArrayList();
-		
-			for (ICapability<?,?> x : publisher.publish()){
-				names.add(x.getName() + ": " + x.getDescription());
-			}
-			
-			return names.toArray(new String[]{});
+			return publisher.publish();	
 		}
 
 		@Override
@@ -72,30 +71,63 @@ public class BulletinBoardView extends ViewPart  {
 		}
 	}
 	
-	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider {
-		public String getColumnText(Object obj, int index) {
-			return getText(obj);
-		}
-		public Image getColumnImage(Object obj, int index) {
-			return getImage(obj);
-		}
-		public Image getImage(Object obj) {
-			return PlatformUI.getWorkbench().
-					getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
-		}
-	}
-	
 	/**
 	 * The constructor.
 	 */
 	public BulletinBoardView() {		
 	}
 	
+	private TableViewerColumn createColumn(String title, int bound, final int colNumber) {
+	    final TableViewerColumn viewerColumn = new TableViewerColumn(viewer, SWT.LEFT);
+	    final TableColumn column = viewerColumn.getColumn();
+	    column.setText(title);
+	    column.setWidth(bound);
+	    column.setResizable(true);
+	    column.setMoveable(false);
+	    return viewerColumn;
+	}
+	
 	@Override
 	public void createPartControl(Composite parent) {	
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider(CupidPlatform.getCapabilityRegistry()));
-		viewer.setLabelProvider(new ViewLabelProvider());
+		//viewer.setLabelProvider(new ViewLabelProvider());
+		
+		
+		final TableViewerColumn nameColumn = createColumn("Name", 100, 0);
+		nameColumn.setLabelProvider(new ColumnLabelProvider(){
+			@Override
+			public String getText(Object element) {
+				return ((ICapability<?,?>) element).getName();
+			}
+		});
+		
+		final TableViewerColumn descriptionColumn = createColumn("Description", 200, 1);
+		descriptionColumn.setLabelProvider(new ColumnLabelProvider(){
+			@Override
+			public String getText(Object element) {
+				return ((ICapability<?,?>) element).getDescription();
+			}
+		});
+		
+		final TableViewerColumn inputColumn = createColumn("Input", 100, 2);
+		inputColumn.setLabelProvider(new ColumnLabelProvider(){
+			@Override
+			public String getText(Object element) {
+				return TypeManager.simpleTypeName(((ICapability<?,?>) element).getParameterType().getType());
+			}
+		});
+		
+		final TableViewerColumn outputColumn = createColumn("Output", 100, 2);
+		outputColumn.setLabelProvider(new ColumnLabelProvider(){
+			@Override
+			public String getText(Object element) {
+				return TypeManager.simpleTypeName(((ICapability<?,?>) element).getReturnType().getType());
+			}
+		});
+		
+		viewer.getTable().setHeaderVisible(true);
+		viewer.getTable().setLinesVisible(true);
 		viewer.setInput(getViewSite());
 	}
 	

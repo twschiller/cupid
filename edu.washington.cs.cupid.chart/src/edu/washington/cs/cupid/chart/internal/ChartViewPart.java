@@ -26,6 +26,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
@@ -89,7 +90,7 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 					
 					for (final ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
 						for (TypeToken<?> type : accepts()){
-							if (CapabilityExecutor.isResultCompatible(capability, type)){
+							if (TypeManager.isJavaCompatible(type, capability.getReturnType())){
 								dropDownMenu.add(new Action(capability.getName()){
 									@Override
 									public void run() {
@@ -120,7 +121,7 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 			
 			final List compatible = Lists.newArrayList();
 			for (Object x : all.toList()){
-				if (CapabilityExecutor.isCompatible(capability, x)){
+				if (TypeManager.isCompatible(capability, x)){
 					compatible.add(x);
 				}
 			}
@@ -128,7 +129,7 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 			results = Maps.newConcurrentMap();
 			
 			for (final Object x : compatible){
-				CapabilityExecutor.asyncExec(capability, CapabilityExecutor.getCompatible(capability, x), ChartViewPart.this, new NullJobListener(){
+				CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, x), ChartViewPart.this, new NullJobListener(){
 					@Override
 					public void done(IJobChangeEvent event) {
 						CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();

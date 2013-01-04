@@ -1,14 +1,9 @@
 package edu.washington.cs.cupid;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -22,10 +17,7 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -44,7 +36,6 @@ import edu.washington.cs.cupid.capability.MalformedCapabilityException;
 import edu.washington.cs.cupid.capability.TypeException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
-import edu.washington.cs.cupid.internal.Utility;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -487,89 +478,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			log (event.getJob(), "sleeping");
 		}	
 	}
-	
-	/**
-	 * @param capability the capability
-	 * @param argumentType the argument type
-	 * @return <code>true</code> iff an argument of type <code>argumentType</code> can be supplied as the argument
-	 * for <code>capability</code>
-	 */
-	public static boolean isCompatible(ICapability<?,?> capability, TypeToken<?> argumentType){
-		
-		if (capability == null){
-			throw new IllegalArgumentException("Capability cannot be null");
-		}else if (capability.getParameterType() == null){
-			throw new IllegalArgumentException("Capability " + capability.getName() + " has null parameter type");
-		}
-		
-		Type paramType = capability.getParameterType().getType();
-		
-		if (capability.getParameterType().getRawType().equals(Integer.class) && argumentType.getRawType().equals(int.class)){
-			return true;
-		}else if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)){
-			return true;
-		}else if (paramType instanceof ParameterizedType){
-			if (capability.getParameterType().getRawType().isAssignableFrom(argumentType.getRawType())){
-				// check if type is all variables (i.e., fully generic)
-				for (Type arg : ((ParameterizedType) paramType).getActualTypeArguments()){
-					if (!(arg instanceof TypeVariable)){
-						return capability.getParameterType().isAssignableFrom(argumentType);
-					}
-				}
-				return true;
-			}else{
-				return false;
-			}
-		}else{
-			return capability.getParameterType().isAssignableFrom(argumentType);
-		}
-	}
-	
-	public static boolean isResultCompatible(ICapability<?,?> capability, TypeToken<?> resultType){
-		return resultType.isAssignableFrom(capability.getReturnType());
-	}
-	
-	/**
-	 * @param capability the capability
-	 * @param argument the argument
-	 * @return  <code>true</code> iff <code>argument</code> can be supplied as the argument
-	 * for <code>capability</code>
-	 */
-	public static boolean isCompatible(ICapability<?,?> capability, Object argument){
-		if (isCompatible(capability, TypeToken.of(argument.getClass()))){
-			return true;
-		}else{
-			for (Object other : corresponding(argument)){
-				if (isCompatible(capability, other.getClass())){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * @param capability the capability
-	 * @param argument the suggested argument
-	 * @return <code>argument</code> iff it is compatible with <code>capability</code>; 
-	 * a corresponding compatible argument, otherwise
-	 * @throws IllegalArgument Exception iff a compatible argument cannot be found
-	 * @see {@link Utility#isCompatible(ICapability, Object)}
-	 * @see {@link Utility#corresponding(Object)}
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T getCompatible(ICapability<T,?> capability, Object argument){
-		if (isCompatible(capability, TypeToken.of(argument.getClass()))){
-			return (T) argument;
-		}else{
-			for (Object other : corresponding(argument)){
-				if (isCompatible(capability, other.getClass())){
-					return (T) other;
-				}
-			}
-		}
-		throw new IllegalArgumentException("Argument is not compatible with capability");
-	}
+
 	
 	/**
 	 * @param o an object
@@ -585,31 +494,6 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			return ((IJavaElement) o).getSchedulingRule();
 		}else{
 			throw new IllegalArgumentException("Scheduling rule not defined for type " + o.getClass().getName());
-		}
-	}
-	
-	/**
-	 * Returns objects (e.g., {@link IResource}s) that are in one-to-one corresponding
-	 * with the supplied object. For example, each {@link ICompilationUnit} corresponds to at
-	 * most a single {@link IFile}.
-	 * @param o the object
-	 * @deprecated an extension point will be exposed to provide correspondences
-	 * @return objects the correspond to object <code>o</code>
-	 */
-	public static Object[] corresponding(Object o){
-		// TODO expose extension point for correspondence rules
-		
-		if (o instanceof IJavaElement){
-			try {
-				IResource corresponding = ((IJavaElement) o).getCorrespondingResource();
-				return corresponding != null ? new Object[] { corresponding } : new Object[] {  };
-			} catch (JavaModelException e) {
-				return new Object[]{};
-			}
-		}else if (o instanceof IProject){
-			return new Object [] {JavaCore.create((IProject)o)}; 
-		}else{
-			return new Object[]{};
 		}
 	}
 	

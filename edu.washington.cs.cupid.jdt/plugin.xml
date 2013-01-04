@@ -22,5 +22,11 @@
             class="edu.washington.cs.cupid.jdt.Activator">
       </client>
    </extension>
+   <extension
+         point="edu.washington.cs.cupid.type.adapter">
+      <adapter
+            adapter="edu.washington.cs.cupid.jdt.types.JdtTypeAdapters">
+      </adapter>
+   </extension>
 
 </plugin>

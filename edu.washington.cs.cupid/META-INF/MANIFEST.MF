@@ -27,6 +27,7 @@ Export-Package: com.google.common.base,
  edu.washington.cs.cupid.jobs,
  edu.washington.cs.cupid.select,
  edu.washington.cs.cupid.standard,
+ edu.washington.cs.cupid.types,
  edu.washington.cs.cupid.utility
 Bundle-ClassPath: lib/TimeOperations.jar,
  lib/ZipOperations.jar,

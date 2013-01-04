@@ -43,6 +43,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
@@ -277,7 +278,7 @@ public class CreatePipelinePage extends WizardPage{
 			
 			for (int i = 1; i < current.size(); i++){
 				ICapability<?,?> next = current.get(i);
-				if (!CapabilityExecutor.isCompatible(next, last)){
+				if (!TypeManager.isCompatible(next, last)){
 					result.add("Capability " + next.getName() + " with input " + next.getParameterType() + " is not compatible with type " + last);
 				}
 				last = next.getReturnType();
@@ -313,7 +314,7 @@ public class CreatePipelinePage extends WizardPage{
 						?  (ICapability<?,?>) element
 						:  ((DerivedCapability) element).getCapability();
 				
-				if (CapabilityExecutor.isCompatible(capability, current.get(current.size()-1).getReturnType())){
+				if (TypeManager.isCompatible(capability, current.get(current.size()-1).getReturnType())){
 					return null;
 				}else{
 					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);

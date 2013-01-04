@@ -6,6 +6,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 
 @SuppressWarnings("restriction")
@@ -27,7 +28,7 @@ public class HeatMapLabelProvider extends DecoratingJavaLabelProvider{
 	
 	@Override
 	public Color getBackground(Object element) {
-		if (capability != null && CapabilityExecutor.isCompatible(capability, element)){
+		if (capability != null && TypeManager.isCompatible(capability, element)){
 			try {
 				@SuppressWarnings("unchecked")
 				Number result = (Number) CapabilityExecutor.exec(capability, element);

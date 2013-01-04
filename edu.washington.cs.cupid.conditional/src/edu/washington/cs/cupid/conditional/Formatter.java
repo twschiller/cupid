@@ -44,6 +44,7 @@ import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.IInvalidationListener;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
@@ -297,9 +298,9 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				// TODO error information needs to be aggregated and passed up the line
 			}
 
-			if (CapabilityExecutor.isCompatible(capability, input)){
+			if (TypeManager.isCompatible(capability, input)){
 				matches++;
-				asyncFormat(item, rule, capability, input);
+				asyncFormat(item, rule, capability, TypeManager.getCompatible(capability, input));
 			}
 		}
 		

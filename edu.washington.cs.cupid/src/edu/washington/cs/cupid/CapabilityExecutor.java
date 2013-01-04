@@ -15,7 +15,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -36,6 +35,8 @@ import edu.washington.cs.cupid.capability.MalformedCapabilityException;
 import edu.washington.cs.cupid.capability.TypeException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
+import edu.washington.cs.cupid.internal.SchedulingRuleRegistry;
+import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -101,7 +102,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private final JobResultCacher cacher = new JobResultCacher();
 	private final JobLogger logger = new JobLogger();
 	private final JobReaper reaper = new JobReaper();
-	
+	private final ISchedulingRuleRegistry scheduler = new SchedulingRuleRegistry();
+
 	private static final CapabilityCacheFactory cacheFactory = new CapabilityCacheFactory();
 	
 	private CapabilityExecutor(){
@@ -137,6 +139,10 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 
+	public static ISchedulingRuleRegistry getSchedulingRuleRegistry(){
+		return getInstance().scheduler;
+	}
+	
 	/**
 	 * Initializes the default capability result cache for an input
 	 * @author Todd Schiller (tws@cs.washington.edu)
@@ -341,7 +347,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					// invalidate cache lines
 					Set<Object> invalidCacheEntries = Sets.newHashSet();
 					for (Object input : resultCaches.asMap().keySet()){
-						if (resource.isConflicting(schedulingRule(input))){
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
 							invalidCacheEntries.add(input);
 						}
 					}
@@ -357,7 +363,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					
 					// cancel obsolete jobs
 					for (Object input : running.rowKeySet()){
-						if (resource.isConflicting(schedulingRule(input))){
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
 							for (CapabilityJob<?,?> job : running.row(input).values()){
 								job.cancel();
 							}
@@ -477,24 +483,6 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		public void sleeping(IJobChangeEvent event) {
 			log (event.getJob(), "sleeping");
 		}	
-	}
-
-	
-	/**
-	 * @param o an object
-	 * @deprecated an extension point will be exposed to provide scheduling rules
-	 * @return the scheduling rule associated with the object
-	 */
-	public static ISchedulingRule schedulingRule(Object o){
-		// TODO expose extension point for scheduling rules
-		
-		if (o instanceof ISchedulingRule){
-			return (ISchedulingRule) o;
-		}else if (o instanceof IJavaElement){
-			return ((IJavaElement) o).getSchedulingRule();
-		}else{
-			throw new IllegalArgumentException("Scheduling rule not defined for type " + o.getClass().getName());
-		}
 	}
 	
 	/**

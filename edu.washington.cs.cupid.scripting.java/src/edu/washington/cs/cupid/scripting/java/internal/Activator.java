@@ -7,6 +7,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
@@ -43,10 +44,11 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	private IProject cupidProject = null;
 	
 	private static List<ICapability<?,?>> dynamic = Lists.newArrayList();
-	
-	private static final ChangeNotifier notifier = new ChangeNotifier();
+	private static ChangeNotifier notifier;
 	
 	public static final String CUPID_PROJECT = "Cupid";
+	
+	private ILog pluginLog;
 	
 	/**
 	 * The constructor
@@ -58,12 +60,13 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		pluginLog = getLog();
+		notifier  = new ChangeNotifier();
 		
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		cupidProject = root.getProject(CUPID_PROJECT);
 		
 		IProgressMonitor monitor = new NullProgressMonitor();
-		
 		
 		if (!cupidProject.exists()){
 			try{
@@ -184,7 +187,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	 * @param e the exception
 	 */
 	public void logError(String msg, Exception e){
-		getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.ERROR, msg, e));
+		pluginLog.log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.ERROR, msg, e));
 	}
 	
 	/**
@@ -192,7 +195,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	 * @param msg localized information message
 	 */
 	public void logInformation(String msg){
-		getLog().log(new Status(Status.INFO, Activator.PLUGIN_ID, Status.INFO, msg, null));
+		pluginLog.log(new Status(Status.INFO, Activator.PLUGIN_ID, Status.INFO, msg, null));
 	}
 
 	@Override

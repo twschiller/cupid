@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
@@ -63,7 +64,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	
 	private CupidSelectionService selectionManager;
 	
-//	private SearchablePluginsManager pluginsManager;
+	private ILog pluginLog;
 	
 	public CupidActivator() {
 	}
@@ -71,6 +72,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		pluginLog = Platform.getLog(context.getBundle());
 	
 		registerCapabilityExtensions();
 		registerPublisherExtensions();
@@ -245,7 +247,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	 * @param e the exception
 	 */
 	public void logError(String msg, Exception e){
-		getLog().log(new Status(Status.ERROR, CupidActivator.PLUGIN_ID, Status.ERROR, msg, e));
+		pluginLog.log(new Status(Status.ERROR, CupidActivator.PLUGIN_ID, Status.ERROR, msg, e));			
 	}
 	
 	/**
@@ -253,7 +255,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	 * @param msg localized information message
 	 */
 	public void logInformation(String msg){
-		getLog().log(new Status(Status.INFO, CupidActivator.PLUGIN_ID, Status.INFO, msg, null));
+		pluginLog.log(new Status(Status.INFO, CupidActivator.PLUGIN_ID, Status.INFO, msg, null));
 	}
 	
 	/**
@@ -261,7 +263,7 @@ public class CupidActivator extends AbstractUIPlugin{
 	 * @param msg localized information message
 	 */
 	public void log(CupidJobStatus status){
-		getLog().log(status);
+		pluginLog.log(status);	
 	}
 
 	

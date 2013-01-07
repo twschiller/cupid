@@ -248,15 +248,19 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 
 		@Override
 		public void selectionChanged(IWorkbenchPart part, Object data) {
-			cancelOldJobs();
-			viewer.setInput(data);
+			if (!part.equals(InspectorView.this)){
+				cancelOldJobs();
+				viewer.setInput(data);			
+			}
 		}
 
 		@Override
 		public void selectionChanged(IWorkbenchPart part, Object[] data) {
-			// TODO handle multiple data case
-			cancelOldJobs();
-			viewer.setInput(data[0]);
+			if (!part.equals(InspectorView.this)){
+				// TODO handle multiple data case
+				cancelOldJobs();
+				viewer.setInput(data[0]);
+			}
 		}
 	}
 	

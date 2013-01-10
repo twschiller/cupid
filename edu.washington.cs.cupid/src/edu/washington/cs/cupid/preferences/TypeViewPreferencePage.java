@@ -2,6 +2,7 @@ package edu.washington.cs.cupid.preferences;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -10,6 +11,8 @@ import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.SelectionEvent;
@@ -41,8 +44,10 @@ import edu.washington.cs.cupid.views.ViewRule;
 
 public class TypeViewPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 	
+	// TODO support cases where capability no longer exists
+	
 	private static final String DEFAULT_TYPE = "java.lang.Object";
-	private static final int ROW_HEIGHT = 25;
+	private static final int ROW_HEIGHT = 20;
 	
 	private Table table;
 	private Gson gson = new Gson();
@@ -53,8 +58,6 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		setPreferenceStore(CupidActivator.getDefault().getPreferenceStore());
 		setDescription("Cupid Selection Type Views Preference Page");
 	}
-	
-
 
 	@Override
 	public void init(IWorkbench workbench) {
@@ -92,6 +95,13 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		
 		table.setHeaderVisible(true);
 		
+		TableLayout layout = new TableLayout();
+		layout.addColumnData( new ColumnWeightData(1));
+		layout.addColumnData( new ColumnWeightData(1));
+		layout.addColumnData( new ColumnWeightData(2));
+		layout.addColumnData( new ColumnWeightData(1));
+		table.setLayout(layout);
+		
 		TableColumn typeColumn = new TableColumn(table, SWT.NULL);
 		typeColumn.setText("Type");
 		
@@ -105,11 +115,7 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		deleteColumn.setText("Remove");
 				
 		populateTable(rules);
-		
-		typeColumn.pack();
-		qualifiedColumn.pack();
-		viewColumn.pack();
-		deleteColumn.pack();
+	
 		
 		try{
 			Method setItemHeightMethod = table.getClass().getDeclaredMethod("setItemHeight", int.class);
@@ -120,9 +126,7 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 			// NO OP
 		}
 	}
-	
-
-	
+		
 	private void populateTable(List<ViewRule> rules){
 		for (ViewRule rule : rules){
 			addRule(rule);
@@ -146,12 +150,15 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		Class<?> clazz = null;
 		
 		try{
-			clazz = Class.forName(rule.getQualifiedType());
+			clazz = Class.forName(rule.getQualifiedType(), false, CupidActivator.class.getClassLoader());
 		}catch(Exception ex){
+			CupidActivator.getDefault().logError("Cannot load type for view preference: " + rule.getQualifiedType(), ex);
 		}			
 		
 		if (clazz != null){
-			for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class))){
+			Set<ICapability<?,?>> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
+			
+			for (ICapability<?,?> capability : xs){
 				combo.add(capability.getName());
 			}
 		}

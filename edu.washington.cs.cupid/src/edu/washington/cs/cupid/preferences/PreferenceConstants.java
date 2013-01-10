@@ -11,4 +11,7 @@ public class PreferenceConstants {
 	public static final String P_INSPECTOR_KILL_TIME_SECONDS = "inspectorKillTimePreference";
 	
 	public static final String P_INSPECTOR_HIDE = "inspectorHidePreference";
+	
+	public static final String P_TYPE_VIEWS = "typeViewsPreference";
+
 }

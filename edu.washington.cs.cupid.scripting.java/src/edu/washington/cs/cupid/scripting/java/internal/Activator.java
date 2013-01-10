@@ -24,6 +24,7 @@ import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.scripting.internal.CompilationUnitLocator;
 import edu.washington.cs.cupid.scripting.internal.CupidCapabilityLoader;
 
 /**
@@ -118,7 +119,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	public void loadDynamicCapabilities(){		
 		dynamic.clear();
 
-		CupidCapabilityLoader.CapabilityResourceLocator finder = new CupidCapabilityLoader.CapabilityResourceLocator();
+		CompilationUnitLocator finder = new CompilationUnitLocator();
 		try {
 			cupidProject.accept(finder);
 		} catch (CoreException e) {
@@ -126,57 +127,62 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 			return;
 		}
 
-		for (ICompilationUnit clazz : finder.getClasses()){		
-			loadDynamicCapability(clazz, false);
+		for (ICompilationUnit clazz : finder.getCapabilityClasses()){		
+			
+			logInformation("Loading dynamic capability " + simpleName(clazz));
+
+			try {
+				loadDynamicCapability(clazz, false);
+			} catch (Exception e) {
+				logError("Error loading dynamic capability " + simpleName(clazz), e);
+			} catch (Error e){
+				// expected when there are compilation errors
+			}
 		}
 
 		notifier.onChange(this);
 	}
 	
-	public void loadDynamicCapability(IJavaElement file, boolean alert){
+	private String simpleName(IJavaElement clazz){
+		return clazz.getElementName().substring(0, clazz.getElementName().lastIndexOf('.'));
+	}
+	
+	private ICapability<?,?> find(String uniqueId){
+		for (ICapability<?,?> capability : dynamic){
+			if (capability.getUniqueId().equals(uniqueId)){
+				return capability;
+			}
+		}
+		return null;
+	}
+	
+	private void removeCapability(String uniqueId){
+		ICapability<?,?> capability = find(uniqueId);
+		if (capability != null){
+			dynamic.remove(capability);
+		}
+	}
 
-		String name = file.getElementName().substring(0, file.getElementName().lastIndexOf('.'));
-
-		logInformation("Loading dynamic capability " + name);
+	/**
+	 * Load a dynamic capability defined by <code>element</code>. If <code>notify</code>, alert
+	 * listeners that the capability has been load.
+	 * @param element
+	 * @param notify
+	 * @throws Exception
+	 * @throws Error iff there are compilation or type resolution errors
+	 */
+	public void loadDynamicCapability(IJavaElement element, boolean notify) throws Exception, Error{
 		
 		CupidCapabilityLoader loader = new CupidCapabilityLoader(Activator.class.getClassLoader());
 
-		Class<?> definition;
-		try {
-			definition = loader.loadClass(name);
-		} catch (ClassNotFoundException e) {
-			logError("Error loading dynamic capability " + name, e);
-			return;
-		}
+		Class<?> definition = loader.loadClass(simpleName(element));
+		ICapability<?,?> capability = (ICapability<?,?>) definition.newInstance();
 
-		if (definition == null){
-			logError("Error loading .class file for " + name, null);
-			return;
-		}
-
-		ICapability<?,?> capability;
-		try {
-			capability = (ICapability<?,?>) definition.newInstance();
-		} catch (Exception e) {
-			logError("Error instantiating dynamic capability " + name, e);
-			return;
-		}
-
-		ICapability<?,?> old = null;
-
-		for (ICapability<?,?> x : dynamic){
-			if (x.getUniqueId().equals(capability.getUniqueId())){
-				old = x;
-				break;
-			}
-		}
-		if (old != null){
-			dynamic.remove(old);
-		}
+		removeCapability(capability.getUniqueId());
+		
 		dynamic.add(capability);
 
-
-		if (alert){
+		if (notify){
 			notifier.onChange(this);
 		}
 	}
@@ -186,7 +192,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	 * @param msg localized error message
 	 * @param e the exception
 	 */
-	public void logError(String msg, Exception e){
+	public void logError(String msg, Throwable e){
 		pluginLog.log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.ERROR, msg, e));
 	}
 	

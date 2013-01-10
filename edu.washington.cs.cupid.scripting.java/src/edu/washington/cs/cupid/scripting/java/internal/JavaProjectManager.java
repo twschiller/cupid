@@ -87,7 +87,13 @@ public class JavaProjectManager implements IResourceChangeListener{
 
 				if (element instanceof IClassFile && !element.getElementName().contains("$")){
 					IClassFile file = (IClassFile) element;
-					Activator.getDefault().loadDynamicCapability(file, true);
+					try {
+						Activator.getDefault().loadDynamicCapability(file, true);
+					} catch (Exception e) {
+						Activator.getDefault().logError("Error reloading dynamic capability " + element.getElementName(), e);
+					} catch (Error e){
+						// caused by unresolved compilation problems
+					}
 					return false;
 				}				
 			}

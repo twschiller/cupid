@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.search;
 
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.target.TargetPlatformService;
 import org.eclipse.pde.internal.core.target.provisional.ITargetHandle;
 import org.eclipse.pde.internal.ui.preferences.AddToJavaSearchJob;
@@ -29,6 +30,8 @@ public class Activator extends AbstractUIPlugin implements IStartup{
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		
+		PDECore.getDefault().getSearchablePluginsManager().removeAllFromJavaSearch();
 		
 		ITargetHandle target = TargetPlatformService.getDefault().getWorkspaceTargetHandle();
 		if (target != null) {

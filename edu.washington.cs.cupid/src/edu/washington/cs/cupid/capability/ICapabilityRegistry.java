@@ -53,6 +53,8 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 */
 	ICapability<?, ?> findCapability(String uniqueId) throws NoSuchCapabilityException;
 
+	ICapability<?, String> getViewer(TypeToken<?> type);
+	
 	/**
 	 * Register a capability that is not provided via an {@link ICapabilityPublisher}, e.g.
 	 * by an extension point.

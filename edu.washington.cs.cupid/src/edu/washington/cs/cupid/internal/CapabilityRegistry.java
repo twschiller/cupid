@@ -2,11 +2,15 @@ package edu.washington.cs.cupid.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
+
+import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ChangeNotifier;
@@ -15,6 +19,8 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.views.ViewRule;
 
 /**
  * A thread-safe registry of the available Cupid capabilities
@@ -36,6 +42,9 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	 * Set of change listeners
 	 */
 	private final ChangeNotifier notifier = new ChangeNotifier();
+	
+	private final IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
+	
 	
 	@Override
 	public synchronized void onChange(ICapabilityPublisher publisher) {
@@ -142,5 +151,28 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	public void registerStaticCapability(ICapability<?, ?> capability) {
 		capabilities.add(capability);
 		notifier.onChange(this);
+	}
+
+	@Override
+	public ICapability<?, String> getViewer(TypeToken<?> type) {
+		List<ViewRule> rules = new Gson().fromJson(
+				preferences.getString(PreferenceConstants.P_TYPE_VIEWS),
+				new com.google.gson.reflect.TypeToken<List<ViewRule>>(){}.getType());
+		
+		for (ViewRule rule : rules){
+			if (rule.isActive() && rule.getCapability() != null){
+				ICapability<?, ?> capability;
+				try {
+					capability = findCapability(rule.getCapability());
+				} catch (NoSuchCapabilityException e) {
+					continue;
+				}
+				
+				if (TypeManager.isCompatible(capability, type)){
+					return (ICapability<?, String>) capability;
+				}
+			}
+		}
+		return null;
 	}
 }

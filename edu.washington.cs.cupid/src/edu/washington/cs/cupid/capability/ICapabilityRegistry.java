@@ -53,6 +53,12 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 */
 	ICapability<?, ?> findCapability(String uniqueId) throws NoSuchCapabilityException;
 
+	/**
+	 * Returns the viewer associated with <code>type</code>, or 
+	 * <code>null</code> if no viewer is associated
+	 * @param type the output type
+	 * @return the viewer associated with <code>type</code>, or <code>null</code>
+	 */
 	ICapability<?, String> getViewer(TypeToken<?> type);
 	
 	/**

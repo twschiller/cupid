@@ -4,6 +4,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.ui.IJavaElementSearchConstants;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -18,6 +23,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.SelectionDialog;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -63,21 +69,21 @@ public class ExtractFieldPage extends WizardPage {
 		
 		Button search = new Button(composite, SWT.PUSH);
 		search.setText("Select");
-		search.addMouseListener(new MouseListener(){
+		search.addSelectionListener(new SelectionListener(){
+
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
-				// NO OP
+			public void widgetSelected(SelectionEvent e) {
+				Object[] types = showTypeDialog();
+				if (types != null && types.length > 0){
+					type.setText(((IType)types[0]).getFullyQualifiedName());
+				}
 			}
 
 			@Override
-			public void mouseDown(MouseEvent e) {
+			public void widgetDefaultSelected(SelectionEvent e) {
 				// NO OP
 			}
-
-			@Override
-			public void mouseUp(MouseEvent e) {
-				// TODO add selection dialog
-			}
+			
 		});
 		
 		type.addModifyListener(new ModifyListener(){
@@ -108,6 +114,23 @@ public class ExtractFieldPage extends WizardPage {
 		updateMethodList();
 		
 		setControl(composite);
+	}
+	
+	private Object[] showTypeDialog(){
+		SelectionDialog dialog;
+		try {
+			dialog = JavaUI.createTypeDialog(this.getShell(), 
+					null,
+					SearchEngine.createWorkspaceScope(),
+					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES,
+					false);
+		} catch (JavaModelException e) {
+			return null;
+			// NO OP
+		}
+		dialog.open();
+
+		return dialog.getResult();
 	}
 	
 	private void updateMethodList(){

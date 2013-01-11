@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.scripting.java.internal;
 
+import java.net.URL;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -7,6 +8,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;

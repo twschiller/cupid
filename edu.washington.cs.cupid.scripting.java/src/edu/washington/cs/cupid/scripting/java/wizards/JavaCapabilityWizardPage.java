@@ -1,7 +1,9 @@
 package edu.washington.cs.cupid.scripting.java.wizards;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogPage;
@@ -20,8 +22,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
-
 /**
  * The "New" wizard page allows setting the container for the new file as well
  * as the file name. The page will only accept file name without the extension
@@ -29,12 +29,16 @@ import edu.washington.cs.cupid.scripting.java.internal.Activator;
  */
 public class JavaCapabilityWizardPage extends WizardPage {
 
+	private static final String DEFAULT_TYPE = "org.eclipse.core.resources.IResource";
 	private Text nameText;
 	private Text descriptionText;
 	
 	private Text parameterType;
 	private Text outputType;
 
+	private IPath parameterTypeReference;
+	private IPath outputTypeReference;
+	
 	private Text idText;
 	
 	/**
@@ -96,7 +100,9 @@ public class JavaCapabilityWizardPage extends WizardPage {
 				Object[] objs = showTypeDialog();
 				
 				if (objs != null){
-					parameterType.setText(((IType)objs[0]).getFullyQualifiedName());
+					IType type = (IType) objs[0];
+					parameterTypeReference = type.getPath();
+					parameterType.setText(type.getFullyQualifiedName());
 				}
 			}
 		});
@@ -125,7 +131,9 @@ public class JavaCapabilityWizardPage extends WizardPage {
 			public void mouseUp(MouseEvent e) {
 				Object[] objs = showTypeDialog();
 				if (objs != null){
-					outputType.setText(((IType)objs[0]).getFullyQualifiedName());
+					IType type = (IType) objs[0];
+					outputTypeReference = type.getPath();
+					outputType.setText(type.getFullyQualifiedName());
 				}
 			}
 		});
@@ -135,12 +143,24 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		setControl(container);
 	}
 	
+	
+	
+	public IPath getParameterTypeReference() {
+		return parameterTypeReference;
+	}
+
+
+	public IPath getOutputTypeReference() {
+		return outputTypeReference;
+	}
+
+
 	private Object[] showTypeDialog(){
 		SelectionDialog dialog;
 		try {
 			dialog = JavaUI.createTypeDialog(this.getShell(), 
 					null,
-					Activator.getDefault().getCupidProject(),
+					SearchEngine.createWorkspaceScope(),
 					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES ,
 					false);
 		} catch (JavaModelException e) {
@@ -148,7 +168,7 @@ public class JavaCapabilityWizardPage extends WizardPage {
 			// NO OP
 		}
 		dialog.open();
-
+	
 		return dialog.getResult();
 	}
 
@@ -174,8 +194,8 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		nameText.setText("MyCapability");
 		descriptionText.setText("My Capability Description");
 		idText.setText("edu.washington.cs.cupid.custom.mycapability");
-		parameterType.setText("org.eclipse.core.resources.IResource");
-		outputType.setText("org.eclipse.core.resources.IResource");
+		parameterType.setText(DEFAULT_TYPE);
+		outputType.setText(DEFAULT_TYPE);
 	}
 
 	private void dialogChanged() {

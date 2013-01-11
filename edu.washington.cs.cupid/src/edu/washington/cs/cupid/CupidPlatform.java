@@ -3,6 +3,7 @@ package edu.washington.cs.cupid;
 import java.io.File;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.osgi.framework.Bundle;
 
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.internal.CapabilityRegistry;
@@ -36,8 +37,5 @@ public final class CupidPlatform {
 	public static ICapabilityRegistry getCapabilityRegistry(){
 		return registry;
 	}
-	
-	public static File getBundleLocation(){
-		return new File(CupidActivator.getDefault().getBundle().getLocation());
-	}
+
 }

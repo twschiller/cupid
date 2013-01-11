@@ -2,6 +2,7 @@ package edu.washington.cs.cupid.preferences;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.IType;
@@ -15,6 +16,8 @@ import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -32,6 +35,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
@@ -51,6 +55,8 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 	
 	private Table table;
 	private Gson gson = new Gson();
+	
+	private Map<Combo, Map<String, ICapability<?,?>>> comboData = Maps.newHashMap();
 	
 	private IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 	
@@ -157,10 +163,14 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		
 		if (clazz != null){
 			Set<ICapability<?,?>> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
+			Map<String, ICapability<?,?>> forType = Maps.newHashMap();
 			
 			for (ICapability<?,?> capability : xs){
 				combo.add(capability.getName());
+				forType.put(capability.getName(), capability);
 			}
+			
+			comboData.put(combo, forType);
 		}
 	}
 	
@@ -183,6 +193,17 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		editor.grabHorizontal = true;
 		editor.setEditor(combo, item, 2);
 		populateComboBox(combo, rule);
+		
+		if (capability != null){
+			combo.setText(capability.getName());
+		}
+		
+		combo.addModifyListener(new ModifyListener(){
+			@Override
+			public void modifyText(ModifyEvent e) {
+				item.setData(comboData.get(combo).get(combo.getText()));
+			}
+		});
 		
 		editor = new TableEditor(table);
 		final Button remove = new Button(table, SWT.PUSH);

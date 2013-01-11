@@ -31,12 +31,7 @@ public class Activator extends AbstractUIPlugin implements IStartup{
 		super.start(context);
 		plugin = this;
 		
-		PDECore.getDefault().getSearchablePluginsManager().removeAllFromJavaSearch();
 		
-		ITargetHandle target = TargetPlatformService.getDefault().getWorkspaceTargetHandle();
-		if (target != null) {
-			AddToJavaSearchJob.synchWithTarget(target.getTargetDefinition());
-		}
 	}
 
 	@Override

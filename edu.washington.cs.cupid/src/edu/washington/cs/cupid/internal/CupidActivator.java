@@ -9,6 +9,10 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.target.TargetPlatformService;
+import org.eclipse.pde.internal.core.target.provisional.ITargetHandle;
+import org.eclipse.pde.internal.ui.preferences.AddToJavaSearchJob;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
@@ -69,6 +73,8 @@ public class CupidActivator extends AbstractUIPlugin{
 	public CupidActivator() {
 	}
 
+
+	
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
@@ -140,8 +146,17 @@ public class CupidActivator extends AbstractUIPlugin{
 			}
 		});
 
+		setTypeScope();
 	}
 
+	private void setTypeScope() throws CoreException{
+		PDECore.getDefault().getSearchablePluginsManager().removeAllFromJavaSearch();
+		
+		ITargetHandle target = TargetPlatformService.getDefault().getWorkspaceTargetHandle();
+		if (target != null) {
+			AddToJavaSearchJob.synchWithTarget(target.getTargetDefinition());
+		}
+	}
 	
 	private void registerSchedulingRuleExtensions(){
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()

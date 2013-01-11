@@ -36,6 +36,7 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.LinearPipeline;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -147,6 +148,16 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 		}
 		
+		private ICapability<I,?> formCapability(ICapability<I,V> original){
+			ICapability<?,String> viewer = CupidPlatform.getCapabilityRegistry().getViewer(original.getReturnType());
+			
+			if (viewer != null){
+				return new LinearPipeline(original.getName(), original.getDescription(), original, viewer);
+			}else{
+				return original;
+			}
+		}
+		
 		public InspectorRow(ICapability<I,V> capability, I input) {
 			this.capability = capability;
 			
@@ -154,7 +165,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			inspectorFamilies.put(family, System.currentTimeMillis());
 			System.out.println("Keep alive family " + family);
 			
-			CapabilityExecutor.asyncExec(capability, input, family, new IJobChangeListener(){
+			CapabilityExecutor.asyncExec(formCapability(capability), input, family, new IJobChangeListener(){
 
 				@Override
 				public void aboutToRun(IJobChangeEvent event) {

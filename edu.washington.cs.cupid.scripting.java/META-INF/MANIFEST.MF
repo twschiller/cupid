@@ -18,3 +18,5 @@ Bundle-ActivationPolicy: lazy
 Eclipse-BuddyPolicy: global, app, ext, boot
 Import-Package: edu.washington.cs.cupid,
  edu.washington.cs.cupid.capability
+Bundle-ClassPath: lib/guava-13.0.1.jar,
+ .

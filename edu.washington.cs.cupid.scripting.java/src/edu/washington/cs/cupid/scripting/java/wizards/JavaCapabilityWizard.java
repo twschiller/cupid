@@ -5,14 +5,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
@@ -26,6 +31,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.scripting.java.internal.Activator;
@@ -71,15 +77,17 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 		try {
 			parameterType = page.getParameterType();
 			returnType = page.getReturnType();
-		} catch (ClassNotFoundException ex) {
+		}catch (ClassNotFoundException ex) {
 			MessageDialog.openError(getShell(), "Error", "Invalid parameter or return type");
 			return false;
 		}
 		
+		final List<IPath> classpath = Lists.newArrayList(page.getParameterTypeReference(), page.getOutputTypeReference());
+		
 		IRunnableWithProgress op = new IRunnableWithProgress() {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					doFinish(name, id, description, parameterType, returnType,  monitor);
+					doFinish(name, id, description, parameterType, returnType, classpath,  monitor);
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {
@@ -107,7 +115,7 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 	 * @throws IOException 
 	 */
 
-	private void doFinish(String name, String id, String description, Class<?> parameterType, Class<?> returnType, IProgressMonitor monitor) throws Exception{
+	private void doFinish(String name, String id, String description, Class<?> parameterType, Class<?> returnType, List<IPath> classpath, IProgressMonitor monitor) throws Exception{
 				
 		// create a sample file
 		String className = formClassName(name);
@@ -120,6 +128,13 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		file.create(openContents(name, id, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
 	
+		IJavaProject proj = JavaCore.create(cupid);
+		List<IClasspathEntry> cp = Lists.newArrayList(proj.getRawClasspath());
+		for (IPath path : classpath){
+			cp.add(JavaCore.newLibraryEntry(path, null, null));	
+		}
+		proj.setRawClasspath(cp.toArray(new IClasspathEntry[]{}), null);
+		
 		monitor.worked(1);
 		
 		monitor.setTaskName("Opening file for editing...");

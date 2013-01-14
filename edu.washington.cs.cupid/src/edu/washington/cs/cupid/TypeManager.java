@@ -101,7 +101,7 @@ public final class TypeManager {
 	 * @return <code>true</code> iff argument <code>argument</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability<?,?> capability, final Object argument){
+	public static boolean isCompatible(final ICapability<?, ?> capability, final Object argument) {
 		return isCompatible(capability, TypeToken.of(argument.getClass()));
 	}
 	
@@ -114,7 +114,7 @@ public final class TypeManager {
 	 * @return <code>true</code> iff an argument of type <code>argumentType</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability<?, ?> capability, final TypeToken<?> argumentType){
+	public static boolean isCompatible(final ICapability<?, ?> capability, final TypeToken<?> argumentType) {
 		
 		if (capability == null) {
 			throw new NullPointerException("Capability cannot be null");

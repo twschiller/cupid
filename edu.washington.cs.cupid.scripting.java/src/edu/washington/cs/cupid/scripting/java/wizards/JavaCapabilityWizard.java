@@ -131,7 +131,9 @@ public class JavaCapabilityWizard extends Wizard implements INewWizard {
 		IJavaProject proj = JavaCore.create(cupid);
 		List<IClasspathEntry> cp = Lists.newArrayList(proj.getRawClasspath());
 		for (IPath path : classpath){
-			cp.add(JavaCore.newLibraryEntry(path, null, null));	
+			if (path != null){
+				cp.add(JavaCore.newLibraryEntry(path, null, null));	
+			}
 		}
 		proj.setRawClasspath(cp.toArray(new IClasspathEntry[]{}), null);
 		

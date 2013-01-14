@@ -1,6 +1,7 @@
 package edu.washington.cs.cupid.views;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
@@ -75,7 +76,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	/**
 	 * Family -> Last Job Submit Time. Used smooth killing of jobs when clicking around the UI
 	 */
-	private ConcurrentMap<JobFamily, Long> inspectorFamilies;
+	private Map<JobFamily, Long> inspectorFamilies;
 	
 	@Override
 	public final void createPartControl(final Composite parent) {
@@ -100,7 +101,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		
 		CupidSelectionService.addListener(contentProvider);
 		
-		inspectorFamilies = Maps.newConcurrentMap();
+		inspectorFamilies = Maps.newHashMap();
 		
 		IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 		reapThresholdInSeconds = preferences.getInt(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS);
@@ -169,7 +170,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			this.capability = capability;
 			
 			JobFamily family = family(input); // TODO need an Inspector View specific family
-			inspectorFamilies.put(family, System.currentTimeMillis());
+			
+			synchronized(inspectorFamilies){
+				inspectorFamilies.put(family, System.currentTimeMillis());	
+			}
+			
 			System.out.println("Keep alive family " + family);
 			
 			CapabilityExecutor.asyncExec(formCapability(capability), input, family, new IJobChangeListener() {

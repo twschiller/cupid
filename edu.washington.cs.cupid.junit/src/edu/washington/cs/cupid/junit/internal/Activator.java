@@ -24,52 +24,49 @@ import edu.washington.cs.cupid.junit.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.standard.Count;
 
 /**
- * The activator class controls the plug-in life cycle
+ * The activator for the Cupid JUnit plugin.
  */
-public class Activator extends AbstractUIPlugin implements ICapabilityPublisher {
+public final class Activator extends AbstractUIPlugin implements ICapabilityPublisher {
 
 	/**
-	 * The plug-in ID
+	 * The Cupid Junit plug-in ID.
 	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid.junit"; //$NON-NLS-1$
 
-	/**
-	 * The shared instance
-	 */
 	private static Activator plugin;
 
 	private final JUnitMonitor monitor = new JUnitMonitor();
 	
-	private static final ChangeNotifier notifier = new ChangeNotifier();
+	private static final ChangeNotifier CHANGE_NOTIFIER = new ChangeNotifier();
+	
+	@SuppressWarnings("rawtypes")
+	private static final HashMap<String, Set<ICapability>> LAUNCH_CONFIGURATIONS = Maps.newHashMap();
 	
 	/**
-	 * The constructor
+	 * Construct the Cupid JUnit plugin.
 	 */
 	public Activator() {
 	}
 
-	@SuppressWarnings("rawtypes")
-	private static final HashMap<String, Set<ICapability>> configs = Maps.newHashMap();
-	
 	@Override
-	public void start(BundleContext context) throws Exception {
+	public void start(final BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 		
 		monitor.start();
 		
-		getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener(){
+		getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
 			@Override
-			public void propertyChange(PropertyChangeEvent event) {
-				if (event.getProperty().equals(PreferenceConstants.P_ACTIVE)){
-					notifier.onChange(Activator.this);
+			public void propertyChange(final PropertyChangeEvent event) {
+				if (event.getProperty().equals(PreferenceConstants.P_ACTIVE)) {
+					CHANGE_NOTIFIER.onChange(Activator.this);
 				}
 			}
 		});
 	}
 
 	@Override
-	public void stop(BundleContext context) throws Exception {
+	public void stop(final BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
 		monitor.stop();
@@ -85,48 +82,48 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	/**
 	 * @return the shared monitor
 	 */
-	public static JUnitMonitor getDefaultMonitor(){
+	public static JUnitMonitor getDefaultMonitor() {
 		return plugin.monitor;
 	}
 	
 	/**
 	 * Returns an image descriptor for the image file at the given
-	 * plug-in relative path
+	 * plug-in relative path.
 	 *
 	 * @param path the path
 	 * @return the image descriptor
 	 */
-	public static ImageDescriptor getImageDescriptor(String path) {
+	public static ImageDescriptor getImageDescriptor(final String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public ICapability<?,?>[] publish() {
+	public ICapability<?, ?>[] publish() {
 		List<ICapability> capabilities = Lists.newArrayList();
 		
 		Set<String> current = Sets.newHashSet(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE).split(";"));
 		
-		for (String config : current){
-			if (!config.isEmpty()){
-				if (!configs.containsKey(config)){
-					configs.put(config, Sets.<ICapability>newHashSet());
+		for (String config : current) {
+			if (!config.isEmpty()) {
+				if (!LAUNCH_CONFIGURATIONS.containsKey(config)) {
+					LAUNCH_CONFIGURATIONS.put(config, Sets.<ICapability>newHashSet());
 					
-					configs.get(config).add(
+					LAUNCH_CONFIGURATIONS.get(config).add(
 							new LinearPipeline.PipelineBuilder(new JUnitCapability(config))
 							.attach(new JUnitFailures())
 							.attach(new Count())
 							.create("Test Failure Count (" + config + ")", 
 									"The number of JUnit test failures (" + config + ")"));
 					
-					configs.get(config).add(
+					LAUNCH_CONFIGURATIONS.get(config).add(
 							new LinearPipeline.PipelineBuilder(new JUnitCapability(config))
 							.attach(new JUnitMarkers())
 							.create("Place Test Failure Markers (" + config + ")", 
 									"The number of JUnit test failures (" + config + ")"));
 				}
 				
-				capabilities.addAll(configs.get(config));
+				capabilities.addAll(LAUNCH_CONFIGURATIONS.get(config));
 			}
 		}
 		
@@ -134,12 +131,12 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	}
 
 	@Override
-	public void addChangeListener(ICapabilityChangeListener listener) {
-		notifier.addChangeListener(listener);
+	public void addChangeListener(final ICapabilityChangeListener listener) {
+		CHANGE_NOTIFIER.addChangeListener(listener);
 	}
 
 	@Override
-	public void removeChangeListener(ICapabilityChangeListener listener) {
-		notifier.removeChangeListener(listener);
+	public void removeChangeListener(final ICapabilityChangeListener listener) {
+		CHANGE_NOTIFIER.removeChangeListener(listener);
 	}
 }

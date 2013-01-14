@@ -92,7 +92,7 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 			protected CapabilityStatus<T> run(final IProgressMonitor monitor) {
 				Object result = getInput();
 				
-				monitor.beginTask(this.getName(), LinearPipeline.this.capabilities.size());
+				monitor.beginTask(LinearPipeline.this.getName(), LinearPipeline.this.capabilities.size());
 
 				for (ICapability capability : capabilities) {
 					if (monitor.isCanceled()) {

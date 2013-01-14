@@ -3,6 +3,7 @@ package edu.washington.cs.cupid.scripting.java.internal;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.security.CodeSource;
 import java.util.List;
 
 import org.eclipse.core.resources.IFolder;
@@ -16,7 +17,6 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -86,17 +86,16 @@ public class JavaProjectManager implements IResourceChangeListener{
 			classpath.add(JavaCore.newLibraryEntry(bundlePath(Platform.getBundle(bundle)), null, null));
 		}
 		
-		
+		CodeSource src = Lists.class.getProtectionDomain().getCodeSource();
+		classpath.add(JavaCore.newLibraryEntry(urlToPath(src.getLocation()), null, null));
+			
 		javaProject.setRawClasspath(classpath.toArray(new IClasspathEntry[]{}), monitor);
 		
 		// TWS: another possible resource
 		// http://www.stateofflow.com/journal/66/creating-java-projects-programmatically
 	}
 	
-	private static IPath bundlePath(Bundle bundle) throws IOException{
-		URL url = FileLocator.resolve(bundle.getEntry("/"));
-		
-		URL foo = FileLocator.toFileURL(url);
+	private static Path urlToPath(URL url){
 		String path = url.getPath();
 		
 		if (path.startsWith("file:")){
@@ -105,15 +104,22 @@ public class JavaProjectManager implements IResourceChangeListener{
 		
 		if (path.endsWith("!/")){
 			path = path.substring(0, path.length() - 2);
-		}else{
-			path = path + "/bin/";
 		}
 		
 		File file = new File(path);
 		
+		if (file.isDirectory()){
+			file = new File(file, "bin");
+		}
+		
 		String absolute = file.getAbsolutePath();
 		
 		return new Path(absolute);
+	}
+	
+	private static IPath bundlePath(Bundle bundle) throws IOException{
+		URL url = FileLocator.resolve(bundle.getEntry("/"));
+		return urlToPath(url);
 	}
 	
 	@Override

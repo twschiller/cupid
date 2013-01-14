@@ -40,5 +40,6 @@ Bundle-ClassPath: lib/TimeOperations.jar,
 Import-Package: org.eclipse.jdt.launching,
  org.eclipse.pde.core,
  org.eclipse.pde.internal.core,
+ org.eclipse.pde.internal.core.target,
  org.eclipse.pde.internal.core.util,
  org.eclipse.pde.internal.ui.preferences

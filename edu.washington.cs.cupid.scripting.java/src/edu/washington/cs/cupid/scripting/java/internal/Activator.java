@@ -1,6 +1,5 @@
 package edu.washington.cs.cupid.scripting.java.internal;
 
-import java.net.URL;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -8,11 +7,11 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -69,31 +68,43 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		cupidProject = root.getProject(CUPID_PROJECT);
 		
-		IProgressMonitor monitor = new NullProgressMonitor();
-		
-		if (!cupidProject.exists()){
-			try{
-				cupidProject.create(monitor);
-				cupidProject.open(monitor);
-				JavaProjectManager.populateCupidProject(cupidProject, monitor);
-			}catch (CoreException ex){
-				logError("Unable to create Cupid project in workspace", ex);
-				return;
-			}
-		}else{
-			try{
-				cupidProject.open(monitor);
-			}catch (CoreException ex){
-				logError("Unable to open Cupid project in workspace", ex);
-				return;
-			}
-		}
-		
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
-	
-		//loadDynamicCapabilities();
-	}
+		if (cupidProject.exists()){
+			new Job("Open Cupid Project"){
 
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try{
+						cupidProject.open(monitor);
+					}catch (CoreException ex){
+						logError("Unable to open Cupid project in workspace", ex);
+						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error opening Cupid project", ex);
+					}
+		
+					ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+					return Status.OK_STATUS;
+				}
+				
+			}.schedule();
+		}else{
+			new Job("Create Cupid Project"){
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try{
+						cupidProject.create(monitor);
+						cupidProject.open(monitor);
+						JavaProjectManager.populateCupidProject(cupidProject, monitor);
+					}catch (Exception ex){
+						logError("Unable to create Cupid project in workspace", ex);
+						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating Cupid project", ex);
+					}
+					
+					ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+		}
+	}
+	
 	public IProject getCupidProject(){
 		return cupidProject;
 	}

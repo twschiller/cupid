@@ -11,7 +11,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 public interface IInvalidationListener {
 	
 	/**
-	 * Callback when a resource change causes invalidation
+	 * Callback when a resource change causes invalidation.
 	 * @param invalidated the objects evicted from the cache
 	 * @param event the original resource change event
 	 */

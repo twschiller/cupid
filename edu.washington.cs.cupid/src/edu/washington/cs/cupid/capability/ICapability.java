@@ -5,16 +5,23 @@ import java.util.Set;
 import com.google.common.reflect.TypeToken;
 
 /**
- * An Eclipse capability (i.e., service)
+ * An Eclipse capability (i.e., service).
  * @author Todd Schiller (tws@cs.washington.edu)
  * @param <I> the input type
  * @param <T> the output type
  */
-public interface ICapability<I,T> {
+public interface ICapability<I, T> {
 	
-	public static interface Unit{};
+	/**
+	 * A void type; used as an input type for capabilities that do not take an input.
+	 * @author Todd Schiller
+	 */
+	interface Unit { };
 	
-	public static TypeToken<Unit> UNIT_TOKEN = new TypeToken<Unit>(){
+	/**
+	 * A void type; used as an input type for capabilities that do not take an input.
+	 */
+	TypeToken<Unit> UNIT_TOKEN = new TypeToken<Unit>() {
 		private static final long serialVersionUID = 1L;
 	};
 	
@@ -51,10 +58,10 @@ public interface ICapability<I,T> {
 	CapabilityJob<I, T> getJob(I input);
 	
 	/**
-	 * Returns the unique ids of the capabilities this capability dynamically depends on
+	 * Returns the unique ids of the capabilities this capability dynamically depends on.
 	 * @return the unique ids of the capabilities this capability dynamically depends on
 	 */
-	public Set<String> getDynamicDependencies();
+	Set<String> getDynamicDependencies();
 	
 	/**
 	 * @return <code>true</code> iff the capability does not modify any local or remote state
@@ -62,7 +69,7 @@ public interface ICapability<I,T> {
 	boolean isPure();
 	
 	/**
-	 * <code>true</code> iff the capability works independently on peers
+	 * <code>true</code> iff the capability works independently on peers.
 	 * @return <code>true</code> iff the capability works independently on peers
 	 * @deprecated method will be removed in favor of multiple methods
 	 */
@@ -74,7 +81,4 @@ public interface ICapability<I,T> {
 	 * @return <code>true</code> iff the capability depends on remote or transient state.
 	 */
 	boolean isTransient();
-	
-	
-	
 }

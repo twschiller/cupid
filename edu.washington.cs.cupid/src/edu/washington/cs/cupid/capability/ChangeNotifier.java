@@ -12,28 +12,32 @@ import com.google.common.collect.Sets;
  * 
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class ChangeNotifier implements ICapabilityChangeListener, ICapabilityChangeNotifier{ 
+public class ChangeNotifier implements ICapabilityChangeListener, ICapabilityChangeNotifier { 
 
 	private final Set<ICapabilityChangeListener> listeners = Sets.newIdentityHashSet();
 		
+	/**
+	 * Construct a notifier that rebroadcasts changes from the {@link ICapabilityPublisher}s 
+	 * it is listening to.
+	 */
 	public ChangeNotifier() {
 		super();
 	}
 	
 	@Override
-	public void onChange(final ICapabilityPublisher publisher) {
-		for (final ICapabilityChangeListener listener : listeners){
+	public final void onChange(final ICapabilityPublisher publisher) {
+		for (final ICapabilityChangeListener listener : listeners) {
 			listener.onChange(publisher);
 		}
 	}
 
 	@Override
-	public synchronized void addChangeListener(ICapabilityChangeListener listener) {
+	public final synchronized void addChangeListener(final ICapabilityChangeListener listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public synchronized void removeChangeListener(ICapabilityChangeListener listener) {
+	public final synchronized void removeChangeListener(final ICapabilityChangeListener listener) {
 		listeners.remove(listener);
 	}
 }

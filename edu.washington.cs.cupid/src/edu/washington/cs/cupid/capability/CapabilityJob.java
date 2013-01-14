@@ -6,7 +6,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.internal.CupidActivator;
 
@@ -24,12 +23,23 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * @param <V> output type
  * @see {@link Job}
  */
-public abstract class CapabilityJob<I, V> extends Job{
+public abstract class CapabilityJob<I, V> extends Job {
+	
+	/**
+	 * The input to the capability.
+	 */
+	// TODO make private and expose getter
 	protected final I input;
-	private final ICapability<I,V> capability;
+	
+	private final ICapability<I, V> capability;
 	private final Set<Object> families;
 	
-	public CapabilityJob(ICapability<I,V> capability, I input) {
+	/**
+	 * A capability job produced by <code>capability</code> operating on input <code>input</code>.
+	 * @param capability the source capability
+	 * @param input the input
+	 */
+	public CapabilityJob(final ICapability<I, V> capability, final I input) {
 		super(capability.getUniqueId());
 		this.input = input;
 		this.capability = capability;
@@ -56,12 +66,12 @@ public abstract class CapabilityJob<I, V> extends Job{
 	 * @param family the family
 	 * @see {@link CapabilityJob#belongsTo(Object)}
 	 */
-	public final void addFamily(Object family){
+	public final void addFamily(final Object family) {
 		families.add(family);
 	}
 	
 	@Override
-	public final boolean belongsTo(Object family){
+	public final boolean belongsTo(final Object family) {
 		return families.contains(family);
 	}
 	

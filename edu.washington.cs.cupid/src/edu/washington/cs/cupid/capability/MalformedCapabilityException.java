@@ -4,23 +4,37 @@ package edu.washington.cs.cupid.capability;
  * Thrown to indicate that a capability is malformed (e.g., a job could not be created).
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class MalformedCapabilityException extends Exception{
+public class MalformedCapabilityException extends Exception {
 
-	private final ICapability<?,?> capability;
-	
 	private static final long serialVersionUID = 1L;
-
-	public MalformedCapabilityException(ICapability<?,?> capability, String msg){
+	
+	private final ICapability<?, ?> capability;
+	
+	/**
+	 * Construct an exception indicating that <code>capability</code> is malformed.
+	 * @param capability the capability
+	 * @param msg the detail message
+	 */
+	public MalformedCapabilityException(final ICapability<?, ?> capability, final String msg) {
 		super(msg);
 		this.capability = capability;
 	}
 	
-	public MalformedCapabilityException(ICapability<?,?> capability, Throwable internal){
-		super(internal);
+	/**
+	 * Construct an exception indicating that <code>capability</code> is malformed.
+	 * @param capability the capability
+	 * @param cause the cause
+	 */
+	public MalformedCapabilityException(final ICapability<?, ?> capability, final Throwable cause) {
+		super(cause);
 		this.capability = capability;
 	}
 
-	public ICapability<?,?> getCapability(){
+	/**
+	 * Returns the capability that caused the exception.
+	 * @return the capability that caused the exception.
+	 */
+	public final ICapability<?, ?> getCapability() {
 		return capability;
 	}
 }

@@ -61,22 +61,22 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	// TODO clean up locks
 	
 	/**
-	 * <code>true</code> iff job status should be logged
+	 * <code>true</code> iff job status should be logged.
 	 */
 	private boolean logJobStatus;
 	
 	/**
-	 * <code>true</code> iff cache status (e.g., hits and misses) should be logged
+	 * <code>true</code> iff cache status (e.g., hits and misses) should be logged.
 	 */
 	private boolean logCacheStatus;
 	
 	/**
-	 * Cupid result caches: Input -> { Capability -> Result }
+	 * Cupid result caches: Input -> { Capability -> Result }.
 	 */
-	private final Cache<Object, Cache<Object,Object>> resultCaches;
+	private final Cache<Object, Cache<Object, Object>> resultCaches;
 	
 	/**
-	 * Running jobs: Input -> { Capability -> Result }
+	 * Running jobs: Input -> { Capability -> Result }.
 	 */
 	@SuppressWarnings("rawtypes")
 	private final Table<Object, ICapability, CapabilityJob> running;
@@ -90,12 +90,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private final Set<IInvalidationListener> cacheListeners = Sets.newIdentityHashSet();
 	
 	/**
-	 * Singleton instance
+	 * Singleton instance.
 	 */
 	private static CapabilityExecutor instance = null;
 	
 	/**
-	 * Monitor lock for instance creation
+	 * Monitor lock for instance creation.
 	 */
 	private static Boolean instanceMonitor = false;
 	
@@ -104,9 +104,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private final JobReaper reaper = new JobReaper();
 	private final ISchedulingRuleRegistry scheduler = new SchedulingRuleRegistry();
 
-	private static final CapabilityCacheFactory cacheFactory = new CapabilityCacheFactory();
+	private static final CapabilityCacheFactory CACHE_FACTORY = new CapabilityCacheFactory();
 	
-	private CapabilityExecutor(){
+	private CapabilityExecutor() {
 		resultCaches = CacheBuilder.newBuilder().build();
 		running = HashBasedTable.create();
 		canceling = Sets.newIdentityHashSet();
@@ -118,10 +118,10 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	}
 	
 	@Override
-	public void propertyChange(PropertyChangeEvent event) {
-		if (event.getProperty().equals(PreferenceConstants.P_JOB_STATUS_LOGGING)){
+	public void propertyChange(final PropertyChangeEvent event) {
+		if (event.getProperty().equals(PreferenceConstants.P_JOB_STATUS_LOGGING)) {
 			logJobStatus = (Boolean) event.getNewValue();
-		}else if (event.getProperty().equals(PreferenceConstants.P_CACHE_STATUS_LOGGING)){
+		} else if (event.getProperty().equals(PreferenceConstants.P_CACHE_STATUS_LOGGING)) {
 			logCacheStatus = (Boolean) event.getNewValue();
 		}	
 	}
@@ -129,9 +129,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * @return the singleton instance
 	 */
-	private static CapabilityExecutor getInstance(){
-		synchronized(instanceMonitor){
-			if (instance == null){
+	private static CapabilityExecutor getInstance() {
+		synchronized (instanceMonitor) {
+			if (instance == null) {
 				instance = new CapabilityExecutor();
 				ResourcesPlugin.getWorkspace().addResourceChangeListener(instance);
 			}
@@ -139,15 +139,19 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 
-	public static ISchedulingRuleRegistry getSchedulingRuleRegistry(){
+	/**
+	 * Returns the job scheduling rule registry.
+	 * @return the job scheduling rule registry.
+	 */
+	public static ISchedulingRuleRegistry getSchedulingRuleRegistry() {
 		return getInstance().scheduler;
 	}
 	
 	/**
-	 * Initializes the default capability result cache for an input
+	 * Initializes the default capability result cache for an input.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private static class CapabilityCacheFactory implements Callable<Cache<Object,Object>>{
+	private static class CapabilityCacheFactory implements Callable<Cache<Object, Object>> {
 		@Override
 		public Cache<Object, Object> call() throws Exception {
 			return CacheBuilder
@@ -157,24 +161,26 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	}
 	
 	/**
-	 * Returns the cached result, or <code>null</code> if the result is not cached
+	 * Returns the cached result, or <code>null</code> if the result is not cached.
 	 * @param capability the capability
 	 * @param input the input
+	 * @param <I> input type
+	 * @param <T> output type
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
 	@SuppressWarnings("unchecked") // FP: result is checked dynamically using capabilities return type
-	private <I,T> T getIfPresent(ICapability<I,T> capability, I input){
-		synchronized(resultCaches){
+	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input) {
+		synchronized (resultCaches) {
 			try {
-				Cache<Object,Object> cCache = resultCaches.get(input, cacheFactory);
+				Cache<Object, Object> cCache = resultCaches.get(input, CACHE_FACTORY);
 				
 				Object cached = cCache.getIfPresent(capability);
 				
-				if (cached == null){
+				if (cached == null) {
 					return null;
-				}else if (capability.getReturnType().isAssignableFrom(cached.getClass())){
+				} else if (capability.getReturnType().isAssignableFrom(cached.getClass())) {
 					return (T) cached;
-				}else{
+				} else {
 					throw new TypeException(capability.getReturnType(), TypeToken.of(cached.getClass()));
 				}
 			} catch (ExecutionException e) {
@@ -185,20 +191,21 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	}
 	
 	/**
-	 * Synchronously execute a capability
+	 * Synchronously execute a capability.
 	 * @param capability the capability
 	 * @param input the input
+	 * @param <I> input type
+	 * @param <T> output type
 	 * @return the result of the capability
-	 * @throws RuntimeException iff the job is interrupted, or the capability throws an exception
 	 * @deprecated execute capabilities asynchronously instead
 	 */
-	public static <I,T> T exec(ICapability<I,T> capability, I input){
+	public static <I, T> T exec(final ICapability<I, T> capability, final I input) {
 		CapabilityExecutor executor = getInstance();
 		
 		T cached = executor.getIfPresent(capability, input);
 		
-		if (cached == null){
-			CapabilityJob<I,T> job = capability.isPure() ? capability.getJob(input) : addSetup(capability, input);
+		if (cached == null) {
+			CapabilityJob<I, T> job = capability.isPure() ? capability.getJob(input) : addSetup(capability, input);
 			job.addJobChangeListener(executor.logger);
 			job.schedule();
 			
@@ -210,16 +217,16 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			
 			CapabilityStatus<T> result = (CapabilityStatus<T>) job.getResult();
 			
-			if (result.isOK()){
-				if (!capability.isTransient()){
+			if (result.isOK()) {
+				if (!capability.isTransient()) {
 					getInstance().resultCaches.getIfPresent(input).put(capability, result);
 				}
 				return result.value();
-			}else{
+			} else {
 				throw new RuntimeException(result.getException());
 			}
-		}else{
-			if (executor.logCacheStatus){
+		} else {
+			if (executor.logCacheStatus) {
 				CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
 			}
 		
@@ -231,53 +238,55 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * Asynchronously execute a capability.
 	 * @param capability the capability
 	 * @param input the input
+	 * @param <I> input type
+	 * @param <T> output type
 	 * @param family the job family (used for job cancellation)
 	 * @param callback the job listener
 	 */
-	public static <I,T> void asyncExec(ICapability<I,T> capability, I input, Object family, IJobChangeListener callback){
+	public static <I, T> void asyncExec(final ICapability<I, T> capability, final I input, final Object family, final IJobChangeListener callback) {
 		CapabilityExecutor executor = getInstance();
 		
 		T cached = executor.getIfPresent(capability, input);
 		
-		CapabilityJob<I,T> job;
+		CapabilityJob<I, T> job;
 		
-		synchronized(executor.running){
-			synchronized (executor.canceling){
-				CapabilityJob<I,T> existing = executor.running.get(input, capability);
+		synchronized (executor.running) {
+			synchronized (executor.canceling) {
+				CapabilityJob<I, T> existing = executor.running.get(input, capability);
 
-				if (cached != null){ // CACHED
-					if (executor.logCacheStatus){
+				if (cached != null) { // CACHED
+					if (executor.logCacheStatus) {
 						
-						if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)){
+						if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
 							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(null), Status.INFO, "cache hit"));
-						}else{
+						} else {
 							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
 						}
 					}
-					job = new ImmediateJob<I,T>(capability, input, cached);		
+					job = new ImmediateJob<I, T>(capability, input, cached);		
 
-				}else if (existing != null && !executor.canceling.contains(existing)){ // ALREADY RUNNING
+				} else if (existing != null && !executor.canceling.contains(existing)) { // ALREADY RUNNING
 					// FIXME this allows jobs to be spuriously killed by other requesters
 					// TODO the job might finish before we get a change to add the callback?
 					job = existing;
 
-					if (executor.logJobStatus){
+					if (executor.logJobStatus) {
 						CupidActivator.getDefault().log(new CupidJobStatus(job, Status.INFO, "attaching new listener"));
 					}
 
-				}else{ // SPAWN NEW JOB	
+				} else { // SPAWN NEW JOB	
 					
-					if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)){
+					if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
 						job = capability.isPure() ? capability.getJob(null) : addSetup(capability, input);
-					}else{
+					} else {
 						job = capability.isPure() ? capability.getJob(input) : addSetup(capability, input);
 					}
 					
-					if (job == null){
+					if (job == null) {
 						job = new ImmediateJob(capability, input, new MalformedCapabilityException(capability, "Capability returned null job"));
 					}
 					
-					if (!capability.isTransient()){
+					if (!capability.isTransient()) {
 						job.addJobChangeListener(executor.cacher);
 					}
 					job.addJobChangeListener(executor.logger);
@@ -288,26 +297,26 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		
 		job.addJobChangeListener(callback);
 		
-		if (family != null){
+		if (family != null) {
 			job.addFamily(family);
 		}
 		
 		job.schedule();
 	}
 	
-	private static <I,T> CapabilityJob<I,T> addSetup(final ICapability<I,T> capability, final I input){
-		return new CapabilityJob<I,T>(capability, input){
+	private static <I, T> CapabilityJob<I, T> addSetup(final ICapability<I, T> capability, final I input) {
+		return new CapabilityJob<I, T>(capability, input) {
 			@Override
-			protected CapabilityStatus<T> run(IProgressMonitor monitor) {
+			protected CapabilityStatus<T> run(final IProgressMonitor monitor) {
 				IShadowJob<?> jSetup = null;
 				
 				monitor.subTask("Create Shadow Project");
 				
-				if (input instanceof IJavaElement){
+				if (input instanceof IJavaElement) {
 					jSetup = new ShadowJavaJob((IJavaElement) input);
-				}else if (input instanceof IResource){
+				} else if (input instanceof IResource) {
 					jSetup = new ShadowResourceJob((IResource) input);
-				}else{
+				} else {
 					return CapabilityStatus.makeError(new RuntimeException("No setup defined for type " + input.getClass()));
 				}
 				
@@ -332,28 +341,28 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	}
 	
 	/**
-	 * Walks a resource delta to invalidate cache lines
+	 * Walks a resource delta to invalidate cache lines.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private class InvalidationVisitor implements IResourceDeltaVisitor{
+	private class InvalidationVisitor implements IResourceDeltaVisitor {
 		private Set<Object> invalidated = Sets.newIdentityHashSet();
 		
 		@Override
-		public boolean visit(IResourceDelta delta) throws CoreException {
-			if (delta.getAffectedChildren().length == 0){
+		public boolean visit(final IResourceDelta delta) throws CoreException {
+			if (delta.getAffectedChildren().length == 0) {
 				IResource resource = delta.getResource();
-				if (resource != null && interesting(delta)){
+				if (resource != null && interesting(delta)) {
 					
 					// invalidate cache lines
 					Set<Object> invalidCacheEntries = Sets.newHashSet();
-					for (Object input : resultCaches.asMap().keySet()){
-						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
+					for (Object input : resultCaches.asMap().keySet()) {
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
 							invalidCacheEntries.add(input);
 						}
 					}
 					
-					if (!invalidCacheEntries.isEmpty()){
-						if (logCacheStatus){
+					if (!invalidCacheEntries.isEmpty()) {
+						if (logCacheStatus) {
 							CupidActivator.getDefault().logInformation(
 								"Invalidating resource " + resource.getFullPath().toPortableString() + " ejects " + invalidCacheEntries.size() + " entries");
 						}
@@ -362,9 +371,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					// cancel obsolete jobs
-					for (Object input : running.rowKeySet()){
-						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
-							for (CapabilityJob<?,?> job : running.row(input).values()){
+					for (Object input : running.rowKeySet()) {
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
+							for (CapabilityJob<?, ?> job : running.row(input).values()) {
 								job.cancel();
 							}
 						}
@@ -378,23 +387,23 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		 * @param delta the delta
 		 * @return <code>true</code> iff the delta causes resources to be invalidated
 		 */
-		private boolean interesting(IResourceDelta delta){
+		private boolean interesting(final IResourceDelta delta) {
 			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
 		}
 	}
 	
 	@Override
-	public void resourceChanged(IResourceChangeEvent event) {
-		if (event.getDelta() != null){
-			synchronized(resultCaches){
-				synchronized(running){
-					synchronized(canceling){
+	public void resourceChanged(final IResourceChangeEvent event) {
+		if (event.getDelta() != null) {
+			synchronized (resultCaches) {
+				synchronized (running) {
+					synchronized (canceling) {
 						try {
 							InvalidationVisitor v = new InvalidationVisitor();
 							event.getDelta().accept(v);
 							
-							synchronized(cacheListeners){
-								for (IInvalidationListener listener : cacheListeners){
+							synchronized (cacheListeners) {
+								for (IInvalidationListener listener : cacheListeners) {
 									listener.onResourceChange(v.invalidated, event);
 								}
 							}
@@ -409,20 +418,20 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 	
-	private class JobResultCacher extends NullJobListener{
+	private class JobResultCacher extends NullJobListener {
 		@Override
-		public void done(IJobChangeEvent event) {
-			CapabilityJob<?,?> job = (CapabilityJob<?,?>) event.getJob();
-			synchronized(resultCaches){
+		public void done(final IJobChangeEvent event) {
+			CapabilityJob<?, ?> job = (CapabilityJob<?, ?>) event.getJob();
+			synchronized (resultCaches) {
 				Object value = ((CapabilityStatus<?>) job.getResult()).value();
 				
-				if (value != null){
-					if (logCacheStatus){
+				if (value != null) {
+					if (logCacheStatus) {
 						CupidActivator.getDefault().log(new CupidJobStatus(job, Status.INFO, "caching result\t" + job.getCapability().hashCode()));
 					}
 					
 					try {
-						resultCaches.get(job.getInput(), cacheFactory).put(job.getCapability(), value);
+						resultCaches.get(job.getInput(), CACHE_FACTORY).put(job.getCapability(), value);
 					} catch (ExecutionException e) {
 						CupidActivator.getDefault().logError("Error adding cache result", e);
 						throw new RuntimeException("Error adding result cache", e);
@@ -432,13 +441,13 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}	
 	
-	private class JobReaper extends NullJobListener{
+	private class JobReaper extends NullJobListener {
 		@Override
-		public void done(IJobChangeEvent event) {
-			synchronized(running){
-				synchronized(canceling){
+		public void done(final IJobChangeEvent event) {
+			synchronized (running) {
+				synchronized (canceling) {
 					CapabilityStatus<?> result = (CapabilityStatus<?>) event.getResult();
-					CapabilityJob<?,?> job = (CapabilityJob<?,?>) event.getJob();
+					CapabilityJob<?, ?> job = (CapabilityJob<?, ?>) event.getJob();
 					running.remove(job.getInput(), result.value());
 					canceling.add(job);
 				}
@@ -446,50 +455,50 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 		
-	private class JobLogger implements IJobChangeListener{
+	private class JobLogger implements IJobChangeListener {
 
-		private void log(Job job, String message){
-			if (logJobStatus){
+		private void log(final Job job, final String message) {
+			if (logJobStatus) {
 				CupidActivator.getDefault().log(new CupidJobStatus(job, Status.INFO, message));
 			}
 		}
 		
 		@Override
-		public void aboutToRun(IJobChangeEvent event) {
-			log (event.getJob(), "about to run");
+		public void aboutToRun(final IJobChangeEvent event) {
+			log(event.getJob(), "about to run");
 		}
 
 		@Override
-		public void awake(IJobChangeEvent event) {
-			log (event.getJob(), "awake");
+		public void awake(final IJobChangeEvent event) {
+			log(event.getJob(), "awake");
 		}
 
 		@Override
-		public void done(IJobChangeEvent event) {
-			log (event.getJob(), "done");
+		public void done(final IJobChangeEvent event) {
+			log(event.getJob(), "done");
 		}
 
 		@Override
-		public void running(IJobChangeEvent event) {
-			log (event.getJob(), "running");
+		public void running(final IJobChangeEvent event) {
+			log(event.getJob(), "running");
 		}
 
 		@Override
-		public void scheduled(IJobChangeEvent event) {
-			log (event.getJob(), "scheduled");
+		public void scheduled(final IJobChangeEvent event) {
+			log(event.getJob(), "scheduled");
 		}
 
 		@Override
-		public void sleeping(IJobChangeEvent event) {
-			log (event.getJob(), "sleeping");
+		public void sleeping(final IJobChangeEvent event) {
+			log(event.getJob(), "sleeping");
 		}	
 	}
 	
 	/**
 	 * @param listener the listener
 	 */
-	public static void removeCacheListener(IInvalidationListener listener){
-		synchronized(getInstance().cacheListeners){
+	public static void removeCacheListener(final IInvalidationListener listener) {
+		synchronized (getInstance().cacheListeners) {
 			getInstance().cacheListeners.remove(listener);
 		}
 	}
@@ -497,8 +506,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * @param listener the listener
 	 */
-	public static void addCacheListener(IInvalidationListener listener){
-		synchronized(getInstance().cacheListeners){
+	public static void addCacheListener(final IInvalidationListener listener) {
+		synchronized (getInstance().cacheListeners) {
 			getInstance().cacheListeners.add(listener);
 		}
 	}

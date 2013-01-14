@@ -24,36 +24,39 @@ import edu.washington.cs.cupid.utility.CapabilityUtil;
 import edu.washington.cs.cupid.views.ViewRule;
 
 /**
- * A thread-safe registry of the available Cupid capabilities
+ * A thread-safe registry of the available Cupid capabilities.
  * @author Todd Schiller (tws@cs.washington.edu) 
  */
-public class CapabilityRegistry implements ICapabilityRegistry{
+public final class CapabilityRegistry implements ICapabilityRegistry {
 
 	/**
-	 * Set of available capabilities, organized by contributing publisher
+	 * Set of available capabilities, organized by contributing publisher.
 	 */
-	private final HashMap<ICapabilityPublisher, Set<ICapability<?,?>>> capabilityMap = Maps.newHashMap();
+	private final HashMap<ICapabilityPublisher, Set<ICapability<?, ?>>> capabilityMap = Maps.newHashMap();
 
 	/**
-	 * Set of available capabilities
+	 * Set of available capabilities.
 	 */
-	private final Set<ICapability<?,?>> capabilities = Sets.newIdentityHashSet();
+	private final Set<ICapability<?, ?>> capabilities = Sets.newIdentityHashSet();
 	
 	/**
-	 * Set of change listeners
+	 * Set of change listeners.
 	 */
 	private final ChangeNotifier notifier = new ChangeNotifier();
 	
+	/**
+	 * Cupid plugin preference store.
+	 */
 	private final IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 	
 	
 	@Override
-	public synchronized void onChange(ICapabilityPublisher publisher) {
-		Set<ICapability<?,?>> available = Sets.newHashSet(publisher.publish());
+	public synchronized void onChange(final ICapabilityPublisher publisher) {
+		Set<ICapability<?, ?>> available = Sets.newHashSet(publisher.publish());
 		
-		if (capabilityMap.containsKey(publisher)){
-			Set<ICapability<?,?>> old = capabilityMap.get(publisher);	
-			Set<ICapability<?,?>> removed = Sets.difference(old, available);
+		if (capabilityMap.containsKey(publisher)) {
+			Set<ICapability<?, ?>> old = capabilityMap.get(publisher);	
+			Set<ICapability<?, ?>> removed = Sets.difference(old, available);
 			capabilities.removeAll(removed);
 		}
 		
@@ -65,13 +68,13 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	
 	@Override
 	public synchronized ICapability<?, ?>[] publish() {
-		return capabilities.toArray(new ICapability<?,?>[]{});
+		return capabilities.toArray(new ICapability<?, ?>[]{});
 	}
 
 	@Override
-	public synchronized ICapability<?,?> findCapability(final String uniqueId) throws NoSuchCapabilityException{
-		for (ICapability <?,?> capability : capabilities){
-			if (capability.getUniqueId().equals(uniqueId)){
+	public synchronized ICapability<?, ?> findCapability(final String uniqueId) throws NoSuchCapabilityException {
+		for (ICapability <?, ?> capability : capabilities) {
+			if (capability.getUniqueId().equals(uniqueId)) {
 				return capability;
 			}	
 		}
@@ -79,10 +82,10 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 
 	@Override
-	public synchronized SortedSet<ICapability<?,?>> getCapabilities(TypeToken<?> type){
-		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
-		for (ICapability<?,?> capability : capabilities){
-			if (TypeManager.isCompatible(capability, type)){
+	public synchronized SortedSet<ICapability<?, ?>> getCapabilities(final TypeToken<?> type) {
+		SortedSet<ICapability<?, ?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		for (ICapability<?, ?> capability : capabilities) {
+			if (TypeManager.isCompatible(capability, type)) {
 				result.add(capability);
 			}
 		}
@@ -90,13 +93,13 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 	
 	@Override
-	public synchronized SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType) {
-		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+	public synchronized SortedSet<ICapability<?, ?>> getCapabilities(final TypeToken<?> inputType, final TypeToken<?> outputType) {
+		SortedSet<ICapability<?, ?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
-		for (ICapability<?,?> capability : capabilities){
+		for (ICapability<?, ?> capability : capabilities) {
 			
-			if (TypeManager.isCompatible(capability, inputType) &&
-				TypeManager.isJavaCompatible(outputType, capability.getReturnType())){
+			if (TypeManager.isCompatible(capability, inputType) 
+				&& TypeManager.isJavaCompatible(outputType, capability.getReturnType())) {
 			
 				result.add(capability);
 			}
@@ -105,12 +108,12 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 	
 	@Override
-	public synchronized SortedSet<ICapability<?,?>> getCapabilitiesForOutput(TypeToken<?> outputType) {
-		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+	public synchronized SortedSet<ICapability<?, ?>> getCapabilitiesForOutput(final TypeToken<?> outputType) {
+		SortedSet<ICapability<?, ?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
-		for (ICapability<?,?> capability : capabilities){
+		for (ICapability<?, ?> capability : capabilities) {
 			
-			if (TypeManager.isJavaCompatible(outputType, capability.getReturnType())){
+			if (TypeManager.isJavaCompatible(outputType, capability.getReturnType())) {
 				result.add(capability);
 			}
 		}
@@ -120,10 +123,10 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	@SuppressWarnings("unchecked")
 	@Override
 	public synchronized SortedSet<ICapability<?, Boolean>> getPredicates() {
-		SortedSet<ICapability<?,Boolean>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		SortedSet<ICapability<?, Boolean>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
-		for (ICapability<?,?> capability : capabilities){
-			if (TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())){
+		for (ICapability<?, ?> capability : capabilities) {
+			if (TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())) {
 				result.add((ICapability<?, Boolean>) capability);
 			}
 		}
@@ -131,42 +134,42 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 
 	@Override
-	public synchronized SortedSet<ICapability<?,?>> getCapabilities(){
-		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+	public synchronized SortedSet<ICapability<?, ?>> getCapabilities() {
+		SortedSet<ICapability<?, ?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		result.addAll(capabilities);
 		return result;
 	}
 	
 	@Override
-	public synchronized void addChangeListener(ICapabilityChangeListener listener) {
+	public synchronized void addChangeListener(final ICapabilityChangeListener listener) {
 		notifier.addChangeListener(listener);
 	}
 
 	@Override
-	public synchronized void removeChangeListener(ICapabilityChangeListener listener) {
+	public synchronized void removeChangeListener(final ICapabilityChangeListener listener) {
 		notifier.addChangeListener(listener);
 	}
 	
 	@Override
-	public synchronized void registerPublisher(ICapabilityPublisher publisher){
+	public synchronized void registerPublisher(final ICapabilityPublisher publisher) {
 		publisher.addChangeListener(this);
 		onChange(publisher);
 	}
 
 	@Override
-	public void registerStaticCapability(ICapability<?, ?> capability) {
+	public void registerStaticCapability(final ICapability<?, ?> capability) {
 		capabilities.add(capability);
 		notifier.onChange(this);
 	}
 
 	@Override
-	public ICapability<?, String> getViewer(TypeToken<?> type) {
+	public ICapability<?, String> getViewer(final TypeToken<?> type) {
 		List<ViewRule> rules = new Gson().fromJson(
 				preferences.getString(PreferenceConstants.P_TYPE_VIEWS),
-				new com.google.gson.reflect.TypeToken<List<ViewRule>>(){}.getType());
+				new com.google.gson.reflect.TypeToken<List<ViewRule>>() { } .getType());
 		
-		for (ViewRule rule : rules){
-			if (rule.isActive() && rule.getCapability() != null){
+		for (ViewRule rule : rules) {
+			if (rule.isActive() && rule.getCapability() != null) {
 				ICapability<?, ?> capability;
 				try {
 					capability = findCapability(rule.getCapability());
@@ -174,7 +177,7 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 					continue;
 				}
 				
-				if (TypeManager.isCompatible(capability, type)){
+				if (TypeManager.isCompatible(capability, type)) {
 					return (ICapability<?, String>) capability;
 				}
 			}

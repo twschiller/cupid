@@ -132,7 +132,9 @@ public class ExtractFieldPage extends WizardPage {
 
 		return dialog.getResult();
 	}
+
 	
+
 	private void updateMethodList(){
 		methodList.removeAll();
 		

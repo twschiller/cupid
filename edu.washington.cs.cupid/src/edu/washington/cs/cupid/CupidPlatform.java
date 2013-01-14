@@ -3,7 +3,6 @@ package edu.washington.cs.cupid;
 import java.io.File;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.osgi.framework.Bundle;
 
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.internal.CapabilityRegistry;

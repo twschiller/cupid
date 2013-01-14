@@ -8,8 +8,10 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.SearchablePluginsManager;
 import org.eclipse.pde.internal.core.target.TargetPlatformService;
 import org.eclipse.pde.internal.core.target.provisional.ITargetHandle;
 import org.eclipse.pde.internal.ui.preferences.AddToJavaSearchJob;
@@ -21,6 +23,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 
 import com.google.common.collect.Lists;
 
@@ -58,6 +62,9 @@ public class CupidActivator extends AbstractUIPlugin{
 	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter"; //$NON-NLS-1$
 	
 	public static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.scheduling.rule"; //$NON-NLS-1$
+	
+	public static final String INIT_ID = "edu.washington.cs.cupid.init"; //$NON-NLS-1$
+	
 	
 	/**
 	 * The shared instance
@@ -145,19 +152,17 @@ public class CupidActivator extends AbstractUIPlugin{
 				});
 			}
 		});
-
-		setTypeScope();
-	}
-
-	private void setTypeScope() throws CoreException{
-		PDECore.getDefault().getSearchablePluginsManager().removeAllFromJavaSearch();
 		
-		ITargetHandle target = TargetPlatformService.getDefault().getWorkspaceTargetHandle();
-		if (target != null) {
-			AddToJavaSearchJob.synchWithTarget(target.getTargetDefinition());
-		}
+		// TWS: races with java initialization
+//		SearchablePluginsManager manager = PDECore.getDefault().getSearchablePluginsManager();
+//		manager.removeAllFromJavaSearch();
+//
+//		ITargetHandle target = TargetPlatformService.getDefault().getWorkspaceTargetHandle();
+//		if (target != null) {
+//			AddToJavaSearchJob.synchWithTarget(target.getTargetDefinition());
+//		}
 	}
-	
+
 	private void registerSchedulingRuleExtensions(){
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.SCHEDULING_RULE_ID);

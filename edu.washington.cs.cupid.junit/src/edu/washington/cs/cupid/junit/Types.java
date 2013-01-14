@@ -6,14 +6,21 @@ import org.eclipse.jdt.internal.junit.model.TestElement;
 
 import com.google.common.reflect.TypeToken;
 
+/**
+ * Types used by the JUnit Cupid plugin.
+ * @author Todd Schiller
+ */
 @SuppressWarnings("restriction")
 public final class Types {
 	
-	public final static TypeToken<Set<TestElement>> TEST_ELEMENTS = new TypeToken<Set<TestElement>>(){
+	/**
+	 * Token for a set of {@link TestElement}s.
+	 */
+	public static final TypeToken<Set<TestElement>> TEST_ELEMENTS = new TypeToken<Set<TestElement>>() {
 		private static final long serialVersionUID = 1L;
 	};
 	
-	private Types(){
+	private Types() {
 		// NO OP
 	}
 }

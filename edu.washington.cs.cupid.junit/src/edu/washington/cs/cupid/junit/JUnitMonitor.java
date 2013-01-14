@@ -14,48 +14,52 @@ import org.eclipse.debug.core.model.RuntimeProcess;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.junit.JUnitCorePlugin;
 import org.eclipse.jdt.internal.junit.launcher.JUnitLaunchConfigurationConstants;
-import org.eclipse.jdt.internal.junit.model.JUnitModel;
 import org.eclipse.jdt.internal.junit.model.TestRunSession;
 import org.eclipse.jdt.junit.TestRunListener;
 
 /**
- * Attached JUnit sessions to launches
+ * Attach JUnit sessions to launches.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
 @SuppressWarnings("restriction")
-public class JUnitMonitor {
+public final class JUnitMonitor {
 	
 	/**
-	 * Launch property indicating that the launch should be monitored
+	 * Launch property indicating that the launch should be monitored.
 	 */
-	public static String MONITOR_TEST = "cupid_monitor";
+	public static final String MONITOR_TEST_PROPERTY = "cupid_monitor";
 	
 	/**
-	 * Debug event listener that attaches JUnit sessions to launches
+	 * Debug event listener that attaches JUnit sessions to launches.
 	 */
-	private static JUnitLaunchListener launchListener = new JUnitLaunchListener();
+	private static final JUnitLaunchListener LAUNCH_LISTENER = new JUnitLaunchListener();
 
 	/**
-	 * JUnit test sessions for launches
+	 * JUnit test sessions for launches.
 	 */
-	private final static Map<ILaunch, TestRunSession> sessions = Collections.synchronizedMap(new HashMap<ILaunch, TestRunSession>());
+	private static final Map<ILaunch, TestRunSession> TEST_SESSIONS = Collections.synchronizedMap(new HashMap<ILaunch, TestRunSession>());
 	
 	/**
-	 * Register the JUnit monitor
+	 * Register the JUnit monitor.
 	 */
-	public void start(){
-		DebugPlugin.getDefault().addDebugEventListener(launchListener);
+	public void start() {
+		DebugPlugin.getDefault().addDebugEventListener(LAUNCH_LISTENER);
 	}
 	
 	/**
-	 * Deregister the JUnit monitor
+	 * Deregister the JUnit monitor.
 	 */
-	public void stop(){
-		DebugPlugin.getDefault().removeDebugEventListener(launchListener);
+	public void stop() {
+		DebugPlugin.getDefault().removeDebugEventListener(LAUNCH_LISTENER);
 	}
 	
-	public TestRunSession forLaunch(ILaunch launch){
-		return sessions.get(launch);
+	/**
+	 * Returns the test session for <code>launch</code>.
+	 * @param launch the launch 
+	 * @return  the test session for <code>launch</code>.
+	 */
+	public TestRunSession forLaunch(final ILaunch launch) {
+		return TEST_SESSIONS.get(launch);
 	}
 	
 	/**
@@ -63,20 +67,20 @@ public class JUnitMonitor {
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 * @see JUnitModel
 	 */
-	private static class JUnitLaunchListener implements IDebugEventSetListener{
+	private static class JUnitLaunchListener implements IDebugEventSetListener {
 		@Override
-		public void handleDebugEvents(DebugEvent[] events) {
-			for (DebugEvent event : events){
-				if (event.getKind() == DebugEvent.CREATE && event.getSource() instanceof RuntimeProcess){
+		public void handleDebugEvents(final DebugEvent[] events) {
+			for (DebugEvent event : events) {
+				if (event.getKind() == DebugEvent.CREATE && event.getSource() instanceof RuntimeProcess) {
 					ILaunch launch = ((RuntimeProcess) event.getSource()).getLaunch();
 					
 					ILaunchConfiguration config = launch.getLaunchConfiguration();
-					if (config == null){
+					if (config == null) {
 						return;
 					}
 					
 					try {
-						if (!config.getAttribute(MONITOR_TEST, false)){
+						if (!config.getAttribute(MONITOR_TEST_PROPERTY, false)) {
 							return;
 						}
 					} catch (CoreException e1) {
@@ -84,14 +88,16 @@ public class JUnitMonitor {
 					}
 					
 					final IJavaProject javaProject = JUnitLaunchConfigurationConstants.getJavaProject(config);
-					if (javaProject == null){
+					if (javaProject == null) {
 						return;
 					}
 					
 					// test whether the launch defines the JUnit attributes
 					String portStr = launch.getAttribute(JUnitLaunchConfigurationConstants.ATTR_PORT);
-					if (portStr == null)
+					if (portStr == null) {
 						return;
+					}
+					
 					try {
 						final int port = Integer.parseInt(portStr);
 						connectTestRunner(launch, javaProject, port);
@@ -102,12 +108,12 @@ public class JUnitMonitor {
 			}
 		}
 		
-		private void connectTestRunner(ILaunch launch, IJavaProject javaProject, int port) {
-			TestRunSession testRunSession= new TestRunSession(launch, javaProject, port);
-			sessions.put(launch, testRunSession);
+		private void connectTestRunner(final ILaunch launch, final IJavaProject javaProject, final int port) {
+			TestRunSession testRunSession = new TestRunSession(launch, javaProject, port);
+			TEST_SESSIONS.put(launch, testRunSession);
 			
-			Object[] listeners= JUnitCorePlugin.getDefault().getNewTestRunListeners().getListeners();
-			for (int i= 0; i < listeners.length; i++) {
+			Object[] listeners = JUnitCorePlugin.getDefault().getNewTestRunListeners().getListeners();
+			for (int i = 0; i < listeners.length; i++) {
 				((TestRunListener) listeners[i]).sessionLaunched(testRunSession);
 			}
 		}

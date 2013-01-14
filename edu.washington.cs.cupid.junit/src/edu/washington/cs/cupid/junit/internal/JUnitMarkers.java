@@ -22,29 +22,37 @@ import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.markers.IMarkerBuilder;
 import edu.washington.cs.cupid.markers.MarkerBuilder;
 
+/**
+ * A capability that produces problem markers for failed JUnit tests in a test session.
+ * @see {@link TestRunSession}
+ * @see {@link IMarkerBuilder}
+ * @author Todd Schiller
+ */
 @SuppressWarnings("restriction")
-public class JUnitMarkers extends AbstractCapability<TestRunSession, Collection<IMarkerBuilder>> {
+public final class JUnitMarkers extends AbstractCapability<TestRunSession, Collection<IMarkerBuilder>> {
 
+	/**
+	 * Construct a capability that produces problem markers for failed JUnit tests in a test session.
+	 */
 	public JUnitMarkers() {
-		super (
-				"JUnit Marker Builder",
-				"edu.washington.cs.cupid.junit.internal.markers",
-				"Create problem markers from failed tests",
-				TypeToken.of(TestRunSession.class),
-				IMarkerBuilder.MARKER_RESULT,
-				Flag.PURE, Flag.LOCAL);
+		super("JUnit Marker Builder",
+			  "edu.washington.cs.cupid.junit.internal.markers",
+			  "Create problem markers from failed tests",
+			  TypeToken.of(TestRunSession.class),
+			  IMarkerBuilder.MARKER_RESULT,
+			  Flag.PURE, Flag.LOCAL);
 	}
 
 	@Override
-	public CapabilityJob<TestRunSession, Collection<IMarkerBuilder>> getJob(TestRunSession input) {
-		return new CapabilityJob<TestRunSession, Collection<IMarkerBuilder>>(this, input){
+	public CapabilityJob<TestRunSession, Collection<IMarkerBuilder>> getJob(final TestRunSession input) {
+		return new CapabilityJob<TestRunSession, Collection<IMarkerBuilder>>(this, input) {
 			@Override
-			protected CapabilityStatus<Collection<IMarkerBuilder>> run(IProgressMonitor monitor) {
+			protected CapabilityStatus<Collection<IMarkerBuilder>> run(final IProgressMonitor monitor) {
 				monitor.beginTask("Building JUnit Markers", input.getAllFailedTestElements().length);
 				Collection<IMarkerBuilder> result = Sets.newHashSet();
 				
-				for (TestElement element : input.getAllFailedTestElements()){
-					if (element instanceof TestCaseElement){
+				for (TestElement element : input.getAllFailedTestElements()) {
+					if (element instanceof TestCaseElement) {
 						TestCaseElement test = (TestCaseElement) element;
 						
 						IResource resource = null;
@@ -53,35 +61,37 @@ public class JUnitMarkers extends AbstractCapability<TestRunSession, Collection<
 						try {
 							IType type = test.getTestRunSession().getLaunchedProject().findType(test.getClassName());
 							
-							if (type == null){
+							if (type == null) {
 								resource = test.getTestRunSession().getLaunchedProject().getCorrespondingResource();
-							}else{
+							} else {
 								ICompilationUnit cunit = type.getCompilationUnit();
 								method = type.getMethod(test.getTestMethodName(), new String[]{});
 								
-								if (cunit == null){
+								if (cunit == null) {
 									resource = test.getTestRunSession().getLaunchedProject().getCorrespondingResource();
-								}else{
+								} else {
 									resource = cunit.getCorrespondingResource();
 								}
 							}
 						} catch (JavaModelException e) {
-							continue;
+							monitor.done();
+							return CapabilityStatus.makeError(e);
 						}
 						
-						if (resource != null){
+						if (resource != null) {
 							MarkerBuilder builder = new MarkerBuilder(resource)
 								.set(IMarker.MESSAGE, "Test failed: " + element.getTestName())
 								.set(IMarker.TRANSIENT, true)
 								.set(IMarker.PRIORITY, IMarker.PRIORITY_NORMAL);
 							
-							if (method != null){
+							if (method != null) {
 								try {
 									builder
 										.set(IMarker.CHAR_START, method.getSourceRange().getOffset())
 										.set(IMarker.CHAR_END, method.getSourceRange().getOffset() + method.getSourceRange().getLength());
 								} catch (JavaModelException e) {
-									// NO OP
+									monitor.done();
+									return CapabilityStatus.makeError(e);
 								}
 							}
 
@@ -91,10 +101,9 @@ public class JUnitMarkers extends AbstractCapability<TestRunSession, Collection<
 				
 					monitor.worked(1);
 				}
-				
+				monitor.done();
 				return CapabilityStatus.makeOk(result);
 			}
-			
 		};
 	}
 

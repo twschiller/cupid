@@ -6,10 +6,10 @@ import org.eclipse.jface.viewers.LabelProvider;
  * Graph label provider that just uses {@link LabelProvider#getText(Object)}.
  * @author Todd Schiller
  */
-public class GraphLabelProvider extends LabelProvider{
+public class GraphLabelProvider extends LabelProvider {
 
 	@Override
-	public String getText(Object element) {
+	public final String getText(final Object element) {
 		return super.getText(element);
 	}
 	

@@ -1,6 +1,5 @@
 package edu.washington.cs.cupid.capability.dynamic;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -20,59 +19,76 @@ import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
  * @param <I> input type
  * @param <V> output type
  */
-public abstract class AbstractTransientCapability<I,V> implements ICapability<I,V>{
+public abstract class AbstractTransientCapability<I, V> implements ICapability<I, V> {
 
 	private final String name;
 	private final String description;
 	private final Set<Object> capabilities;
 	
-	public AbstractTransientCapability(String name, String description, Collection<Object> capabilities){
+	/**
+	 * Construct a capability with possibly dynamic bindings.
+	 * @param name the capability name
+	 * @param description the capability description
+	 * @param capabilities the component capabilities. Each element is either a unique id, or an {@link ICapability}
+	 */
+	public AbstractTransientCapability(final String name, final String description, final Collection<Object> capabilities) {
 		this.name = name;
 		this.description = description;
 		this.capabilities = Sets.newHashSet(capabilities);
 	}
 	
 	@Override
-	public String getName() {
+	public final String getName() {
 		return name;
 	}
 
 	@Override
-	public String getDescription() {
+	public final String getDescription() {
 		return description;
 	}
 
-	public Map<String, ICapability<?,?>> current() throws NoSuchCapabilityException{
-		Map<String, ICapability<?,?>> result = Maps.newHashMap();
-		for (Object capability : capabilities){
-			if (capability instanceof ICapability){
-				ICapability<?,?> x = (ICapability<?,?>) capability;
+	/**
+	 * Returns a mapping from unique ids to resolved capabilities for the component capabilities. 
+	 * @return a mapping from unique ids to resolved capabilities for the component capabilities. 
+	 * @throws NoSuchCapabilityException if a dynamic binding cannot be resolved
+	 */
+	public final Map<String, ICapability<?, ?>> current() throws NoSuchCapabilityException {
+		Map<String, ICapability<?, ?>> result = Maps.newHashMap();
+		for (Object capability : capabilities) {
+			if (capability instanceof ICapability) {
+				ICapability<?, ?> x = (ICapability<?, ?>) capability;
 				result.put(x.getUniqueId(), x);
-			}else if (capability instanceof String){
+			} else if (capability instanceof String) {
 				result.put((String) capability, CupidPlatform.getCapabilityRegistry().findCapability((String) capability));
-			}else{
+			} else {
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
 		}
 		return result;
 	}
 	
-	public ICapability<?,?> get(Object key) throws NoSuchCapabilityException{
-		if (key instanceof String){
+	/**
+	 * Resolve the capability binding for <code>key</code>.
+	 * @param key a capability id or {@link ICapability}
+	 * @return the capability binding for <code>key</code>
+	 * @throws NoSuchCapabilityException if <code>key</code> cannot be resolved
+	 */
+	public final ICapability<?, ?> get(final Object key) throws NoSuchCapabilityException {
+		if (key instanceof String) {
 			return current().get((String) key);
-		}else if (key instanceof ICapability){
-			return (ICapability<?,?>) key;
-		}else{
+		} else if (key instanceof ICapability) {
+			return (ICapability<?, ?>) key;
+		} else {
 			throw new IllegalArgumentException();
 		}
 	}
 
 	@Override
-	public boolean isPure() {
+	public final boolean isPure() {
 		try {
-			return Iterables.all(current().values(), new Predicate<ICapability<?,?>>(){
+			return Iterables.all(current().values(), new Predicate<ICapability<?, ?>>() {
 				@Override
-				public boolean apply(ICapability<?, ?> capability) {
+				public boolean apply(final ICapability<?, ?> capability) {
 					return capability.isPure();
 				}
 			});
@@ -82,11 +98,11 @@ public abstract class AbstractTransientCapability<I,V> implements ICapability<I,
 	}
 	
 	@Override
-	public boolean isLocal() {
+	public final boolean isLocal() {
 		try {
-			return Iterables.all(current().values(), new Predicate<ICapability<?,?>>(){
+			return Iterables.all(current().values(), new Predicate<ICapability<?, ?>>() {
 				@Override
-				public boolean apply(ICapability<?, ?> capability) {
+				public boolean apply(final ICapability<?, ?> capability) {
 					return capability.isLocal();
 				}
 			});
@@ -96,11 +112,11 @@ public abstract class AbstractTransientCapability<I,V> implements ICapability<I,
 	}
 	
 	@Override
-	public boolean isTransient() {
+	public final boolean isTransient() {
 		try {
-			return Iterables.any(current().values(), new Predicate<ICapability<?,?>>(){
+			return Iterables.any(current().values(), new Predicate<ICapability<?, ?>>() {
 				@Override
-				public boolean apply(ICapability<?, ?> capability) {
+				public boolean apply(final ICapability<?, ?> capability) {
 					return capability.isTransient();
 				}
 			});
@@ -111,12 +127,12 @@ public abstract class AbstractTransientCapability<I,V> implements ICapability<I,
 	
 
 	@Override
-	public Set<String> getDynamicDependencies() {
+	public final Set<String> getDynamicDependencies() {
 		Set<String> dependencies = Sets.newHashSet();
 		
-		for (Object capability : capabilities){
-			if (capability instanceof String){
-				dependencies.add((String)capability);
+		for (Object capability : capabilities) {
+			if (capability instanceof String) {
+				dependencies.add((String) capability);
 			}
 		}
 	

@@ -16,33 +16,41 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 
 /**
- * A linear pipeline with dynamic binding
+ * A linear pipeline with dynamic binding that can be serialized.
+ * @param <I> input type
+ * @param <V> output type
  * @author Todd Schiller
  */
 @SuppressWarnings("rawtypes")
-public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,V>{
+public class SerializablePipeline<I, V> extends AbstractSerializableCapability<I, V> {
 	// TODO handle concurrent modifications to capability bindings
 	
 	private static final long serialVersionUID = 1L;
 	
 	private final List<Serializable> capabilities;
 
-	public SerializablePipeline(String name, String description, List<Serializable> capabilities) {
+	/**
+	 * Construct a serializable pipeline of capabilities.
+	 * @param name the capability name
+	 * @param description the capability description
+	 * @param capabilities the pipeline of capabilities
+	 */
+	public SerializablePipeline(final String name, final String description, final List<Serializable> capabilities) {
 		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
 
-	private List<ICapability<?,?>> inorder() throws NoSuchCapabilityException{
-		Map<String, ICapability<?,?>> map = super.current();
+	private List<ICapability<?, ?>> inorder() throws NoSuchCapabilityException {
+		Map<String, ICapability<?, ?>> map = super.current();
 		
-		List<ICapability<?,?>> result = Lists.newArrayList();
+		List<ICapability<?, ?>> result = Lists.newArrayList();
 	
-		for (Object capability : capabilities){
-			if (capability instanceof ICapability){
+		for (Object capability : capabilities) {
+			if (capability instanceof ICapability) {
 				result.add((ICapability) capability);
-			}else if (capability instanceof String){
+			} else if (capability instanceof String) {
 				result.add(map.get((String) capability));
-			}else{
+			} else {
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
 		}
@@ -50,15 +58,15 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 	}
 	
 	@Override
-	public String getUniqueId() {
+	public final String getUniqueId() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[pipe:");
-		for (Object capability : capabilities){
-			if (capability instanceof ICapability){
+		for (Object capability : capabilities) {
+			if (capability instanceof ICapability) {
 				builder.append(((ICapability) capability).getUniqueId());
-			}else if (capability instanceof String){
-				builder.append(((String)capability));
-			}else{
+			} else if (capability instanceof String) {
+				builder.append(((String) capability));
+			} else {
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
 			
@@ -68,13 +76,13 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 		return builder.toString();	
 	}
 
-	private ICapability<?,?> get(int index) throws NoSuchCapabilityException{
+	private ICapability<?, ?> get(final int index) throws NoSuchCapabilityException {
 		return get(capabilities.get(index));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public TypeToken<I> getParameterType() {
+	public final TypeToken<I> getParameterType() {
 		try {
 			return (TypeToken<I>) get(0).getParameterType();
 		} catch (NoSuchCapabilityException e) {
@@ -84,9 +92,9 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public TypeToken<V> getReturnType() {
+	public final TypeToken<V> getReturnType() {
 		try {
-			return (TypeToken<V>) get(capabilities.size()-1).getReturnType();
+			return (TypeToken<V>) get(capabilities.size() - 1).getReturnType();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -94,17 +102,17 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public CapabilityJob getJob(Object input) {
-		return new CapabilityJob(this, input){
+	public final CapabilityJob getJob(final Object input) {
+		return new CapabilityJob(this, input) {
 			@Override
-			protected CapabilityStatus run(IProgressMonitor monitor) {
+			protected CapabilityStatus run(final IProgressMonitor monitor) {
 				Object result = getInput();
 				
 				monitor.beginTask(this.getName(), SerializablePipeline.this.capabilities.size());
 
-				List<ICapability<?, ?>> capabilities;
+				List<ICapability<?, ?>> resolved;
 				try {
-					capabilities = inorder();
+					resolved = inorder();
 				} catch (NoSuchCapabilityException e) {
 					return CapabilityStatus.makeError(e);
 				}
@@ -112,14 +120,14 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 				List<Object> intermediateResults = Lists.newArrayList();
 				intermediateResults.add(result);
 
-				for (ICapability capability : capabilities){
-					if (monitor.isCanceled()){
+				for (ICapability capability : resolved) {
+					if (monitor.isCanceled()) {
 						return CapabilityStatus.makeCancelled();
 					}
 
-					CapabilityJob<?,?> subtask = capability.getJob(result);
+					CapabilityJob<?, ?> subtask = capability.getJob(result);
 					
-					if (subtask == null){
+					if (subtask == null) {
 						throw new RuntimeException("Capability " + capability.getName() + " produced null job");
 					}
 					
@@ -132,13 +140,13 @@ public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,
 						return CapabilityStatus.makeError(e);
 					}
 
-					CapabilityStatus status = ((CapabilityStatus)subtask.getResult());
+					CapabilityStatus status = ((CapabilityStatus) subtask.getResult());
 
-					if (status.getCode() == Status.OK){
+					if (status.getCode() == Status.OK) {
 						result = status.value();
 						intermediateResults.add(result);
 						monitor.worked(1);
-					}else{
+					} else {
 						monitor.done();
 						return CapabilityStatus.makeError(status.getException());
 					}

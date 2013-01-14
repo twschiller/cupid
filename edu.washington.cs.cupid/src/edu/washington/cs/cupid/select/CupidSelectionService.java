@@ -24,10 +24,10 @@ import com.google.common.collect.Maps;
 import edu.washington.cs.cupid.internal.NullPartListener;
 
 /**
- * A selection manager to track selections in Eclipse and SWT Widgets
+ * A selection manager to track selections in Eclipse and SWT Widgets.
  * @author Todd Schiller
  */
-public class CupidSelectionService extends NullPartListener implements ISelectionListener{
+public final class CupidSelectionService extends NullPartListener implements ISelectionListener {
 
 	// TODO fix broadcaster memory leak when parts are disposed
 	// TODO support for list selection
@@ -43,38 +43,46 @@ public class CupidSelectionService extends NullPartListener implements ISelectio
 	
 	private static CupidSelectionService instance = null;
 	
-	public static CupidSelectionService getInstance(){
-		if (instance == null){
+	/**
+	 * Returns the singleton selection service instance.
+	 * @return the singleton selection service instance.
+	 */
+	public static CupidSelectionService getInstance() {
+		if (instance == null) {
 			instance = new CupidSelectionService();
 		}
 		return instance;
 	}
 	
-	private CupidSelectionService(){
-		try{
+	private CupidSelectionService() {
+		try {
 			workbenchPartReferenceClazz = Class.forName("org.eclipse.ui.internal.WorkbenchPartReference");
 			partPaneClazz = Class.forName("org.eclipse.ui.internal.PartPane");
 			getPaneMethod = workbenchPartReferenceClazz.getMethod("getPane");
 			getControlMethod = partPaneClazz.getMethod("getControl");
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
 	}
 	
 	@Override
-	public void partActivated(IWorkbenchPartReference partRef) {
+	public void partActivated(final IWorkbenchPartReference partRef) {
 		injectListeners(partRef);
 	}
 
 	@Override
-	public void partVisible(IWorkbenchPartReference partRef) {
+	public void partVisible(final IWorkbenchPartReference partRef) {
 		injectListeners(partRef);
 	}
 	
-	public void injectListeners(IWorkbenchPartReference partRef){
+	/**
+	 * Adds selection listeners to the {@link Tree}s and {@link Table}s in <code>partRef</code>.
+	 * @param partRef the workbench part to listen for selections in
+	 */
+	public void injectListeners(final IWorkbenchPartReference partRef) {
 		Control control = null;
 		
-		if (partRef instanceof IViewReference){
+		if (partRef instanceof IViewReference) {
 			try {
 				Object pane = getPaneMethod.invoke(partRef);
 				control = (Control) getControlMethod.invoke(pane);
@@ -82,9 +90,9 @@ public class CupidSelectionService extends NullPartListener implements ISelectio
 				throw new RuntimeException(e);
 			}
 
-			if (control != null){
+			if (control != null) {
 				IWorkbenchPart part = partRef.getPart(false);
-				if (!broadcasters.containsKey(part)){
+				if (!broadcasters.containsKey(part)) {
 					broadcasters.put(part, new Broadcaster(part));
 				}
 				
@@ -93,87 +101,93 @@ public class CupidSelectionService extends NullPartListener implements ISelectio
 		}
 	}
 	
-	public static void addListener(ICupidSelectionListener listener){
+	/**
+	 * Adds a selection listener to the selection service.
+	 * @param listener the selection listener
+	 */
+	public static void addListener(final ICupidSelectionListener listener) {
 		getInstance().listeners.add(listener);
 	}
 	
-	public static void removeListener(ICupidSelectionListener listener){
+	/**
+	 * Removes a selection listener from the selection service.
+	 * @param listener the selection listener to remove
+	 */
+	public static void removeListener(final ICupidSelectionListener listener) {
 		getInstance().listeners.remove(listener);
 	}
 	
-	private void injectListeners(Broadcaster broadcast, Control control){
+	private void injectListeners(final Broadcaster broadcast, final Control control) {
 		
-		if (control instanceof Tree){
+		if (control instanceof Tree) {
 			((Tree) control).addSelectionListener(broadcast);
-		}else if(control instanceof Table){
+		} else if (control instanceof Table) {
 			((Table) control).addSelectionListener(broadcast);
 		}
 		
 		// recursively add listeners
-		if (control instanceof Composite){
-			for (Control child : ((Composite) control).getChildren()){
+		if (control instanceof Composite) {
+			for (Control child : ((Composite) control).getChildren()) {
 				injectListeners(broadcast, child);
 			}
 		}
 	}
 	
-	private class Broadcaster implements SelectionListener{
+	private class Broadcaster implements SelectionListener {
 
 		private IWorkbenchPart part;
 		
-		public Broadcaster(IWorkbenchPart part) {
+		public Broadcaster(final IWorkbenchPart part) {
 			this.part = part;
 		}
 
 		@Override
-		public void widgetSelected(SelectionEvent e) {
-			if (e.widget instanceof Table){
+		public void widgetSelected(final SelectionEvent e) {
+			if (e.widget instanceof Table) {
 				Table table = (Table) e.widget;
 				
-				if (table.getSelectionCount() == 1){
-					for (ICupidSelectionListener listener : listeners){
+				if (table.getSelectionCount() == 1) {
+					for (ICupidSelectionListener listener : listeners) {
 						listener.selectionChanged(part, table.getSelection()[0].getData());
 					}
-				}else{
+				} else {
 					List<Object> selection = Lists.newArrayList();
-					for (TableItem item : table.getSelection()){
+					for (TableItem item : table.getSelection()) {
 						selection.add(item.getData());
 					}
-					for (ICupidSelectionListener listener : listeners){
+					for (ICupidSelectionListener listener : listeners) {
 						listener.selectionChanged(part, selection.toArray());
 					}
 				}
-			}else if (e.widget instanceof Tree){
+			} else if (e.widget instanceof Tree) {
 				Tree tree = (Tree) e.widget;
 				
-				if (tree.getSelectionCount() == 1){
-					for (ICupidSelectionListener listener : listeners){
+				if (tree.getSelectionCount() == 1) {
+					for (ICupidSelectionListener listener : listeners) {
 						listener.selectionChanged(part, tree.getSelection()[0].getData());
 					}
-				}else{
+				} else {
 					List<Object> selection = Lists.newArrayList();
-					for (TreeItem item : tree.getSelection()){
+					for (TreeItem item : tree.getSelection()) {
 						selection.add(item.getData());
 					}
-					for (ICupidSelectionListener listener : listeners){
+					for (ICupidSelectionListener listener : listeners) {
 						listener.selectionChanged(part, selection.toArray());
 					}
 				}
-			}else{
-				// TODO log this?
 			}
 		}
 
 		@Override
-		public void widgetDefaultSelected(SelectionEvent e) {
+		public void widgetDefaultSelected(final SelectionEvent e) {
 			// NO OP
 		}
 		
 	}
 
 	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		for (ICupidSelectionListener listener : listeners){
+	public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
+		for (ICupidSelectionListener listener : listeners) {
 			listener.selectionChanged(part, selection);
 		}
 	}

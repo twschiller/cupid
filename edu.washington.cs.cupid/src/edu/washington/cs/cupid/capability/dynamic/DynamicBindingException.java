@@ -8,14 +8,12 @@ package edu.washington.cs.cupid.capability.dynamic;
 public class DynamicBindingException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
-	private final Throwable inner;
-
-	public DynamicBindingException(Throwable inner) {
-		super();
-		this.inner = inner;
+	/**
+	 * Construct an exception indicating that a dynamic capability binding failed.
+	 * @param cause the cause
+	 */
+	public DynamicBindingException(final Throwable cause) {
+		super(cause);
 	}
 
-	public Throwable getInner() {
-		return inner;
-	}	
 }

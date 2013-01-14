@@ -37,12 +37,14 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.LinearPipeline;
+import edu.washington.cs.cupid.capability.dynamic.TransientPipeline;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.preferences.SelectionInspectorPreferencePage;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.select.ICupidSelectionListener;
+import edu.washington.cs.cupid.utility.CapabilityUtil;
 
 /**
  * View that shows capabilities (and their outputs) that apply to the current workbench selection.
@@ -152,7 +154,8 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			ICapability<?,String> viewer = CupidPlatform.getCapabilityRegistry().getViewer(original.getReturnType());
 			
 			if (viewer != null){
-				return new LinearPipeline(original.getName(), original.getDescription(), original, viewer);
+				return new TransientPipeline(original.getName(), original.getDescription(), 
+						Lists.newArrayList(original, viewer));
 			}else{
 				return original;
 			}
@@ -233,8 +236,10 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 
 			List<Object> rows = Lists.newArrayList();
+			
+			Set<ICapability<?,?>> capabilities = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()));
 
-			for (ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()))){
+			for (ICapability<?,?> capability : CapabilityUtil.sort(capabilities, CapabilityUtil.COMPARE_NAME)){
 				if (!hidden.contains(capability.getUniqueId())){
 					
 					Object adapted = TypeManager.getCompatible(capability, argument);

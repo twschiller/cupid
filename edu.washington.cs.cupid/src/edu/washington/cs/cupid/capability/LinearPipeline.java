@@ -49,7 +49,7 @@ public class LinearPipeline<I,T> implements ICapability<I,T>{
 		
 		for (ICapability<?,?> capability : capabilities){
 			if (!capability.getDynamicDependencies().isEmpty()){
-				throw new IllegalArgumentException("Static pipelines cannot have dynamic dependencies");
+				throw new IllegalArgumentException("Static pipelines cannot have dynamic dependencies: " + capability.getUniqueId());
 			}
 			
 			lpure &= capability.isPure();

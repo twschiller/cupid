@@ -12,22 +12,21 @@ import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 
 /**
- * A pipeline
+ * A capability with possibly dynamic bindings.
  * @author Todd Schiller
+ * @param <I> input type
+ * @param <V> output type
  */
-public abstract class DynamicPipeline<I,V> implements ISerializableCapability<I,V>{
-
-	private static final long serialVersionUID = 1L;
+public abstract class AbstractTransientCapability<I,V> implements ICapability<I,V>{
 
 	private final String name;
 	private final String description;
-	private final Set<Serializable> capabilities;
+	private final Set<Object> capabilities;
 	
-	public DynamicPipeline(String name, String description, Collection<Serializable> capabilities){
+	public AbstractTransientCapability(String name, String description, Collection<Object> capabilities){
 		this.name = name;
 		this.description = description;
 		this.capabilities = Sets.newHashSet(capabilities);
@@ -58,7 +57,7 @@ public abstract class DynamicPipeline<I,V> implements ISerializableCapability<I,
 		return result;
 	}
 	
-	public ICapability<?,?> get(Serializable key) throws NoSuchCapabilityException{
+	public ICapability<?,?> get(Object key) throws NoSuchCapabilityException{
 		if (key instanceof String){
 			return current().get((String) key);
 		}else if (key instanceof ICapability){
@@ -102,7 +101,7 @@ public abstract class DynamicPipeline<I,V> implements ISerializableCapability<I,
 			return Iterables.any(current().values(), new Predicate<ICapability<?,?>>(){
 				@Override
 				public boolean apply(ICapability<?, ?> capability) {
-					return capability.isPure();
+					return capability.isTransient();
 				}
 			});
 		} catch (NoSuchCapabilityException e) {

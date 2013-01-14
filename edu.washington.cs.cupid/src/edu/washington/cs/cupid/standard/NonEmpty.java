@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 import edu.washington.cs.cupid.jobs.ImmediateJob;

@@ -1,9 +1,9 @@
 package edu.washington.cs.cupid.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -20,6 +20,7 @@ import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.utility.CapabilityUtil;
 import edu.washington.cs.cupid.views.ViewRule;
 
 /**
@@ -78,8 +79,8 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 
 	@Override
-	public synchronized Set<ICapability<?,?>> getCapabilities(TypeToken<?> type){
-		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
+	public synchronized SortedSet<ICapability<?,?>> getCapabilities(TypeToken<?> type){
+		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		for (ICapability<?,?> capability : capabilities){
 			if (TypeManager.isCompatible(capability, type)){
 				result.add(capability);
@@ -89,8 +90,9 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 	
 	@Override
-	public synchronized Set<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType) {
-		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
+	public synchronized SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType) {
+		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		
 		for (ICapability<?,?> capability : capabilities){
 			
 			if (TypeManager.isCompatible(capability, inputType) &&
@@ -103,8 +105,9 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 	
 	@Override
-	public synchronized Set<ICapability<?,?>> getCapabilitiesForOutput(TypeToken<?> outputType) {
-		Set<ICapability<?,?>> result = Sets.newIdentityHashSet();
+	public synchronized SortedSet<ICapability<?,?>> getCapabilitiesForOutput(TypeToken<?> outputType) {
+		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		
 		for (ICapability<?,?> capability : capabilities){
 			
 			if (TypeManager.isJavaCompatible(outputType, capability.getReturnType())){
@@ -116,8 +119,9 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public synchronized Set<ICapability<?, Boolean>> getPredicates() {
-		Set<ICapability<?,Boolean>> result = Sets.newIdentityHashSet();
+	public synchronized SortedSet<ICapability<?, Boolean>> getPredicates() {
+		SortedSet<ICapability<?,Boolean>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		
 		for (ICapability<?,?> capability : capabilities){
 			if (TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())){
 				result.add((ICapability<?, Boolean>) capability);
@@ -127,8 +131,10 @@ public class CapabilityRegistry implements ICapabilityRegistry{
 	}
 
 	@Override
-	public synchronized Set<ICapability<?,?>> getCapabilities(){
-		return Collections.unmodifiableSet(capabilities);
+	public synchronized SortedSet<ICapability<?,?>> getCapabilities(){
+		SortedSet<ICapability<?,?>> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		result.addAll(capabilities);
+		return result;
 	}
 	
 	@Override

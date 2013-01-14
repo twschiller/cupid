@@ -20,14 +20,14 @@ import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
  * @author Todd Schiller
  */
 @SuppressWarnings("rawtypes")
-public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
+public class SerializablePipeline<I,V> extends AbstractSerializableCapability<I,V>{
 	// TODO handle concurrent modifications to capability bindings
 	
 	private static final long serialVersionUID = 1L;
 	
 	private final List<Serializable> capabilities;
 
-	public DynamicLinearPipeline(String name, String description, List<Serializable> capabilities) {
+	public SerializablePipeline(String name, String description, List<Serializable> capabilities) {
 		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
@@ -100,7 +100,7 @@ public class DynamicLinearPipeline<I,V> extends DynamicPipeline<I,V>{
 			protected CapabilityStatus run(IProgressMonitor monitor) {
 				Object result = getInput();
 				
-				monitor.beginTask(this.getName(), DynamicLinearPipeline.this.capabilities.size());
+				monitor.beginTask(this.getName(), SerializablePipeline.this.capabilities.size());
 
 				List<ICapability<?, ?>> capabilities;
 				try {

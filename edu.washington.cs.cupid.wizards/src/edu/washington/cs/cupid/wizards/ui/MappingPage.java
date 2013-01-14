@@ -41,7 +41,7 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
-import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
+import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
@@ -235,7 +235,7 @@ public class MappingPage extends WizardPage {
 		}else if (selected instanceof ISerializableCapability){
 			return (ISerializableCapability<?,?>) selected;
 		}else if (selected instanceof ICapability){
-			return new DynamicLinearPipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
+			return new SerializablePipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();
 		}else{

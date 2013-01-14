@@ -1,31 +1,23 @@
 package edu.washington.cs.cupid.views;
 
-import java.util.List;
-
-
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-
-import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.utility.CapabilityUtil;
 
 public class BulletinBoardView extends ViewPart  {
 
@@ -65,7 +57,9 @@ public class BulletinBoardView extends ViewPart  {
 			Display.getDefault().asyncExec(new Runnable(){
 				@Override
 				public void run() {
-					viewer.setInput(getViewSite());
+					if (!viewer.getTable().isDisposed()){
+						viewer.setInput(getViewSite());
+					}
 				}
 			});
 		}
@@ -91,8 +85,6 @@ public class BulletinBoardView extends ViewPart  {
 	public void createPartControl(Composite parent) {	
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider(CupidPlatform.getCapabilityRegistry()));
-		//viewer.setLabelProvider(new ViewLabelProvider());
-		
 		
 		final TableViewerColumn nameColumn = createColumn("Name", 100, 0);
 		nameColumn.setLabelProvider(new ColumnLabelProvider(){
@@ -129,6 +121,13 @@ public class BulletinBoardView extends ViewPart  {
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
 		viewer.setInput(getViewSite());
+		
+		viewer.setComparator(new ViewerComparator(){
+			@Override
+			public int compare(Viewer viewer, Object lhs, Object rhs) {
+				return CapabilityUtil.COMPARE_NAME.compare((ICapability<?,?>) lhs, (ICapability<?,?>) rhs);
+			}
+		});
 	}
 	
 	@Override

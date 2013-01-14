@@ -1,6 +1,7 @@
 package edu.washington.cs.cupid.capability;
 
 import java.util.Set;
+import java.util.SortedSet;
 
 import com.google.common.reflect.TypeToken;
 
@@ -15,27 +16,27 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * Returns an unmodifiable view of the available capabilities.
 	 * @return an unmodifiable view of the available capabilities
 	 */
-	Set<ICapability<?, ?>> getCapabilities();
+	SortedSet<ICapability<?, ?>> getCapabilities();
 
 	/**
 	 * Returns the available capabilities that are compatible with input of the given type.
 	 * @param type the query
 	 * @return the capabilities that are compatible with input of the given type
 	 */
-	Set<ICapability<?, ?>> getCapabilities(TypeToken<?> type);
+	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> type);
 
 	/**
 	 * Returns the available capabilities that are compatible with the given types
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with output of the given type
 	 */
-	Set<ICapability<?, ?>> getCapabilitiesForOutput(TypeToken<?> outputType);
+	SortedSet<ICapability<?, ?>> getCapabilitiesForOutput(TypeToken<?> outputType);
 	
 	/**
 	 * Returns the capabilities that output boolean values
 	 * @return the capabilities that output boolean values
 	 */
-	Set<ICapability<?, Boolean>> getPredicates();
+	SortedSet<ICapability<?, Boolean>> getPredicates();
 	
 	/**
 	 * Returns the available capabilities that are compatible with the given types
@@ -43,7 +44,7 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with input of the given type
 	 */
-	Set<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType);
+	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType);
 
 	/**
 	 * Returns the capability with the given unique id

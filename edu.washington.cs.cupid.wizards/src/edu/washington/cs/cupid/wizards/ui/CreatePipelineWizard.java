@@ -7,7 +7,7 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
 import edu.washington.cs.cupid.CupidPlatform;
-import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
+import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 
 /**
@@ -25,7 +25,7 @@ public class CreatePipelineWizard extends Wizard{
 	
 	@Override
 	public boolean performFinish() {
-		DynamicLinearPipeline pipe = page.createPipeline();
+		SerializablePipeline pipe = page.createPipeline();
 		try {
 			Activator.getDefault().getHydrationService().store(pipe);
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);

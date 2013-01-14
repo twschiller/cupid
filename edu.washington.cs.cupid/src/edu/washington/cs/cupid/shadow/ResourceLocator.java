@@ -6,21 +6,36 @@ import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-public class ResourceLocator implements IResourceVisitor{
+/**
+ * Locates a resource within a project
+ * @author Todd Schiller
+ */
+public final class ResourceLocator implements IResourceVisitor {
 	private IResource result;
 	private IPath query;
 	
+	private ResourceLocator(final IPath query) {
+		this.query = query;
+		this.result = null;
+	}
+	
 	@Override
-	public boolean visit(IResource resource) throws CoreException {
-		if (resource.getProjectRelativePath().equals(query)){
+	public boolean visit(final IResource resource) throws CoreException {
+		if (resource.getProjectRelativePath().equals(query)) {
 			result = resource;
 			return false;
 		}
 		return result == null;
 	}
 	
-	public static IResource find(IProject project, IPath query){
-		ResourceLocator visitor = new ResourceLocator();
+	/**
+	 * Returns the {@link IResource} with path <code>query</code> in <code>project</code>. 
+	 * @param project the project
+	 * @param query the query path
+	 * @return the {@link IResource} with path <code>query</code> in <code>project</code>
+	 */
+	public static IResource find(final IProject project, final IPath query) {
+		ResourceLocator visitor = new ResourceLocator(query);
 		try {
 			project.accept(visitor, IResource.DEPTH_INFINITE, true);
 		} catch (CoreException e) {

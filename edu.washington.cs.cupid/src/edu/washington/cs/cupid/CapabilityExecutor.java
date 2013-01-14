@@ -97,7 +97,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Monitor lock for instance creation.
 	 */
-	private static Boolean instanceMonitor = false;
+	private static final Object instanceMonitor = new Object();
 	
 	private final JobResultCacher cacher = new JobResultCacher();
 	private final JobLogger logger = new JobLogger();

@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.dynamic.DynamicLinearPipeline;
+import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 
 /**
  * Helper class for combination of Capability + Getter
@@ -31,12 +31,12 @@ public class DerivedCapability{
 		this.getter = getter;
 	}
 	
-	public DynamicLinearPipeline toPipeline(){
+	public SerializablePipeline toPipeline(){
 		List<Object> pipeline = Lists.<Object>newArrayList(
 				capability.getUniqueId(),
 				getter);
 		
-		return new DynamicLinearPipeline(
+		return new SerializablePipeline(
 				capability.getName() + " + " + getter.getName(), 
 				capability.getName() + " + " + getter.getName(), 
 				pipeline);

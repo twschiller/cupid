@@ -22,19 +22,27 @@ import edu.washington.cs.cupid.preferences.PreferenceConstants;
  */
 public final class CupidPlatform {
 
-	private static final ICapabilityRegistry registry = new CapabilityRegistry();
+	private static final ICapabilityRegistry REGISTRY = new CapabilityRegistry();
 	
-	private CupidPlatform(){
+	private CupidPlatform() {
 		// NO OP	
 	}
 	
-	public static File getPipelineDirectory(){
+	/**
+	 * Returns the directory where the Cupid plugin stores pipelines.
+	 * @return the directory where the Cupid plugin stores pipelines
+	 */
+	public static File getPipelineDirectory() {
 		IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 		return new File(preferences.getString(PreferenceConstants.P_ARROW_DIR));
 	}
 	
-	public static ICapabilityRegistry getCapabilityRegistry(){
-		return registry;
+	/**
+	 * Returns the Cupid capability registry.
+	 * @return the Cupid capability registry
+	 */
+	public static ICapabilityRegistry getCapabilityRegistry() {
+		return REGISTRY;
 	}
 
 }

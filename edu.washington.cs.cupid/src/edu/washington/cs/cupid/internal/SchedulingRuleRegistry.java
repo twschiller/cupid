@@ -12,40 +12,48 @@ import com.google.common.collect.Maps;
 import edu.washington.cs.cupid.jobs.ICupidSchedulingRule;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 
-public class SchedulingRuleRegistry implements ISchedulingRuleRegistry{
+/**
+ * The default rule registry.
+ * @author Todd Schiller
+ */
+public final class SchedulingRuleRegistry implements ISchedulingRuleRegistry {
 
 	@SuppressWarnings("rawtypes")
 	private Map<Class, ICupidSchedulingRule> registry = Maps.newHashMap();
 
-	public static class NullSchedulingRule implements ISchedulingRule{
+	/**
+	 * A scheduling rule that does not conflict with other rules.
+	 * @author Todd Schiller
+	 */
+	public static class NullSchedulingRule implements ISchedulingRule {
 		@Override
-		public boolean contains(ISchedulingRule rule) {
+		public final boolean contains(final ISchedulingRule rule) {
 			return false;
 		}
 
 		@Override
-		public boolean isConflicting(ISchedulingRule rule) {
+		public final boolean isConflicting(final ISchedulingRule rule) {
 			return false;
 		}
 	}
 	
 	@Override
-	public void registerSchedulingRule(ICupidSchedulingRule<?> rule) {
+	public void registerSchedulingRule(final ICupidSchedulingRule<?> rule) {
 		registry.put(rule.getRuleClass(), rule);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public ISchedulingRule getSchedulingRule(Object object) {
+	public ISchedulingRule getSchedulingRule(final Object object) {
 		Class<?> rt = object.getClass();
 		
-		if (object instanceof ISchedulingRule){
+		if (object instanceof ISchedulingRule) {
 			return (ISchedulingRule) object;
-		}else{
+		} else {
 			List<ISchedulingRule> rules = Lists.newArrayList();
 			
-			for (Map.Entry<Class, ICupidSchedulingRule> rule : registry.entrySet()){
-				if (rule.getKey().isAssignableFrom(rt)){
+			for (Map.Entry<Class, ICupidSchedulingRule> rule : registry.entrySet()) {
+				if (rule.getKey().isAssignableFrom(rt)) {
 					rules.add(rule.getValue().getRule(object));
 				}
 			}

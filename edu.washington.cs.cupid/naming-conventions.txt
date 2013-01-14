@@ -1,7 +1,0 @@
-Hungarian notations used in Cupid
-
-c<name> capability
-cs<name> capabilities
-
-p<name> pipe
-f<name> UI field

@@ -12,5 +12,10 @@ package edu.washington.cs.cupid.capability;
  * @see {@link ChangeNotifier} a thread-safe notification implementation
  */
 public interface ICapabilityChangeListener {
-	public void onChange(ICapabilityPublisher publisher);
+	
+	/**
+	 * Triggered when the set of capabilities provided by <code>publisher</code> changes.
+	 * @param publisher the notifying publisher
+	 */
+	void onChange(final ICapabilityPublisher publisher);
 }

@@ -1,6 +1,5 @@
 package edu.washington.cs.cupid.capability;
 
-import java.util.Set;
 import java.util.SortedSet;
 
 import com.google.common.reflect.TypeToken;
@@ -10,7 +9,7 @@ import com.google.common.reflect.TypeToken;
  * The capability registry holds the master list of all available capabilities.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityChangeListener{
+public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityChangeListener {
 
 	/**
 	 * Returns an unmodifiable view of the available capabilities.
@@ -26,20 +25,20 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> type);
 
 	/**
-	 * Returns the available capabilities that are compatible with the given types
+	 * Returns the available capabilities that are compatible with the given types.
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with output of the given type
 	 */
 	SortedSet<ICapability<?, ?>> getCapabilitiesForOutput(TypeToken<?> outputType);
 	
 	/**
-	 * Returns the capabilities that output boolean values
+	 * Returns the capabilities that output boolean values.
 	 * @return the capabilities that output boolean values
 	 */
 	SortedSet<ICapability<?, Boolean>> getPredicates();
 	
 	/**
-	 * Returns the available capabilities that are compatible with the given types
+	 * Returns the available capabilities that are compatible with the given types.
 	 * @param inputType the input type
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with input of the given type
@@ -47,7 +46,7 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType);
 
 	/**
-	 * Returns the capability with the given unique id
+	 * Returns the capability with the given unique id.
 	 * @param uniqueId the capability's unique id
 	 * @return the capability with the given unique id
 	 * @throws NoSuchCapabilityException iff a capability with the given id is not available
@@ -56,7 +55,7 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 
 	/**
 	 * Returns the viewer associated with <code>type</code>, or 
-	 * <code>null</code> if no viewer is associated
+	 * <code>null</code> if no viewer is associated.
 	 * @param type the output type
 	 * @return the viewer associated with <code>type</code>, or <code>null</code>
 	 */
@@ -67,7 +66,11 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * by an extension point.
 	 * @param capability the capability
 	 */
-	void registerStaticCapability(ICapability<?,?> capability);
+	void registerStaticCapability(ICapability<?, ?> capability);
 	
+	/**
+	 * Register a capability publisher.
+	 * @param publisher the capability publisher
+	 */
 	void registerPublisher(ICapabilityPublisher publisher);
 }

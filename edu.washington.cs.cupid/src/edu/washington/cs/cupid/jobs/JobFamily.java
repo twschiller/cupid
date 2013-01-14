@@ -3,10 +3,10 @@ package edu.washington.cs.cupid.jobs;
 import java.util.Arrays;
 
 /**
- * A job family constructed from other families
+ * A job family constructed from other families.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class JobFamily {
+public final class JobFamily {
 
 	// TODO This is going to introduce memory leaks. Perhaps we need to intern, and cleanup objects we hold the last reference to?
 	
@@ -14,9 +14,9 @@ public class JobFamily {
 	
 	/**
 	 * Create a family using the specified {@link Object} tags. <i>All objects should use reference equality.</i>
-	 * @param tags
+	 * @param tags the family tags
 	 */
-	public JobFamily(Object... tags){
+	public JobFamily(final Object... tags) {
 		this.tags = tags;
 	}
 		
@@ -34,16 +34,19 @@ public class JobFamily {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(final Object obj) {
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		} else if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		} else if (getClass() != obj.getClass()) {
 			return false;
+		}
+		
 		JobFamily other = (JobFamily) obj;
-		if (!Arrays.equals(tags, other.tags))
+		if (!Arrays.equals(tags, other.tags)) {
 			return false;
+		}
 		return true;
 	}
 }

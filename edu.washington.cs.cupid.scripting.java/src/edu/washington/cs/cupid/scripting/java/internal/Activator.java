@@ -21,6 +21,7 @@ import org.osgi.framework.BundleContext;
 
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
@@ -67,6 +68,9 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 		
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		cupidProject = root.getProject(CUPID_PROJECT);
+		
+		// force cupid to load first?
+		CupidPlatform.class.toString();
 		
 		if (cupidProject.exists()){
 			new Job("Open Cupid Project"){

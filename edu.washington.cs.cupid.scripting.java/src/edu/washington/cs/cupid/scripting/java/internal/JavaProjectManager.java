@@ -89,6 +89,10 @@ public class JavaProjectManager implements IResourceChangeListener{
 		CodeSource src = Lists.class.getProtectionDomain().getCodeSource();
 		classpath.add(JavaCore.newLibraryEntry(urlToPath(src.getLocation()), null, null));
 			
+		Bundle cupid = Platform.getBundle("edu.washington.cs.cupid");
+		
+		classpath.add(JavaCore.newLibraryEntry(bundlePath(cupid), null, null));
+		
 		javaProject.setRawClasspath(classpath.toArray(new IClasspathEntry[]{}), monitor);
 		
 		// TWS: another possible resource

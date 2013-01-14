@@ -220,16 +220,14 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		}
 		
 		try {
-			@SuppressWarnings("unused")
-			Class<?> paramType = getParameterType();
+			getParameterType();
 		} catch (ClassNotFoundException e) {
 			updateStatus("Unknown parameter type " + parameterType.getText());
 			return;
 		}
 		
 		try {
-			@SuppressWarnings("unused")
-			Class<?> outputType = getReturnType();
+			getReturnType();
 		} catch (ClassNotFoundException e) {
 			updateStatus("Unknown return type " + outputType.getText());
 			return;

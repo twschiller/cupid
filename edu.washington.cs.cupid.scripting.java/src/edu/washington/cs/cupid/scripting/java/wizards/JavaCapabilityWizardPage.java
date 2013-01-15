@@ -6,7 +6,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -23,11 +22,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
 /**
- * The "New" wizard page allows setting the container for the new file as well
- * as the file name. The page will only accept file name without the extension
- * OR with the extension that matches the expected one (cupid).
+ * A wizard page for configuring a new Java capability script.
+ * @author Todd Schiller
  */
-public class JavaCapabilityWizardPage extends WizardPage {
+public final class JavaCapabilityWizardPage extends WizardPage {
 
 	private static final String DEFAULT_TYPE = "org.eclipse.core.resources.IResource";
 	private Text nameText;
@@ -42,20 +40,17 @@ public class JavaCapabilityWizardPage extends WizardPage {
 	private Text idText;
 	
 	/**
-	 * Constructor for JavaCapabilityWizardPage.
-	 * @param pageName
+	 * Construct a wizard page for configuring a new Java capability script.
+	 * @param selection currently does nothing
 	 */
-	public JavaCapabilityWizardPage(ISelection selection) {
+	public JavaCapabilityWizardPage(final ISelection selection) {
 		super("wizardPage");
 		setTitle("New Cupid Capability");
 		setDescription("Create a new Java Cupid Capability");
 	}
-
 	
-	/**
-	 * @see IDialogPage#createControl(Composite)
-	 */
-	public void createControl(Composite parent) {
+	@Override
+	public void createControl(final Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
@@ -65,9 +60,9 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		addLabel(container, "&Name:");
 		nameText = new Text(container, SWT.BORDER | SWT.SINGLE);
 		initText(nameText, 2);
-		nameText.addModifyListener(new ModifyListener(){
+		nameText.addModifyListener(new ModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e) {
+			public void modifyText(final ModifyEvent e) {
 				validateName();
 			}
 		});
@@ -84,22 +79,22 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		parameterType = new Text(container, SWT.BORDER | SWT.SINGLE);
 		final Button inputSelect = new Button(container, SWT.PUSH);
 		
-		inputSelect.addMouseListener(new MouseListener(){
+		inputSelect.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
+			public void mouseDoubleClick(final MouseEvent e) {
 				// NO OP
 			}
 
 			@Override
-			public void mouseDown(MouseEvent e) {
+			public void mouseDown(final MouseEvent e) {
 				// NO OP
 			}
 
 			@Override
-			public void mouseUp(MouseEvent e) {
+			public void mouseUp(final MouseEvent e) {
 				Object[] objs = showTypeDialog();
 				
-				if (objs != null){
+				if (objs != null) {
 					IType type = (IType) objs[0];
 					parameterTypeReference = type.getPath();
 					parameterType.setText(type.getFullyQualifiedName());
@@ -116,21 +111,21 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		outputSelect.setText("Select");
 		initText(outputType, 1);
 		
-		outputSelect.addMouseListener(new MouseListener(){
+		outputSelect.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
+			public void mouseDoubleClick(final MouseEvent e) {
 				// NO OP
 			}
 
 			@Override
-			public void mouseDown(MouseEvent e) {
+			public void mouseDown(final MouseEvent e) {
 				// NO OP
 			}
 
 			@Override
-			public void mouseUp(MouseEvent e) {
+			public void mouseUp(final MouseEvent e) {
 				Object[] objs = showTypeDialog();
-				if (objs != null){
+				if (objs != null) {
 					IType type = (IType) objs[0];
 					outputTypeReference = type.getPath();
 					outputType.setText(type.getFullyQualifiedName());
@@ -143,25 +138,13 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		setControl(container);
 	}
 	
-	
-	
-	public IPath getParameterTypeReference() {
-		return parameterTypeReference;
-	}
-
-
-	public IPath getOutputTypeReference() {
-		return outputTypeReference;
-	}
-
-
-	private Object[] showTypeDialog(){
+	private Object[] showTypeDialog() {
 		SelectionDialog dialog;
 		try {
 			dialog = JavaUI.createTypeDialog(this.getShell(), 
 					null,
 					SearchEngine.createWorkspaceScope(),
-					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES ,
+					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES,
 					false);
 		} catch (JavaModelException e) {
 			return null;
@@ -172,19 +155,19 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		return dialog.getResult();
 	}
 
-	private Label addLabel(Composite container, String text){
+	private Label addLabel(final Composite container, final String text) {
 		Label label = new Label(container, SWT.NONE);
 		label.setText(text);
 		return label;
 	}
 	
-	private void initText(Text text, int span){
+	private void initText(final Text text, final int span) {
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
 		data.horizontalSpan = span;
 		text.setLayoutData(data);
 		
 		text.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+			public void modifyText(final ModifyEvent e) {
 				dialogChanged();
 			}
 		});
@@ -204,17 +187,17 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		String description = getCapabilityDescription();
 		String id = getUniqueId();
 
-		if (name.length() == 0) {
+		if (name.isEmpty()) {
 			updateStatus("Capability name must be specified");
 			return;
 		}
 		
-		if (id.length() == 0){
+		if (id.isEmpty()) {
 			updateStatus("Unique id must be specified");
 			return;
 		}
 		
-		if (description.length() == 0) {
+		if (description.isEmpty()) {
 			updateStatus("Capability description must be specified");
 			return;
 		}
@@ -236,38 +219,76 @@ public class JavaCapabilityWizardPage extends WizardPage {
 		updateStatus(null);
 	}
 	
-	private void validateName(){
+	private void validateName() {
 		String name =  nameText.getText();
 		boolean isValid = name.matches("[a-zA-Z][a-zA-Z1-9 ]*");
 		
-		if (isValid){
+		if (isValid) {
 			updateStatus(null);
-		}else{
+		} else {
 			updateStatus("Invalid capability name");
 		}
 	}
 
-	private void updateStatus(String message) {
+	private void updateStatus(final String message) {
 		setErrorMessage(message);
 		setPageComplete(message == null);
 	}
 
+	/**
+	 * Returns the resolved parameter type for the new capability.
+	 * @return the resolved parameter type for the new capability
+	 * @throws ClassNotFoundException if the user supplied type cannot be resolved
+	 */
 	public Class<?> getParameterType() throws ClassNotFoundException {
 		return Class.forName(parameterType.getText());
 	}
 	
+	/**
+	 * Returns the resolved return type for the new capability.
+	 * @return the resolved return type for the new capability
+	 * @throws ClassNotFoundException if the user supplied type cannot be resolved
+	 */
 	public Class<?> getReturnType() throws ClassNotFoundException {
 		return Class.forName(outputType.getText());
 	}
 	
-	public String getUniqueId(){
+	/**
+	 * Returns the path (e.g., jar) that defines the parameter type.
+	 * @return the path (e.g., jar) that defines the parameter type
+	 */
+	public IPath getParameterTypeReference() {
+		return parameterTypeReference;
+	}
+
+	/**
+	 * Returns the path (e.g., jar) that defines the output type.
+	 * @return the path (e.g., jar) that defines the output type
+	 */
+	public IPath getOutputTypeReference() {
+		return outputTypeReference;
+	}
+
+	/**
+	 * Returns the unique id for the new capability.
+	 * @return the unique id for the new capability
+	 */
+	public String getUniqueId() {
 		return idText.getText();
 	}
 	
+	/**
+	 * Returns the name for the new capability.
+	 * @return the name for the new capability
+	 */
 	public String getCapabilityName() {
 		return nameText.getText();
 	}
 	
+	/**
+	 * Returns the description for the new capability.
+	 * @return the description for the new capability
+	 */
 	public String getCapabilityDescription() {
 		return descriptionText.getText();
 	}

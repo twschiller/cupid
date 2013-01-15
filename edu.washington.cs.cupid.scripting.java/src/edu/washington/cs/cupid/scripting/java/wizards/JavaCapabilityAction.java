@@ -7,11 +7,11 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
- * Opens the pipeline creation dialog
+ * Opens the pipeline creation dialog.
  * @author Todd Schiller
  * @see IWorkbenchWindowActionDelegate
  */
-public class JavaCapabilityAction implements IWorkbenchWindowActionDelegate {
+public final class JavaCapabilityAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
 	
 	/**
@@ -20,43 +20,25 @@ public class JavaCapabilityAction implements IWorkbenchWindowActionDelegate {
 	public JavaCapabilityAction() {
 	}
 
-	/**
-	 * The action has been activated. The argument of the
-	 * method represents the 'real' action sitting
-	 * in the workbench UI.
-	 * @see IWorkbenchWindowActionDelegate#run
-	 */
-	public void run(IAction action) {
+	@Override
+	public void run(final IAction action) {
 		JavaCapabilityWizard wizard = new JavaCapabilityWizard();
 		WizardDialog dialog = new WizardDialog(window.getShell(), wizard);
 		dialog.create();
 		dialog.open();
 	}
 
-	/**
-	 * Selection in the workbench has been changed. We 
-	 * can change the state of the 'real' action here
-	 * if we want, but this can only happen after 
-	 * the delegate has been created.
-	 * @see IWorkbenchWindowActionDelegate#selectionChanged
-	 */
-	public void selectionChanged(IAction action, ISelection selection) {
+	@Override
+	public void selectionChanged(final IAction action, final ISelection selection) {
 	}
 
-	/**
-	 * We can use this method to dispose of any system
-	 * resources we previously allocated.
-	 * @see IWorkbenchWindowActionDelegate#dispose
-	 */
+	@Override
 	public void dispose() {
 	}
 
-	/**
-	 * We will cache window object in order to
-	 * be able to provide parent shell for the message dialog.
-	 * @see IWorkbenchWindowActionDelegate#init
-	 */
-	public void init(IWorkbenchWindow window) {
+	@Override
+	public void init(final IWorkbenchWindow window) {
+		// cache window object in order to be able to provide parent shell for the message dialog.
 		this.window = window;
 	}
 }

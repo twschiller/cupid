@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -32,29 +33,42 @@ import org.osgi.framework.Bundle;
 import com.google.common.collect.Lists;
 
 /**
- * Manages the Cupid scripting project for Java
+ * Manages the Cupid scripting project for Java.
  * @author Todd Schiller
  */
-public class JavaProjectManager implements IResourceChangeListener{
+public final class JavaProjectManager implements IResourceChangeListener {
 
-	public static final String JAVA_NATURE = "org.eclipse.jdt.core.javanature";
+	private static final String JAVA_NATURE = "org.eclipse.jdt.core.javanature";
 
-	public static void populateCupidProject(IProject project, IProgressMonitor monitor) throws CoreException, IOException{
+	/**
+	 * Setup the Cupid script project. Creates source directory, bin directory, and constructs the
+	 * classpath.
+	 * @param project the project
+	 * @param monitor a progress monitor
+	 * @throws CoreException if project creation fails
+	 * @throws IOException if a file system error occurs
+	 */
+	public static void populateCupidProject(final IProject project, final IProgressMonitor monitor) throws CoreException, IOException {
 		// http://www.pushing-pixels.org/2008/11/18/extending-eclipse-creating-a-java-project-without-displaying-a-wizard.html
+		// http://www.stateofflow.com/journal/66/creating-java-projects-programmatically
+	
+		final int totalWork = 5;
+		
+		monitor.beginTask("Populate Cupid Project", totalWork);
 		
 		// create source directory
 		IPath srcPath = new Path("src");
 		IFolder srcFolder = project.getFolder(srcPath);
-		srcFolder.create(true, true, monitor);
+		srcFolder.create(true, true, new SubProgressMonitor(monitor, 1));
 		
 		// create bin directory
 		IPath binPath = new Path(PreferenceConstants.getPreferenceStore().getString(PreferenceConstants.SRCBIN_BINNAME));
 		IFolder binFolder = project.getFolder(binPath);
-		binFolder.create(IResource.FORCE | IResource.DERIVED, true, monitor);
-		binFolder.setDerived(true, monitor);
+		binFolder.create(IResource.FORCE | IResource.DERIVED, true, new SubProgressMonitor(monitor, 1));
+		binFolder.setDerived(true, new SubProgressMonitor(monitor, 1));
 		
 		// refresh directories
-		project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+		project.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 1));
 		
 		// load the project 
 		IJavaProject javaProject = JavaCore.create(project);
@@ -75,14 +89,14 @@ public class JavaProjectManager implements IResourceChangeListener{
 		IPath containerPath = new Path(JavaRuntime.JRE_CONTAINER);
 		classpath.add(JavaCore.newContainerEntry(containerPath));
 		
-		String bundles [] = new String[] {
+		String [] bundles = new String[] {
 			"org.eclipse.core.runtime",
 			"org.eclipse.core.resources",
 			"org.eclipse.equinox.common",
 			"org.eclipse.core.expressions",
 		};
 		
-		for (String bundle : bundles){
+		for (String bundle : bundles) {
 			classpath.add(JavaCore.newLibraryEntry(bundlePath(Platform.getBundle(bundle)), null, null));
 		}
 		
@@ -93,26 +107,25 @@ public class JavaProjectManager implements IResourceChangeListener{
 		
 		classpath.add(JavaCore.newLibraryEntry(bundlePath(cupid), null, null));
 		
-		javaProject.setRawClasspath(classpath.toArray(new IClasspathEntry[]{}), monitor);
-		
-		// TWS: another possible resource
-		// http://www.stateofflow.com/journal/66/creating-java-projects-programmatically
+		javaProject.setRawClasspath(classpath.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
+			
+		monitor.done();
 	}
 	
-	private static Path urlToPath(URL url){
+	private static Path urlToPath(final URL url) {
 		String path = url.getPath();
 		
-		if (path.startsWith("file:")){
+		if (path.startsWith("file:")) {
 			path = path.substring("file:".length());
 		}
 		
-		if (path.endsWith("!/")){
+		if (path.endsWith("!/")) {
 			path = path.substring(0, path.length() - 2);
 		}
 		
 		File file = new File(path);
 		
-		if (file.isDirectory()){
+		if (file.isDirectory()) {
 			file = new File(file, "bin");
 		}
 		
@@ -121,13 +134,13 @@ public class JavaProjectManager implements IResourceChangeListener{
 		return new Path(absolute);
 	}
 	
-	private static IPath bundlePath(Bundle bundle) throws IOException{
+	private static IPath bundlePath(final Bundle bundle) throws IOException {
 		URL url = FileLocator.resolve(bundle.getEntry("/"));
 		return urlToPath(url);
 	}
 	
 	@Override
-	public void resourceChanged(IResourceChangeEvent event) {
+	public void resourceChanged(final IResourceChangeEvent event) {
 		try {
 			event.getDelta().accept(new DynamicChangeVisitor());
 		} catch (CoreException e) {
@@ -135,21 +148,21 @@ public class JavaProjectManager implements IResourceChangeListener{
 		}
 	}
 	
-	private static class DynamicChangeVisitor implements IResourceDeltaVisitor{
+	private static class DynamicChangeVisitor implements IResourceDeltaVisitor {
 		@Override
-		public boolean visit(IResourceDelta delta) throws CoreException {
+		public boolean visit(final IResourceDelta delta) throws CoreException {
 
 			IResource resource = delta.getResource();
-			if (resource != null && resource.getProject() == Activator.getDefault().getCupidProject() && interesting(delta)){
+			if (resource != null && resource.getProject() == Activator.getDefault().getCupidProject() && interesting(delta)) {
 				IJavaElement element = JavaCore.create(resource);
 
-				if (element instanceof IClassFile && !element.getElementName().contains("$")){
+				if (element instanceof IClassFile && !element.getElementName().contains("$")) {
 					IClassFile file = (IClassFile) element;
 					try {
 						Activator.getDefault().loadDynamicCapability(file, true);
 					} catch (Exception e) {
 						Activator.getDefault().logError("Error reloading dynamic capability " + element.getElementName(), e);
-					} catch (Error e){
+					} catch (Error e) {
 						// caused by unresolved compilation problems
 					}
 					return false;
@@ -160,10 +173,11 @@ public class JavaProjectManager implements IResourceChangeListener{
 		}	
 		
 		/**
+		 * Return <code>true</code> iff the delta causes resources to be invalidated.
 		 * @param delta the delta
 		 * @return <code>true</code> iff the delta causes resources to be invalidated
 		 */
-		private boolean interesting(IResourceDelta delta){
+		private boolean interesting(final IResourceDelta delta) {
 			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
 		}
 	}

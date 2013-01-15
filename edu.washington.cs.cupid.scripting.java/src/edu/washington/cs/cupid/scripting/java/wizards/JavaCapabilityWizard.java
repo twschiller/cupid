@@ -103,6 +103,15 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
+	private boolean inClasspath(List<IClasspathEntry> classpath, IPath query){
+		for (IClasspathEntry entry : classpath){
+			if (entry.getPath().equals(query)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	/**
 	 * The worker method. It will find the container, create the
 	 * file if missing or just replace its contents, and open
@@ -125,7 +134,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		IJavaProject proj = JavaCore.create(cupid);
 		List<IClasspathEntry> cp = Lists.newArrayList(proj.getRawClasspath());
 		for (IPath path : classpath) {
-			if (path != null) {
+			if (path != null && !inClasspath(cp, path)) {
 				cp.add(JavaCore.newLibraryEntry(path, null, null));	
 			}
 		}

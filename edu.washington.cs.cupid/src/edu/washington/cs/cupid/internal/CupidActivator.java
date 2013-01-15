@@ -8,13 +8,7 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.SearchablePluginsManager;
-import org.eclipse.pde.internal.core.target.TargetPlatformService;
-import org.eclipse.pde.internal.core.target.provisional.ITargetHandle;
-import org.eclipse.pde.internal.ui.preferences.AddToJavaSearchJob;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
@@ -23,8 +17,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
 
 import com.google.common.collect.Lists;
 
@@ -35,7 +27,6 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.ICupidSchedulingRule;
 import edu.washington.cs.cupid.select.CupidSelectionService;
-import edu.washington.cs.cupid.shadow.ShadowProjectManager;
 import edu.washington.cs.cupid.standard.Count;
 import edu.washington.cs.cupid.standard.Empty;
 import edu.washington.cs.cupid.standard.Max;
@@ -45,44 +36,39 @@ import edu.washington.cs.cupid.types.ITypeAdapter;
 import edu.washington.cs.cupid.types.ITypeAdapterPublisher;
 
 /**
- * Activator and life-cycle manager for Cupid
+ * Activator and life-cycle manager for Cupid.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class CupidActivator extends AbstractUIPlugin{
+public final class CupidActivator extends AbstractUIPlugin {
 	
 	/**
-	 * The plugin id
+	 * The Cupid plug-in id.
 	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid"; //$NON-NLS-1$
 
-	public static final String PUBLISH_ID = "edu.washington.cs.cupid.publish"; //$NON-NLS-1$
+	private static final String PUBLISH_ID = "edu.washington.cs.cupid.publish"; //$NON-NLS-1$
 	
-	public static final String CAPABILITY_ID = "edu.washington.cs.cupid.capability"; //$NON-NLS-1$
+	private static final String CAPABILITY_ID = "edu.washington.cs.cupid.capability"; //$NON-NLS-1$
 	
-	public static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter"; //$NON-NLS-1$
+	private static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter"; //$NON-NLS-1$
 	
-	public static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.scheduling.rule"; //$NON-NLS-1$
+	private static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.scheduling.rule"; //$NON-NLS-1$
 	
-	public static final String INIT_ID = "edu.washington.cs.cupid.init"; //$NON-NLS-1$
-	
-	
-	/**
-	 * The shared instance
-	 */
 	private static CupidActivator plugin;
-	
-	private final ShadowProjectManager shadowManager = new ShadowProjectManager();
 	
 	private CupidSelectionService selectionManager;
 	
 	private ILog pluginLog;
 	
+	/**
+	 * Construct the activator and life-cycle manager for Cupid.
+	 */
 	public CupidActivator() {
+	
 	}
 
-
-	
-	public void start(BundleContext context) throws Exception {
+	@Override
+	public void start(final BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 		pluginLog = Platform.getLog(context.getBundle());
@@ -101,7 +87,7 @@ public class CupidActivator extends AbstractUIPlugin{
 				new MostFrequent(),
 				new NonEmpty());
 		
-		for (ICapability<?,?> capability : standard){
+		for (ICapability<?, ?> capability : standard) {
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			
 		}
 		
@@ -119,34 +105,34 @@ public class CupidActivator extends AbstractUIPlugin{
 		
 		final IWorkbench workbench = PlatformUI.getWorkbench();
 		
-		for (IWorkbenchWindow window : workbench.getWorkbenchWindows()){
+		for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
 			window.getSelectionService().addSelectionListener(selectionManager);
 		}
 		
-		workbench.getDisplay().asyncExec(new Runnable(){
+		workbench.getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
 				IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
 				
-				for (IWorkbenchPage page : window.getPages()){
-					for (IViewReference view : page.getViewReferences()){
+				for (IWorkbenchPage page : window.getPages()) {
+					for (IViewReference view : page.getViewReferences()) {
 						selectionManager.injectListeners(view);
 					}
 					
 					page.addPartListener(selectionManager);
 				}
 				
-				window.addPageListener(new IPageListener(){
+				window.addPageListener(new IPageListener() {
 					@Override
-					public void pageActivated(IWorkbenchPage page) {
+					public void pageActivated(final IWorkbenchPage page) {
 						page.addPartListener(selectionManager);
 					}
 					@Override
-					public void pageClosed(IWorkbenchPage page) {
+					public void pageClosed(final IWorkbenchPage page) {
 						page.removePartListener(selectionManager);
 					}
 					@Override
-					public void pageOpened(IWorkbenchPage page) {
+					public void pageOpened(final IWorkbenchPage page) {
 						page.addPartListener(selectionManager);
 					}
 				});
@@ -163,11 +149,11 @@ public class CupidActivator extends AbstractUIPlugin{
 //		}
 	}
 
-	private void registerSchedulingRuleExtensions(){
+	private void registerSchedulingRuleExtensions() {
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.SCHEDULING_RULE_ID);
 
-		for (IConfigurationElement extension : extensions){
+		for (IConfigurationElement extension : extensions) {
 			try {
 				
 				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension("rule"));
@@ -179,16 +165,16 @@ public class CupidActivator extends AbstractUIPlugin{
 		}
 	}
 	
-	private void registerTypeAdapterExtensions(){
+	private void registerTypeAdapterExtensions() {
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.TYPE_ADAPTER_ID);
 
-		for (IConfigurationElement extension : extensions){
+		for (IConfigurationElement extension : extensions) {
 			try {
 				
 				ITypeAdapterPublisher publisher = ((ITypeAdapterPublisher) extension.createExecutableExtension("adapter"));
 				
-				for (ITypeAdapter<?,?> adapter : publisher.publish()){
+				for (ITypeAdapter<?, ?> adapter : publisher.publish()) {
 					TypeManager.getTypeAdapterRegistry().registerAdapter(adapter);
 				}
 			} catch (CoreException ex) {
@@ -198,15 +184,15 @@ public class CupidActivator extends AbstractUIPlugin{
 	}
 	
 	/**
-	 * Register static capabilities
+	 * Register static capabilities.
 	 */
-	private void registerCapabilityExtensions(){
+	private void registerCapabilityExtensions() {
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.CAPABILITY_ID);
 
-		for (IConfigurationElement extension : extensions){
+		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?,?>) extension.createExecutableExtension("class"));
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension("class"));
 			} catch (CoreException ex) {
 				logError("Error registering capabilities for extension " + extension.getName(), ex);
 			}
@@ -214,13 +200,13 @@ public class CupidActivator extends AbstractUIPlugin{
 	}
 	
 	/**
-	 * Register static capability publishers
+	 * Register static capability publishers.
 	 */
-	private void registerPublisherExtensions(){
+	private void registerPublisherExtensions() {
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.PUBLISH_ID);
 
-		for (IConfigurationElement extension : extensions){
+		for (IConfigurationElement extension : extensions) {
 			try {
 				CupidPlatform.getCapabilityRegistry().registerPublisher((ICapabilityPublisher) extension.createExecutableExtension("class"));
 			} catch (CoreException ex) {
@@ -230,8 +216,8 @@ public class CupidActivator extends AbstractUIPlugin{
 	}
 	
 	@Override
-	public void stop(BundleContext context) throws Exception {
-		Job.getJobManager().cancel(this); // cancel all jobs created by cupid
+	public void stop(final BundleContext context) throws Exception {
+		Job.getJobManager().cancel(this); // cancel all jobs created by Cupid
 		plugin = null;
 		super.stop(context);
 	}
@@ -242,47 +228,40 @@ public class CupidActivator extends AbstractUIPlugin{
 	public static CupidActivator getDefault() {
 		return plugin;
 	}
-
-	/**
-	 * @return the shared shadow project manager
-	 */
-	public static ShadowProjectManager getShadowManager(){
-		return plugin.shadowManager;
-	}
 		
 	/**
 	 * Returns an image descriptor for the image file at the given
-	 * plug-in relative path
+	 * plug-in relative path.
 	 *
 	 * @param path the path
 	 * @return the image descriptor
 	 */
-	public static ImageDescriptor getImageDescriptor(String path) {
+	public static ImageDescriptor getImageDescriptor(final String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 	
 	/**
-	 * Log an error in the plugin's log
+	 * Log an error in the plugin's log.
 	 * @param msg localized error message
 	 * @param e the exception
 	 */
-	public void logError(String msg, Exception e){
+	public void logError(final String msg, final Exception e) {
 		pluginLog.log(new Status(Status.ERROR, CupidActivator.PLUGIN_ID, Status.ERROR, msg, e));			
 	}
 	
 	/**
-	 * Log information in the plugin's log
+	 * Log information in the plugin's log.
 	 * @param msg localized information message
 	 */
-	public void logInformation(String msg){
+	public void logInformation(final String msg) {
 		pluginLog.log(new Status(Status.INFO, CupidActivator.PLUGIN_ID, Status.INFO, msg, null));
 	}
 	
 	/**
-	 * Log information in the plugin's log
-	 * @param msg localized information message
+	 * Log information in the plugin's log.
+	 * @param status the Cupid job status to log
 	 */
-	public void log(CupidJobStatus status){
+	public void log(final CupidJobStatus status) {
 		pluginLog.log(status);	
 	}
 

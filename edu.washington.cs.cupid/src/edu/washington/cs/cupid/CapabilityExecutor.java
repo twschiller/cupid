@@ -11,12 +11,10 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -40,9 +38,6 @@ import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
-import edu.washington.cs.cupid.shadow.IShadowJob;
-import edu.washington.cs.cupid.shadow.ShadowJavaJob;
-import edu.washington.cs.cupid.shadow.ShadowResourceJob;
 
 /**
  * <p>A singleton executor of Cupid capabilities. This class cannot be instantiated or subclassed by clients; 
@@ -97,7 +92,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Monitor lock for instance creation.
 	 */
-	private static final Object instanceMonitor = new Object();
+	private static final Object INSTANCE_MONITOR = new Object();
 	
 	private final JobResultCacher cacher = new JobResultCacher();
 	private final JobLogger logger = new JobLogger();
@@ -130,7 +125,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @return the singleton instance
 	 */
 	private static CapabilityExecutor getInstance() {
-		synchronized (instanceMonitor) {
+		synchronized (INSTANCE_MONITOR) {
 			if (instance == null) {
 				instance = new CapabilityExecutor();
 				ResourcesPlugin.getWorkspace().addResourceChangeListener(instance);
@@ -205,7 +200,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		T cached = executor.getIfPresent(capability, input);
 		
 		if (cached == null) {
-			CapabilityJob<I, T> job = capability.isPure() ? capability.getJob(input) : addSetup(capability, input);
+			CapabilityJob<I, T> job = capability.getJob(input);
 			job.addJobChangeListener(executor.logger);
 			job.schedule();
 			
@@ -276,11 +271,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 
 				} else { // SPAWN NEW JOB	
 					
-					if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
-						job = capability.isPure() ? capability.getJob(null) : addSetup(capability, input);
-					} else {
-						job = capability.isPure() ? capability.getJob(input) : addSetup(capability, input);
-					}
+					job = capability.getParameterType().equals(ICapability.UNIT_TOKEN)
+							? capability.getJob(null)
+							: capability.getJob(input);
 					
 					if (job == null) {
 						job = new ImmediateJob(capability, input, new MalformedCapabilityException(capability, "Capability returned null job"));
@@ -302,42 +295,6 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 		
 		job.schedule();
-	}
-	
-	private static <I, T> CapabilityJob<I, T> addSetup(final ICapability<I, T> capability, final I input) {
-		return new CapabilityJob<I, T>(capability, input) {
-			@Override
-			protected CapabilityStatus<T> run(final IProgressMonitor monitor) {
-				IShadowJob<?> jSetup = null;
-				
-				monitor.subTask("Create Shadow Project");
-				
-				if (input instanceof IJavaElement) {
-					jSetup = new ShadowJavaJob((IJavaElement) input);
-				} else if (input instanceof IResource) {
-					jSetup = new ShadowResourceJob((IResource) input);
-				} else {
-					return CapabilityStatus.makeError(new RuntimeException("No setup defined for type " + input.getClass()));
-				}
-				
-				((Job) jSetup).schedule();
-				try {
-					((Job) jSetup).join();
-				} catch (InterruptedException e) {
-					return CapabilityStatus.makeError(e);
-				}
-				
-				Job jMain = capability.getJob((I) jSetup.get());
-				
-				jMain.schedule();
-				try {
-					jMain.join();
-				} catch (InterruptedException e) {
-					return CapabilityStatus.makeError(e);
-				}
-				return (CapabilityStatus<T>) jMain.getResult();
-			}
-		};
 	}
 	
 	/**

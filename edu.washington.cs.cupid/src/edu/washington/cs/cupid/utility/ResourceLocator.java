@@ -1,4 +1,4 @@
-package edu.washington.cs.cupid.shadow;
+package edu.washington.cs.cupid.utility;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

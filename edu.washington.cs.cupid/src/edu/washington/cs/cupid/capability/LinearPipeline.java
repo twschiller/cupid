@@ -15,55 +15,26 @@ import com.google.common.reflect.TypeToken;
  * @param <I> input type
  * @param <T> output type
  */
-public class LinearPipeline<I, T> implements ICapability<I, T> {
+public final class LinearPipeline<I, T> implements ICapability<I, T> {
 
 	// TODO support caching for intermediary values
 	
 	private final String name;
 	private final String description;
 	
-	/**
-	 * The capabilities in the pipeline.
-	 */
 	@SuppressWarnings("rawtypes")
-	protected final List<ICapability> capabilities;
+	private final List<ICapability> capabilities;
 	
 	private final boolean pure;
 	private final boolean trans;
-	
-	/**
-	 * Construct a two-capability pipeline.
-	 * @param name the capability name
-	 * @param description the capability description
-	 * @param first the first capability in the pipeline
-	 * @param second the second capability in the pipeline
-	 * @param <S> the intermediate type
-	 */
-	public <S> LinearPipeline(final String name, final String description, final ICapability<I,S> first, final ICapability<S,T> second){
-		this(name, description, new ICapability[]{first, second});
-	}
-	
-	/**
-	 * Construct a three-capability pipeline.
-	 * @param name the capability name
-	 * @param description the capability description
-	 * @param first the first capability in the pipeline
-	 * @param second the second capability in the pipeline
-	 * @param <S> the first intermediate type
-	 * @param <Q> the second intermediate type
-	 */
-	public <S,Q> LinearPipeline(final String name, final String description, final ICapability<I,S> first, final ICapability<S,Q> second, final ICapability<Q,T> third){
-		this(name, description, new ICapability[]{first, second, third});
-	}
 	
 	/**
 	 * Construct a pipeline of capabilities.
 	 * @param name the capability name
 	 * @param description the capability description
 	 * @param capabilities the capabilities in the pipeline
-	 * @deprecated not type safe, use {@link PipelineBuilder}
 	 */
-	public LinearPipeline(final String name, final String description, @SuppressWarnings("rawtypes") final ICapability[] capabilities) {
+	private LinearPipeline(final String name, final String description, @SuppressWarnings("rawtypes") final ICapability[] capabilities) {
 		this.name = name;
 		this.description = description;
 		this.capabilities = Lists.newArrayList(capabilities);
@@ -86,7 +57,7 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public final CapabilityJob<I, T> getJob(final I input) {
+	public CapabilityJob<I, T> getJob(final I input) {
 		return new CapabilityJob(this, input) {
 			@Override
 			protected CapabilityStatus<T> run(final IProgressMonitor monitor) {
@@ -119,29 +90,29 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 	}
 
 	@Override
-	public final boolean isTransient() {
+	public boolean isTransient() {
 		return trans;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public final TypeToken<I> getParameterType() {
+	public TypeToken<I> getParameterType() {
 		return capabilities.get(0).getParameterType();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final TypeToken<T> getReturnType() {
+	public TypeToken<T> getReturnType() {
 		return capabilities.get(capabilities.size() - 1).getReturnType();
 	}
 
 	@Override
-	public final boolean isPure() {
+	public boolean isPure() {
 		return pure;
 	}
 	
 	@Override
-	public final boolean isLocal() {
+	public boolean isLocal() {
 		for (ICapability<?, ?> capability : capabilities) {
 			if (!capability.isLocal()) {
 				return false;
@@ -150,19 +121,18 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 		return true;
 	}
 
-
 	@Override
-	public final String getDescription() {
+	public String getDescription() {
 		return description;
 	}
 
 	@Override
-	public final String getName() {
+	public String getName() {
 		return name;
 	}
 
 	@Override
-	public final String getUniqueId() {
+	public String getUniqueId() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[pipe:");
 		for (ICapability<?, ?> capability : capabilities) { 
@@ -178,8 +148,8 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 	 * @param <X> the pipeline input type
 	 * @param <Y> the pipeline output type
 	 */
-	@SuppressWarnings({"rawtypes", "unchecked" })
 	public static class PipelineBuilder<X, Y> {
+		@SuppressWarnings("rawtypes")
 		private final List<ICapability> capabilities;
 		
 		/**
@@ -187,13 +157,8 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 		 * @param first the first capability in the pipeline
 		 */
 		public PipelineBuilder(final ICapability<X, Y> first) {
-			this.capabilities = Lists.newArrayList((ICapability) first);
-		}
-		
-		private PipelineBuilder(final List<ICapability> capabilities, final ICapability next) {
-			this.capabilities = Lists.newArrayList();
-			this.capabilities.addAll(capabilities);
-			this.capabilities.add(next);
+			capabilities = Lists.newArrayList();
+			capabilities.add(first);
 		}
 		
 		/**
@@ -203,7 +168,8 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 		 * @return the pipeline builder with <code>next</code> attached
 		 */
 		public final <Z> PipelineBuilder<X, Y> attach(final ICapability<Z, Y> next) {
-			return new PipelineBuilder(this.capabilities, next);
+			capabilities.add(next);
+			return this;
 		}
 		
 		/**
@@ -213,12 +179,12 @@ public class LinearPipeline<I, T> implements ICapability<I, T> {
 		 * @return a capability for the constructed pipeline.
 		 */
 		public final LinearPipeline<X, Y> create(final String name, final String description) {
-			return new LinearPipeline(name, description, this.capabilities.toArray(new ICapability[]{}));
+			return new LinearPipeline<X,Y>(name, description, capabilities.toArray(new ICapability[]{}));
 		}
 	}
 
 	@Override
-	public final Set<String> getDynamicDependencies() {
+	public Set<String> getDynamicDependencies() {
 		return new HashSet<String>();
 	}
 }

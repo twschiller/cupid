@@ -13,7 +13,7 @@ import edu.washington.cs.cupid.capability.ICapability;
  * Capability utility methods.
  * @author Todd Schiller
  */
-public abstract class CapabilityUtil {
+public final class CapabilityUtil {
 
 	private CapabilityUtil() {
 		

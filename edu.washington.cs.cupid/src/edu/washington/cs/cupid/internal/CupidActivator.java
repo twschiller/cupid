@@ -265,5 +265,4 @@ public final class CupidActivator extends AbstractUIPlugin {
 		pluginLog.log(status);	
 	}
 
-	
 }

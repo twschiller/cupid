@@ -11,22 +11,26 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.types.ITypeAdapter;
 import edu.washington.cs.cupid.types.ITypeAdapterRegistry;
 
-public class TypeAdapterRegistry implements ITypeAdapterRegistry {
+/**
+ * The registry of Cupid type adapters.
+ * @author Todd Schiller
+ */
+public final class TypeAdapterRegistry implements ITypeAdapterRegistry {
 
-	private Multimap<TypeToken<?>, ITypeAdapter<?,?>> registry = HashMultimap.create();
+	private Multimap<TypeToken<?>, ITypeAdapter<?, ?>> registry = HashMultimap.create();
 	
 	@Override
-	public void registerAdapter(ITypeAdapter<?,?> adapter){
+	public void registerAdapter(final ITypeAdapter<?, ?> adapter) {
 		TypeToken<?> inputType = adapter.getInputType();
 		registry.put(inputType, adapter);
 	}
 	
 	@Override
-	public ITypeAdapter<?, ?>[] getTypeAdapters(TypeToken<?> inputType) {
-		Set<ITypeAdapter<?,?>> result = Sets.newHashSet();
+	public ITypeAdapter<?, ?>[] getTypeAdapters(final TypeToken<?> inputType) {
+		Set<ITypeAdapter<?, ?>> result = Sets.newHashSet();
 		
-		for (TypeToken<?> adapterInput : registry.keys()){
-			if (TypeManager.isJavaCompatible(adapterInput, inputType)){
+		for (TypeToken<?> adapterInput : registry.keys()) {
+			if (TypeManager.isJavaCompatible(adapterInput, inputType)) {
 				result.addAll(registry.get(adapterInput));
 			}
 		}
@@ -35,10 +39,10 @@ public class TypeAdapterRegistry implements ITypeAdapterRegistry {
 	}
 
 	@Override
-	public ITypeAdapter<?,?> getTypeAdapter(TypeToken<?> inputType, TypeToken<?> outputType) {
-		ITypeAdapter<?,?> result = null;
-		for (ITypeAdapter<?,?> adapter : getTypeAdapters(inputType)){
-			if (TypeManager.isJavaCompatible(outputType, adapter.getOutputType())){
+	public ITypeAdapter<?, ?> getTypeAdapter(final TypeToken<?> inputType, final TypeToken<?> outputType) {
+		ITypeAdapter<?, ?> result = null;
+		for (ITypeAdapter<?, ?> adapter : getTypeAdapters(inputType)) {
+			if (TypeManager.isJavaCompatible(outputType, adapter.getOutputType())) {
 				result = adapter;
 			}
 		}

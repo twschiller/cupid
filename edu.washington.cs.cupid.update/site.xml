@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <description name="Cupid for Eclipse" url="http://cupid.eclipselabs.org.codespot.com/hg/">
+   <description name="Cupid for Eclipse" url="http://cupid.eclipselabs.org.codespot.com/hg/release/">
       Cupid for Eclipse update site.
    </description>
    <feature url="features/edu.washington.cs.cupid.eclipse.core_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.core" version="1.0.0.0"/>

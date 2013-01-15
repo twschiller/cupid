@@ -4,6 +4,9 @@
       Cupid for Eclipse update site.
    </description>
    <feature url="features/edu.washington.cs.cupid.eclipse.core_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.core" version="1.0.0.0"/>
-   <feature url="features/edu.washington.cs.cupid.eclipse.scripting.java_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.scripting.java" version="1.0.0.0"/>
+   <feature url="features/edu.washington.cs.cupid.eclipse.scripting.java_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.scripting.java" version="1.0.0.0">
+      <category name="edu.washington.cs.cupid.eclipse.scripting"/>
+   </feature>
    <feature url="features/edu.washington.cs.cupid.eclipse.visualizations_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.visualizations" version="1.0.0.0"/>
+   <category-def name="edu.washington.cs.cupid.eclipse.scripting" label="Capability Scripting"/>
 </site>

@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
 /**
- * Locates a resource within a project
+ * Locates a resource within a project.
  * @author Todd Schiller
  */
 public final class ResourceLocator implements IResourceVisitor {

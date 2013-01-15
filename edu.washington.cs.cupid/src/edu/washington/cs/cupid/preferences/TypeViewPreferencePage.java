@@ -45,39 +45,50 @@ import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.views.ViewRule;
 
-
-public class TypeViewPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
+/**
+ * Preference page for creating type display rules.
+ * @author Todd Schiller
+ */
+public final class TypeViewPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 	
 	// TODO support cases where capability no longer exists
 	
+	private static final int TABLE_DELETE_COLUMN = 3;
+	private static final int TABLE_SELECTION_COLUMN = 2;
 	private static final String DEFAULT_TYPE = "java.lang.Object";
 	private static final int ROW_HEIGHT = 20;
+	private static final int TABLE_NUM_COLS = 3;
 	
 	private Table table;
 	private Gson gson = new Gson();
 	
-	private Map<Combo, Map<String, ICapability<?,?>>> comboData = Maps.newHashMap();
+	private Map<Combo, Map<String, ICapability<?, ?>>> comboData = Maps.newHashMap();
 	
 	private IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 	
+	/**
+	 * Construct the preference page for creating type display rules.
+	 */
 	public TypeViewPreferencePage() {
 		setPreferenceStore(CupidActivator.getDefault().getPreferenceStore());
 		setDescription("Cupid Selection Type Views Preference Page");
 	}
 
 	@Override
-	public void init(IWorkbench workbench) {
+	public void init(final IWorkbench workbench) {
+		// NO OP
 	}
 	
 	@Override
-	protected Control createContents(Composite parent) {
+	protected Control createContents(final Composite parent) {
+		final int margin = 5;
 		
 		Composite composite = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 1;
-		layout.marginRight = 5;
-		layout.marginTop = 5;
+		layout.marginRight = margin;
+		layout.marginTop = margin;
 		layout.marginWidth  = 0;
 		composite.setLayout(layout);
 		
@@ -90,10 +101,10 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		return null;
 	}
 	
-	private void makeRuleTable(Composite parent){
+	private void makeRuleTable(final Composite parent) {
 		List<ViewRule> rules = gson.fromJson(
 				preferences.getString(PreferenceConstants.P_TYPE_VIEWS),
-				new com.google.gson.reflect.TypeToken<List<ViewRule>>(){}.getType());
+				new com.google.gson.reflect.TypeToken<List<ViewRule>>() { }.getType());
 		
 		table = new Table(parent, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL);
 		GridData data = new GridData(GridData.FILL_BOTH);
@@ -102,10 +113,10 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		table.setHeaderVisible(true);
 		
 		TableLayout layout = new TableLayout();
-		layout.addColumnData( new ColumnWeightData(1));
-		layout.addColumnData( new ColumnWeightData(1));
-		layout.addColumnData( new ColumnWeightData(2));
-		layout.addColumnData( new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(2));
+		layout.addColumnData(new ColumnWeightData(1));
 		table.setLayout(layout);
 		
 		TableColumn typeColumn = new TableColumn(table, SWT.NULL);
@@ -122,50 +133,47 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 				
 		populateTable(rules);
 	
-		
-		try{
+		try {
 			Method setItemHeightMethod = table.getClass().getDeclaredMethod("setItemHeight", int.class);
 			setItemHeightMethod.setAccessible(true);
 			setItemHeightMethod.invoke(table, ROW_HEIGHT);
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			// TODO log error
-			// NO OP
 		}
 	}
 		
-	private void populateTable(List<ViewRule> rules){
-		for (ViewRule rule : rules){
+	private void populateTable(final List<ViewRule> rules) {
+		for (ViewRule rule : rules) {
 			addRule(rule);
 		}
 	}
 	
-	private ICapability<?,?> capability(ViewRule rule){
-		ICapability<?,?> result = null;
-		
-		if (rule.getCapability() != null){
+	private ICapability<?, ?> capability(final ViewRule rule) {
+		if (rule.getCapability() != null) {
 			try {
-				result = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapability());
+				return CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapability());
 			} catch (NoSuchCapabilityException e) {
-				// NO OP
+				return null;
 			}
+		} else {
+			return null;
 		}
-		return result;
 	}
 	
-	private void populateComboBox(Combo combo, ViewRule rule){
+	private void populateComboBox(final Combo combo, final ViewRule rule) {
 		Class<?> clazz = null;
 		
-		try{
+		try {
 			clazz = Class.forName(rule.getQualifiedType(), false, CupidActivator.class.getClassLoader());
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			CupidActivator.getDefault().logError("Cannot load type for view preference: " + rule.getQualifiedType(), ex);
 		}			
 		
-		if (clazz != null){
-			Set<ICapability<?,?>> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
-			Map<String, ICapability<?,?>> forType = Maps.newHashMap();
+		if (clazz != null) {
+			Set<ICapability<?, ?>> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
+			Map<String, ICapability<?, ?>> forType = Maps.newHashMap();
 			
-			for (ICapability<?,?> capability : xs){
+			for (ICapability<?, ?> capability : xs) {
 				combo.add(capability.getName());
 				forType.put(capability.getName(), capability);
 			}
@@ -174,14 +182,14 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		}
 	}
 	
-	private void addRule(ViewRule rule){
+	private void addRule(final ViewRule rule) {
 		final TableItem item = new TableItem(table, SWT.NONE);
 		
-		ICapability<?,?> capability = capability(rule);
+		ICapability<?, ?> capability = capability(rule);
 		item.setData(capability);
 		
 		item.setText(new String[]{
-			rule.getQualifiedType().substring(rule.getQualifiedType().lastIndexOf('.')+1),
+			rule.getQualifiedType().substring(rule.getQualifiedType().lastIndexOf('.') + 1),
 			rule.getQualifiedType(),
 			capability  == null ? "" : capability.getName()
 		});
@@ -191,16 +199,16 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		TableEditor editor = new TableEditor(table);
 		final Combo combo = new Combo(table, SWT.DROP_DOWN);
 		editor.grabHorizontal = true;
-		editor.setEditor(combo, item, 2);
+		editor.setEditor(combo, item, TABLE_SELECTION_COLUMN);
 		populateComboBox(combo, rule);
 		
-		if (capability != null){
+		if (capability != null) {
 			combo.setText(capability.getName());
 		}
 		
-		combo.addModifyListener(new ModifyListener(){
+		combo.addModifyListener(new ModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e) {
+			public void modifyText(final ModifyEvent e) {
 				item.setData(comboData.get(combo).get(combo.getText()));
 			}
 		});
@@ -210,11 +218,11 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		remove.setText("Remove");
 		editor.grabHorizontal = true;
 		editor.minimumWidth = remove.getSize().x;
-		editor.setEditor(remove, item, 3);
+		editor.setEditor(remove, item, TABLE_DELETE_COLUMN);
 		
-		remove.addSelectionListener(new SelectionListener(){
+		remove.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				table.remove(table.indexOf(item));
 				remove.dispose();
 				combo.dispose();
@@ -222,19 +230,19 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
 	}
 	
-	private void makeAddRuleBox(Composite parent){
+	private void makeAddRuleBox(final Composite parent) {
 		Composite ruleBox = new Composite(parent, SWT.NONE);
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
 		ruleBox.setLayoutData(data);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = TABLE_NUM_COLS;
 		ruleBox.setLayout(layout);
 		
 		final Text typeBox = new Text(ruleBox, SWT.LEFT | SWT.SINGLE | SWT.BORDER);
@@ -248,17 +256,17 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		Button searchButton = new Button(ruleBox, SWT.PUSH);
 		searchButton.setText("Search");
 		
-		searchButton.addSelectionListener(new SelectionListener(){
+		searchButton.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				Object[] types = showTypeDialog();
-				if (types != null && types.length > 0){
-					typeBox.setText(((IType)types[0]).getFullyQualifiedName());
+				if (types != null && types.length > 0) {
+					typeBox.setText(((IType) types[0]).getFullyQualifiedName());
 				}
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 			
@@ -267,20 +275,20 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 		final Button addRule = new Button(ruleBox, SWT.PUSH);
 		addRule.setText("Add");
 		
-		addRule.addSelectionListener(new SelectionListener(){
+		addRule.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				addRule(new ViewRule(typeBox.getText(), null, true));
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});	
 	}
 	
-	private Object[] showTypeDialog(){
+	private Object[] showTypeDialog() {
 		SelectionDialog dialog;
 		try {
 			dialog = JavaUI.createTypeDialog(this.getShell(), 
@@ -301,12 +309,12 @@ public class TypeViewPreferencePage extends PreferencePage implements IWorkbench
 	protected void performApply() {
 		List<ViewRule> rules = Lists.newArrayList();
 		
-		for (int i = 0; i < table.getItemCount(); i++){
+		for (int i = 0; i < table.getItemCount(); i++) {
 			TableItem item = table.getItem(i);
 			
 			rules.add(new ViewRule(
 					item.getText(1),
-					item.getData() == null ? null : ((ICapability<?,?>) item.getData()).getUniqueId(),
+					item.getData() == null ? null : ((ICapability<?, ?>) item.getData()).getUniqueId(),
 					item.getChecked()));
 		}
 		

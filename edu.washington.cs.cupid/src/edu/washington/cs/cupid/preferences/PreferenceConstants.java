@@ -1,9 +1,14 @@
 package edu.washington.cs.cupid.preferences;
 
 /**
- * Constant definitions for plug-in preferences
+ * Constant definitions for plug-in preferences.
  */
-public class PreferenceConstants {
+public final class PreferenceConstants {
+	
+	private PreferenceConstants() {
+		// NO OP
+	}
+	
 	public static final String P_IMPURE = "impurePreference";
 	public static final String P_ARROW_DIR = "cupidArrowDirectory";
 	public static final String P_JOB_STATUS_LOGGING = "jobStatusLoggingPreference";

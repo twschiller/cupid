@@ -19,7 +19,11 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.utility.CapabilityUtil;
 
-public class BulletinBoardView extends ViewPart  {
+/**
+ * A view that lists available capabilities in a table.
+ * @author Todd Schiller
+ */
+public final class BulletinBoardView extends ViewPart {
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -32,11 +36,11 @@ public class BulletinBoardView extends ViewPart  {
 		private ICapabilityPublisher publisher;
 		
 		@Override
-		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
-			
+		public void inputChanged(final Viewer v, final Object oldInput, final Object newInput) {
+			// NO OP
 		}
 		
-		public ViewContentProvider(ICapabilityPublisher publisher) {
+		public ViewContentProvider(final ICapabilityPublisher publisher) {
 			super();
 			this.publisher = publisher;
 			this.publisher.addChangeListener(this);
@@ -48,16 +52,16 @@ public class BulletinBoardView extends ViewPart  {
 		}
 		
 		@Override
-		public Object[] getElements(Object parent) {
+		public Object[] getElements(final Object parent) {
 			return publisher.publish();	
 		}
 
 		@Override
-		public void onChange(ICapabilityPublisher publisher) {
-			Display.getDefault().asyncExec(new Runnable(){
+		public void onChange(final ICapabilityPublisher notifier) {
+			Display.getDefault().asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					if (!viewer.getTable().isDisposed()){
+					if (!viewer.getTable().isDisposed()) {
 						viewer.setInput(getViewSite());
 					}
 				}
@@ -71,7 +75,7 @@ public class BulletinBoardView extends ViewPart  {
 	public BulletinBoardView() {		
 	}
 	
-	private TableViewerColumn createColumn(String title, int bound, final int colNumber) {
+	private TableViewerColumn createColumn(final String title, final int bound, final int colNumber) {
 	    final TableViewerColumn viewerColumn = new TableViewerColumn(viewer, SWT.LEFT);
 	    final TableColumn column = viewerColumn.getColumn();
 	    column.setText(title);
@@ -82,39 +86,39 @@ public class BulletinBoardView extends ViewPart  {
 	}
 	
 	@Override
-	public void createPartControl(Composite parent) {	
+	public void createPartControl(final Composite parent) {	
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider(CupidPlatform.getCapabilityRegistry()));
 		
 		final TableViewerColumn nameColumn = createColumn("Name", 100, 0);
-		nameColumn.setLabelProvider(new ColumnLabelProvider(){
+		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
-			public String getText(Object element) {
-				return ((ICapability<?,?>) element).getName();
+			public String getText(final Object element) {
+				return ((ICapability<?, ?>) element).getName();
 			}
 		});
 		
 		final TableViewerColumn descriptionColumn = createColumn("Description", 200, 1);
-		descriptionColumn.setLabelProvider(new ColumnLabelProvider(){
+		descriptionColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
-			public String getText(Object element) {
-				return ((ICapability<?,?>) element).getDescription();
+			public String getText(final Object element) {
+				return ((ICapability<?, ?>) element).getDescription();
 			}
 		});
 		
 		final TableViewerColumn inputColumn = createColumn("Input", 100, 2);
-		inputColumn.setLabelProvider(new ColumnLabelProvider(){
+		inputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
-			public String getText(Object element) {
-				return TypeManager.simpleTypeName(((ICapability<?,?>) element).getParameterType().getType());
+			public String getText(final Object element) {
+				return TypeManager.simpleTypeName(((ICapability<?, ?>) element).getParameterType().getType());
 			}
 		});
 		
 		final TableViewerColumn outputColumn = createColumn("Output", 100, 2);
-		outputColumn.setLabelProvider(new ColumnLabelProvider(){
+		outputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
-			public String getText(Object element) {
-				return TypeManager.simpleTypeName(((ICapability<?,?>) element).getReturnType().getType());
+			public String getText(final Object element) {
+				return TypeManager.simpleTypeName(((ICapability<?, ?>) element).getReturnType().getType());
 			}
 		});
 		
@@ -122,10 +126,11 @@ public class BulletinBoardView extends ViewPart  {
 		viewer.getTable().setLinesVisible(true);
 		viewer.setInput(getViewSite());
 		
-		viewer.setComparator(new ViewerComparator(){
+		// sort table by capability name
+		viewer.setComparator(new ViewerComparator() {
 			@Override
-			public int compare(Viewer viewer, Object lhs, Object rhs) {
-				return CapabilityUtil.COMPARE_NAME.compare((ICapability<?,?>) lhs, (ICapability<?,?>) rhs);
+			public int compare(final Viewer context, final Object lhs, final Object rhs) {
+				return CapabilityUtil.COMPARE_NAME.compare((ICapability<?, ?>) lhs, (ICapability<?, ?>) rhs);
 			}
 		});
 	}

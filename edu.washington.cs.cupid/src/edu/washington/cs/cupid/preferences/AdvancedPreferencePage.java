@@ -8,10 +8,18 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import edu.washington.cs.cupid.internal.CupidActivator;
 
-public class AdvancedPreferencePage 
-extends FieldEditorPreferencePage
-implements IWorkbenchPreferencePage {
+/**
+ * Advances Cupid options preference page.
+ * @author Todd Schiller
+ */
+public final class AdvancedPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
+	private static final int MAXIMUM_CANCELATION_SECONDS = 15;
+	private static final int MINIMUM_CANCELATION_SECONDS = 2;
+
+	/**
+	 * Construct the Cupid advanced options preference page.
+	 */
 	public AdvancedPreferencePage() {
 		super(GRID);
 		setPreferenceStore(CupidActivator.getDefault().getPreferenceStore());
@@ -37,10 +45,11 @@ implements IWorkbenchPreferencePage {
 					PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS,
 					"Inspector View cancelation threshold:",
 					getFieldEditorParent(),
-					2 /* min (s) */, 15 /* max (s) */, 1, 1));
+					MINIMUM_CANCELATION_SECONDS, MAXIMUM_CANCELATION_SECONDS, 1, 1));
 	}
 
 	@Override
-	public void init(IWorkbench workbench) {
+	public void init(final IWorkbench workbench) {
+		// NO OP
 	}	
 }

@@ -1,16 +1,22 @@
 package edu.washington.cs.cupid.preferences;
 
-import org.eclipse.jface.preference.*;
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.DirectoryFieldEditor;
+import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
 
 import edu.washington.cs.cupid.internal.CupidActivator;
 
+/**
+ * The main Cupid preference page.
+ * @author Todd Schiller
+ */
+public final class CupidPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-public class CupidPreferencePage
-	extends FieldEditorPreferencePage
-	implements IWorkbenchPreferencePage {
-
+	/**
+	 * Construct the main Cupid preference page.
+	 */
 	public CupidPreferencePage() {
 		super(GRID);
 		setPreferenceStore(CupidActivator.getDefault().getPreferenceStore());
@@ -31,11 +37,10 @@ public class CupidPreferencePage
 				PreferenceConstants.P_IMPURE,
 				"Enable side-effecting capabilities (experimental)",
 				getFieldEditorParent()));
-		
-	
 	}
 
 	@Override
-	public void init(IWorkbench workbench) {
+	public void init(final IWorkbench workbench) {
+		// NO OP
 	}	
 }

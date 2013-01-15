@@ -3,45 +3,49 @@ package edu.washington.cs.cupid.internal;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPartReference;
 
-public class NullPartListener implements IPartListener2{
+/**
+ * A part listener that ignores all notifications; meant to be subclassed.
+ * @author Todd Schiller
+ */
+public class NullPartListener implements IPartListener2 {
 
 	@Override
-	public void partActivated(IWorkbenchPartReference partRef) {
+	public void partActivated(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partBroughtToTop(IWorkbenchPartReference partRef) {
+	public void partBroughtToTop(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partClosed(IWorkbenchPartReference partRef) {
+	public void partClosed(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partDeactivated(IWorkbenchPartReference partRef) {
+	public void partDeactivated(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partOpened(IWorkbenchPartReference partRef) {
+	public void partOpened(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partHidden(IWorkbenchPartReference partRef) {
+	public void partHidden(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partVisible(IWorkbenchPartReference partRef) {
+	public void partVisible(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 
 	@Override
-	public void partInputChanged(IWorkbenchPartReference partRef) {
+	public void partInputChanged(final IWorkbenchPartReference partRef) {
 		// NO OP
 	}
 

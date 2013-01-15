@@ -4,28 +4,51 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 /**
- * Status for jobs spawned internally by the Cupid runtime
+ * Status for jobs spawned internally by the Cupid runtime. Does not store a reference to 
+ * the job.
+ * @see {@link Job}
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class CupidJobStatus extends Status {
+public final class CupidJobStatus extends Status {
 
 	private final String jobName;
 	private final int jobHashCode;
 	
-	public CupidJobStatus(Job job, int severity, String message) {
+	/**
+	 * Construct a status for <code>job</code>.
+	 * @param job the job
+	 * @param severity the status severity
+	 * @param message the status message
+	 */
+	public CupidJobStatus(final Job job, final int severity, final String message) {
 		this (job, severity, message, null);
 	}
 	
-	public CupidJobStatus(Job job, int severity, String message, Exception ex) {
+	/**
+	 * Construct an exceptional status for <code>job</code>.
+	 * @param job the job
+	 * @param severity the status severity
+	 * @param message the status message
+	 * @param ex the exception
+	 */
+	public CupidJobStatus(final Job job, final int severity, final String message, final Exception ex) {
 		super(severity, CupidActivator.PLUGIN_ID, job.getName() + "\t#" + job.hashCode() + "\t" + message, ex);
 		jobName = job.getName();
 		jobHashCode = job.hashCode();
 	}
 
+	/**
+	 * Returns the name of associated job.
+	 * @return  the name of associated job
+	 */
 	public String getJobName() {
 		return jobName;
 	}
 
+	/**
+	 * Returns the hashcode of the associated job.
+	 * @return the hashcode of the associated job
+	 */
 	public int getJobHashCode() {
 		return jobHashCode;
 	}

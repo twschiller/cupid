@@ -1,9 +1,11 @@
 package edu.washington.cs.cupid.views;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -13,17 +15,24 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
@@ -37,7 +46,6 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.dynamic.TransientPipeline;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -62,12 +70,17 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 
 	private static final int DEFAULT_COLUMN_WIDTH = 100;
 
+	private static final boolean INCLUDE_NULL_OUTPUT = false;
+	
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
 	public static final String ID = "edu.washington.cs.cupid.views.InspectorView";
 	
-	private TableViewer viewer;
+	private SashForm sash;
+	
+	private TreeViewer viewer;
+	private Text detail;
 	
 	private ViewContentProvider contentProvider;
 		
@@ -82,22 +95,24 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	public final void createPartControl(final Composite parent) {
 		contentProvider = new ViewContentProvider();
 		
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		sash = new SashForm(parent, SWT.BORDER | SWT.HORIZONTAL);
+		Tree tree = new Tree(sash, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL);
+		detail = new Text(sash, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY);
+		
+		TreeColumn cCapability = new TreeColumn(tree, SWT.LEFT);
+		cCapability.setText("Capability");
+		cCapability.setWidth(DEFAULT_COLUMN_WIDTH);
+		
+		TreeColumn cValue = new TreeColumn(tree, SWT.LEFT);
+		cValue.setText("Value");
+		cValue.setWidth(DEFAULT_COLUMN_WIDTH);
+		
+		tree.setHeaderVisible(true);
+		tree.setLinesVisible(true);
+			
+		viewer = new TreeViewer(tree);
 		viewer.setContentProvider(contentProvider);
-		
-		TableViewerColumn cCapability = new TableViewerColumn(viewer, SWT.NONE);
-		cCapability.getColumn().setText("Capability");
-		cCapability.getColumn().setWidth(DEFAULT_COLUMN_WIDTH);
-		cCapability.setLabelProvider(new CapabilityColumnProvider());
-		
-		TableViewerColumn cValue = new TableViewerColumn(viewer, SWT.NONE);
-		cValue.getColumn().setText("Value");
-		cValue.getColumn().setWidth(DEFAULT_COLUMN_WIDTH);
-		cValue.setLabelProvider(new ValueColumnProvider());
-		
-		final Table table = viewer.getTable();
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
+		viewer.setLabelProvider(new ViewLabelProvider());
 		
 		CupidSelectionService.addListener(contentProvider);
 		
@@ -107,7 +122,28 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		reapThresholdInSeconds = preferences.getInt(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS);
 		preferences.addPropertyChangeListener(this);
 		
-		//viewer.setInput(selectionService.getSelection());
+		viewer.addSelectionChangedListener(new DetailContentProvider());
+	}
+	
+	private class DetailContentProvider implements ISelectionChangedListener {
+		@Override
+		public void selectionChanged(final SelectionChangedEvent event) {
+			ISelection selection = event.getSelection();
+			
+			detail.setText("");
+		
+			if (selection instanceof ITreeSelection) {
+				Object row = ((ITreeSelection) selection).getFirstElement();
+				if (row instanceof ClassRow) {
+					detail.setText(((ClassRow) row).value.toString());
+				} else if (row instanceof CapabilityRow) {
+					CapabilityRow x = (CapabilityRow) row;
+					if (x.finished && x.result.getCode() == Status.OK) {
+						detail.setText(x.value.toString());
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -132,52 +168,61 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		}
 	}
 	
-	/**
-	 * The model for a row in the table.
-	 * @author Todd Schiller (tws@cs.washington.edu)
-	 * @param <I> the capabilty's input type
-	 * @param <V> the result of the capability (or intermediate status)
-	 */
-	private final class InspectorRow<I, V> {
-		private ICapability<I, V> capability;
+	
+	private final class ClassRow {
+		private Object parent;
+		private String name;
+		private Object value;
+		
+		public ClassRow(final Object parent, final String name, final Object value) {
+			this.parent = parent;
+			this.name = name;
+			this.value = value;
+		}
+	}
+	
+	private final class CapabilityRow {
+		private ICapability<?, ?> capability;
 		
 		private String status = "Updating (submitted)...";
 		private boolean interrupted = false;
 		private boolean finished = false;
 		private IStatus result = null;
-		private V value = null;
+		private Object value = null;
 		
 		private void updateStatus(final String msg) {
 			synchronized (this) {
 				status = msg;
-				update(InspectorRow.this);
+				update(CapabilityRow.this);
 			}
 		}
 		
-		private ICapability<I, ?> formCapability(final ICapability<I, V> original) {
-			ICapability<?, String> viewAdapter = CupidPlatform.getCapabilityRegistry().getViewer(original.getReturnType());
-			
-			if (viewAdapter != null) {
-				return new TransientPipeline(
-						original.getName(), original.getDescription(), 
-						Lists.newArrayList(original, viewAdapter));
-			} else {
-				return original;
-			}
-		}
+//		private <I> ICapability<I, ?> formCapability(final ICapability<I, ?> original) {
+//			ICapability<?, String> viewAdapter = CupidPlatform.getCapabilityRegistry().getViewer(original.getReturnType());
+//			
+//			if (viewAdapter != null) {
+//				return new TransientPipeline(
+//						original.getName(), original.getDescription(), 
+//						Lists.newArrayList(original, viewAdapter));
+//			} else {
+//				return (ICapability<I, String>) original;
+//			}
+//		}
 		
-		private InspectorRow(final ICapability<I, V> capability, final I input) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		private CapabilityRow(final ICapability capability, final Object input) {
 			this.capability = capability;
 			
-			JobFamily family = family(input); // TODO need an Inspector View specific family
+			// TODO need an Inspector View specific family
+			JobFamily family = family(input); 
 			
-			synchronized(inspectorFamilies){
+			synchronized (inspectorFamilies) {
 				inspectorFamilies.put(family, System.currentTimeMillis());	
 			}
 			
 			System.out.println("Keep alive family " + family);
 			
-			CapabilityExecutor.asyncExec(formCapability(capability), input, family, new IJobChangeListener() {
+			CapabilityExecutor.asyncExec(capability, input, family, new IJobChangeListener() {
 
 				@Override
 				public void aboutToRun(final IJobChangeEvent event) {
@@ -189,13 +234,13 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 					updateStatus("Updating (awake)...");
 				}
 
-				@SuppressWarnings("unchecked")
+	
 				@Override
 				public void done(final IJobChangeEvent event) {
 					synchronized (this) {
 						finished = true;
 						result = event.getResult();
-						value = ((CapabilityStatus<V>) result).value();
+						value = ((CapabilityStatus) result).value();
 						updateStatus("Done");
 					}
 				}
@@ -218,7 +263,80 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		}
 	}
 	
-	private class ViewContentProvider implements IStructuredContentProvider, ICupidSelectionListener {		
+	private final class ViewLabelProvider implements ITableLabelProvider {
+
+		@Override
+		public void dispose() {
+			// NO OP
+		}
+
+		@Override
+		public boolean isLabelProperty(final Object element, final String property) {
+			return false;
+		}
+
+		@Override
+		public void addListener(final ILabelProviderListener listener) {
+			// NO OP
+		}
+		
+		@Override
+		public void removeListener(final ILabelProviderListener listener) {
+			// NO OP
+		}
+
+		@Override
+		public Image getColumnImage(final Object element, final int columnIndex) {
+			return null;
+		}
+
+		@Override
+		public String getColumnText(final Object element, final int columnIndex) {
+			if (element instanceof CapabilityRow) {
+
+				CapabilityRow row = (CapabilityRow) element;
+
+				switch (columnIndex) {
+				case 0:
+					return row.capability.getName();
+				case 1:
+					if (row.interrupted) {
+						return "Error (interrupted)";
+					} else if (row.finished) {
+						switch (row.result.getCode()) {
+						case Status.OK:
+							return row.value.toString();
+						case Status.CANCEL:
+							return "Update Cancelled...";
+						case Status.ERROR:
+							return "Exception: " + row.result.getException().getLocalizedMessage();
+						default: 
+							throw new RuntimeException("Unexpected plugin-specific status code: " + row.result.getCode());
+						}
+					} else {
+						return row.status;
+					}
+				default:
+					throw new IllegalArgumentException("Invalid column index");
+				}
+			} else if (element instanceof ClassRow) {
+				ClassRow row = (ClassRow) element;
+				switch(columnIndex) {
+				case 0:
+					return row.name;
+				case 1:
+					return row.value == null ? "null" : row.value.toString();
+				default:
+					throw new IllegalArgumentException("Invalid column index");
+				}
+				
+			} else {
+				throw new IllegalArgumentException("Illegal table entry");
+			}
+		}	
+	}
+	
+	private final class ViewContentProvider implements ITreeContentProvider, ICupidSelectionListener {		
 		@Override
 		public void inputChanged(final Viewer v, final Object oldSelection, final Object newSelection) {
 			v.refresh();
@@ -247,7 +365,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 				if (!hidden.contains(capability.getUniqueId())) {
 					
 					Object adapted = TypeManager.getCompatible(capability, argument);
-					rows.add(new InspectorRow(capability, adapted));
+					rows.add(new CapabilityRow(capability, adapted));
 				}
 			}
 
@@ -282,42 +400,100 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 				viewer.setInput(data[0]);
 			}
 		}
+
+		@Override
+		public Object[] getChildren(final Object parentElement) {
+			if (parentElement instanceof CapabilityRow) {
+				CapabilityRow row = (CapabilityRow) parentElement;
+				
+				if (row.finished && row.result.getCode() == Status.OK) {
+					return generateRows(row, row.value);
+				}
+			} else if (parentElement instanceof ClassRow) {
+				ClassRow row = (ClassRow) parentElement;
+				return generateRows(row, row.value);
+			}
+			
+			return new Object[] {};
+		}
+
+		@Override
+		public Object getParent(final Object element) {
+			if (element instanceof ClassRow) {
+				return ((ClassRow) element).parent;
+			} else {
+				return null;
+			}
+		}
+
+		@Override
+		public boolean hasChildren(final Object element) {
+			if (element instanceof CapabilityRow) {
+				CapabilityRow row = (CapabilityRow) element;
+				if (row.finished && row.result.getCode() == Status.OK) {
+					return valueHasChildren(row.value);
+				}
+			} else if (element instanceof ClassRow) {
+				return valueHasChildren(((ClassRow) element).value);
+			}
+			
+			return false;
+		}
+	}
+	
+	private boolean valueHasChildren(final Object value) {
+		return !(value == null 
+			|| value.getClass().isPrimitive() 
+			|| value instanceof String 
+			|| value instanceof Number);
+	}
+	
+	private Object[] generateRows(final Object parent, final Object value) {
+		if (value == null) {
+			return new Object[]{};
+		} else if (value instanceof String) {
+			return new Object[]{};
+		}
+		
+		List<ClassRow> children = Lists.newArrayList();
+		
+		for (Field field : value.getClass().getFields()) {
+			if (!Modifier.isStatic(field.getModifiers())) {
+				try {
+					Object child = field.get(value);
+					children.add(new ClassRow(parent, field.getName(), child));
+				} catch (Exception e) {
+					children.add(new ClassRow(parent, field.getName(), e));
+				}
+			}
+		}
+		
+		for (Method method : value.getClass().getMethods()) {
+			if (!Modifier.isStatic(method.getModifiers())) {
+				if (method.getParameterTypes().length == 0 
+					&& method.getName().startsWith("get")
+					&& !method.getName().equalsIgnoreCase("getClass")) {
+					
+					try {
+						Object child = method.invoke(value);
+						
+						if (child != null || INCLUDE_NULL_OUTPUT) {
+							children.add(new ClassRow(parent, method.getName(), child));
+						}
+					} catch (Exception e) {
+						children.add(new ClassRow(parent, method.getName(), e));
+					}
+				}
+			}
+		}
+		
+		return children.toArray();
 	}
 	
 	private JobFamily family(final Object input) {
 		return new JobFamily(input, this);
 	}
-	
-	private class CapabilityColumnProvider extends ColumnLabelProvider {
-		@Override
-		public String getText(final Object element) {
-			return super.getText(((InspectorRow<?, ?>) element).capability.getName());
-		}
-	}
-	
-	private class ValueColumnProvider extends ColumnLabelProvider {
-		@Override
-		public String getText(final Object element) {
-			InspectorRow<?, ?> row = (InspectorRow<?, ?>) element;
-			if (row.interrupted) {
-				return "Error (interrupted)";
-			} else if (row.finished) {
-				switch (row.result.getCode()) {
-				case Status.OK:
-					return super.getText(row.value);
-				case Status.CANCEL:
-					return "Update Cancelled...";
-				case Status.ERROR:
-					return "Exception: " + row.result.getException().getLocalizedMessage();
-				default: 
-					throw new RuntimeException("Unexpected plugin-specific status code: " + row.result.getCode());
-				}
-			} else {
-				return row.status;
-			}
-		}
-	}
-	
+		
 	@Override
 	public final void setFocus() {
 		viewer.getControl().setFocus();
@@ -327,11 +503,13 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	 * Safely (in the UI thread) updates the given row in the table.
 	 * @param row the row to update
 	 */
-	private void update(final InspectorRow<?, ?> row) {
+	private void update(final CapabilityRow row) {
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				viewer.update(row, null);
+				if (!viewer.getTree().isDisposed()) {	
+					viewer.refresh(row);
+				}
 			}
 		});
 	}

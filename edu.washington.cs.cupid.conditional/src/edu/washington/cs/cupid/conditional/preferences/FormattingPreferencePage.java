@@ -49,10 +49,10 @@ import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 
 /**
- * Preference page for defining and editing conditional formatting rules
+ * Preference page for defining and editing conditional formatting rules.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class FormattingPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
+public final class FormattingPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
 	// TODO implement restore defaults
 	// TODO add font override support
@@ -64,36 +64,39 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	private Group editor;
 	
 	/**
-	 * Store the selected item, so we can tell if it changes
+	 * Store the selected item, so we can tell if it changes.
 	 */
 	private TableItem active;
 	
 	/**
-     * True iff the user hasn't selected a capability yet for {@link active}, the selected item
+     * True iff the user hasn't selected a capability yet for {@link active}, the selected item.
      */
     private boolean containsSentinalEntry = false;
 	
 	/**
 	 * List of currently available predicates; currently updated each time the user 
-	 * selects a formatting rule
+	 * selects a formatting rule.
 	 */
-    private List<ICapability<?,Boolean>> available;
+    private List<ICapability<?, Boolean>> available;
     
+    /**
+     * Construct the preference page for defining and editing conditional formatting rules.
+     */
 	public FormattingPreferencePage() {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		setDescription("Conditional Formatting Rules");
 	}
 	
 	@Override
-	public void init(IWorkbench workbench) {
+	public void init(final IWorkbench workbench) {
 		available = Lists.newArrayList(CupidPlatform.getCapabilityRegistry().getPredicates());
 	}
 
-	private void createEditForm(Composite parent, final TableItem item){
+	private void createEditForm(final Composite parent, final TableItem item) {
 		
 		final FormattingRule rule = (FormattingRule) item.getData();
 		
-		for (Control control : parent.getChildren()){
+		for (Control control : parent.getChildren()) {
 			control.dispose();
 		}
 		
@@ -111,9 +114,9 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		final Text tName = new Text(parent, SWT.SINGLE | SWT.BORDER);
 		tName.setText(rule.getName());
-		tName.addModifyListener(new ModifyListener(){
+		tName.addModifyListener(new ModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e) {
+			public void modifyText(final ModifyEvent e) {
 				rule.setName(tName.getText());
 				item.setText(rule.getName());
 			}
@@ -125,24 +128,24 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		final Button bBackground = new Button(parent, SWT.PUSH);
 		bBackground.setLayoutData(new GridData(60,30));
-		if (rule.getFormat().getBackground() != null){
+		if (rule.getFormat().getBackground() != null) {
 			setButtonColor(bBackground, rule.getFormat().getBackground());
 		}
 		
-		bBackground.addMouseListener(new MouseListener(){
+		bBackground.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseDown(MouseEvent e) {
+			public void mouseDown(final MouseEvent e) {
 				RGB choice = color.open();
 				setButtonColor(bBackground, choice);
 				rule.getFormat().setBackground(choice);
 				item.setBackground(new Color(Display.getDefault(), choice));
 			}
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
+			public void mouseDoubleClick(final MouseEvent e) {
 				// NO OP
 			}
 			@Override
-			public void mouseUp(MouseEvent e) {
+			public void mouseUp(final MouseEvent e) {
 				// NO OP
 			}
 		});
@@ -157,23 +160,23 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		final Button bForeground = new Button(parent, SWT.PUSH);
 		bForeground.setLayoutData(new GridData(60, 30));
-		if (rule.getFormat().getForeground() != null){
+		if (rule.getFormat().getForeground() != null) {
 			setButtonColor(bForeground, rule.getFormat().getForeground());
 		}
-		bForeground.addMouseListener(new MouseListener(){
+		bForeground.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseDown(MouseEvent e) {
+			public void mouseDown(final MouseEvent e) {
 				RGB choice = color.open();
 				setButtonColor(bForeground, choice);
 				rule.getFormat().setForeground(choice);
 				item.setForeground(new Color(Display.getDefault(), choice));
 			}
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
+			public void mouseDoubleClick(final MouseEvent e) {
 				// NO OP
 			}
 			@Override
-			public void mouseUp(MouseEvent e) {
+			public void mouseUp(final MouseEvent e) {
 				// NO OP
 			}
 		});
@@ -183,14 +186,14 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		final Button bFont = new Button(parent, SWT.PUSH);
 		bFont.setText("Select Font");
-		if (rule.getFormat().getFont() != null){
+		if (rule.getFormat().getFont() != null) {
 			bFont.setFont(new Font(Display.getDefault(), rule.getFormat().getFont()));
 		}
 		
-		bFont.addMouseListener(new MouseListener(){
+		bFont.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseDown(MouseEvent e) {
-				if (font.open() != null){
+			public void mouseDown(final MouseEvent e) {
+				if (font.open() != null) {
 					FontData[] choice = font.getFontList();
 					rule.getFormat().setFont(choice);
 					Font font = new Font(Display.getDefault(), choice);
@@ -199,11 +202,11 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 				}
 			}
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
+			public void mouseDoubleClick(final MouseEvent e) {
 				// NO OP
 			}
 			@Override
-			public void mouseUp(MouseEvent e) {
+			public void mouseUp(final MouseEvent e) {
 				// NO OP
 			}
 		});
@@ -213,29 +216,29 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	}
 	
 	/**
-	 * Add an entry to the combo box, and select it
+	 * Add an entry to the combo box, and select it.
 	 * @param combo the combo box
 	 * @param text the text to add and select
 	 */
-	private static void addAndSet(Combo combo, String text){
+	private static void addAndSet(final Combo combo, final String text) {
 		combo.add(text);
 		combo.setText(text);
 	}
 	
 	/**
-	 * Populate the predicate option list for the formatting rules
+	 * Populate the predicate option list for the formatting rules.
 	 * @param parent the parent widget
 	 * @param rule the formatting rule
 	 */
-	private void createPredicateList(Composite parent, final FormattingRule rule){
+	private void createPredicateList(final Composite parent, final FormattingRule rule) {
 		final Combo cCapability = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
 
-		if (available.isEmpty()){
+		if (available.isEmpty()) {
 			addAndSet(cCapability, "No predicates available");
-		}else{
-			ICapability<?,?> forRule = null;
+		} else {
+			ICapability<?, ?> forRule = null;
 
-			if (rule.getCapabilityId() != null){
+			if (rule.getCapabilityId() != null) {
 				try {
 					forRule = Activator.findPredicate(rule);
 					containsSentinalEntry = false;
@@ -246,15 +249,15 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 					addAndSet(cCapability, "Invalid predicate");
 					containsSentinalEntry = true;
 				}
-			}else{
+			} else {
 				addAndSet(cCapability, "Select predicate");
 				containsSentinalEntry = true;
 			}
 
-			for (ICapability<?,Boolean> capability : available ){
-				if (forRule == capability){
+			for (ICapability<?, Boolean> capability : available ) {
+				if (forRule == capability) {
 					addAndSet(cCapability, capability.getName());
-				}else{
+				} else {
 					cCapability.add(capability.getName());
 				}
 			}
@@ -262,17 +265,17 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 			// TODO handle formats with capabilities that don't exist
 		}
 
-		cCapability.addModifyListener(new ModifyListener(){
+		cCapability.addModifyListener(new ModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e) {
-				if (!available.isEmpty()){
-					if (containsSentinalEntry){
-						if (cCapability.getSelectionIndex() > 0){
+			public void modifyText(final ModifyEvent e) {
+				if (!available.isEmpty()) {
+					if (containsSentinalEntry) {
+						if (cCapability.getSelectionIndex() > 0) {
 							rule.setCapabilityId(available.get(cCapability.getSelectionIndex() - 1).getUniqueId());
 							cCapability.remove(0);
 							containsSentinalEntry = false;
 						}
-					}else{
+					} else {
 						rule.setCapabilityId(available.get(cCapability.getSelectionIndex()).getUniqueId());
 					}
 				}
@@ -294,7 +297,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	}
 	
 	@Override
-	protected Control createContents(Composite parent) {	
+	protected Control createContents(final Composite parent) {	
 		composite = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -315,9 +318,9 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		final ToolItem add = new ToolItem(toolbar, SWT.PUSH);
 		add.setText("Add");
 		add.setToolTipText("Add Rule");
-		add.addSelectionListener(new SelectionListener(){
+		add.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				FormattingRule rule = new FormattingRule("My Rule");
 				TableItem item = addRuleItem(rule);
 				table.select(table.getItemCount() - 1);
@@ -326,7 +329,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
@@ -335,9 +338,9 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		copy.setText("Copy");
 		copy.setToolTipText("Copy Rule");
 		copy.setEnabled(false);
-		copy.addSelectionListener(new SelectionListener(){
+		copy.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				TableItem item = table.getSelection()[0];
 				
 				FormattingRule clone = ((FormattingRule) item.getData()).copy();
@@ -350,7 +353,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
@@ -359,14 +362,14 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		delete.setText("Delete");
 		delete.setToolTipText("Delete Rule");
 		delete.setEnabled(false);
-		delete.addSelectionListener(new SelectionListener(){
+		delete.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				// TODO handle multiple selections
 				table.remove(table.getSelectionIndex());
 				delete.setEnabled(false);
 				
-				for (Control control : editor.getChildren()){
+				for (Control control : editor.getChildren()) {
 					control.dispose();
 				}
 				editor.layout(true);
@@ -374,7 +377,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
@@ -382,18 +385,18 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		final ToolItem enable = new ToolItem(toolbar, SWT.PUSH);
 		enable.setText("Enable");
 		enable.setToolTipText("Enable All");
-		enable.addSelectionListener(new SelectionListener(){
+		enable.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				// TODO handle multiple selections
-				for (TableItem item : table.getItems()){
+				for (TableItem item : table.getItems()) {
 					item.setChecked(true);
 					((FormattingRule) item.getData()).setActive(true);
 				}
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
@@ -401,14 +404,14 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		final ToolItem disable = new ToolItem(toolbar, SWT.PUSH);
 		disable.setText("Disable");
 		disable.setToolTipText("Disable All");
-		disable.addSelectionListener(new SelectionListener(){
+		disable.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				disableAll();
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
@@ -421,35 +424,35 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		
 		String[] titles = { "Formatting Rule" };
 		
-		for (int i = 0 ; i < titles.length; i++){
+		for (int i = 0; i < titles.length; i++) {
 			TableColumn column = new TableColumn(table, SWT.NULL);
 			column.setText(titles[i]);
 		}
 		
 		FormattingRule[] rules = new FormattingRule[]{};
-		try{
+		try {
 			rules = Activator.getDefault().storedRules();
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
 				
-		for (FormattingRule rule : rules){
+		for (FormattingRule rule : rules) {
 			addRuleItem(rule);
 		}
 	
-		for (int i = 0; i < titles.length; i++){
+		for (int i = 0; i < titles.length; i++) {
 			table.getColumn(i).pack();
 		}
 		
-		table.addSelectionListener(new SelectionListener(){
+		table.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(final SelectionEvent e) {
 				TableItem item = (TableItem) e.item;
 		
 				FormattingRule rule = ((FormattingRule) item.getData());
 				rule.setActive(item.getChecked());
 		
-				if (active != item){
+				if (active != item) {
 					createEditForm(editor, item);
 					active = item;
 				}
@@ -459,12 +462,12 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});
 		
-		if (table.getItemCount() > 0){
+		if (table.getItemCount() > 0) {
 			table.select(0);
 		}
 		
@@ -478,9 +481,9 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 		return null;
 	}
 	
-	private void disableAll(){
+	private void disableAll() {
 		// TODO handle multiple selections
-		for (TableItem item : table.getItems()){
+		for (TableItem item : table.getItems()) {
 			item.setChecked(false);
 			((FormattingRule) item.getData()).setActive(false);
 		}
@@ -491,7 +494,7 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	 * @param rule the rule
 	 * @return the added item
 	 */
-	private TableItem addRuleItem(FormattingRule rule){
+	private TableItem addRuleItem(final FormattingRule rule) {
 		TableItem item = new TableItem(table, SWT.NULL);
 		item.setText(rule.getName());
 		item.setText(0, rule.getName());
@@ -509,8 +512,8 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	 * @param button the button
 	 * @param color the color
 	 */
-	private static void setButtonColor(Button button, RGB color){
-		if (color != null){
+	private static void setButtonColor(final Button button, final RGB color) {
+		if (color != null) {
 			Device display = Display.getDefault();
 			Image image = new Image(display, 30, 20);	
 			GC gc = new GC(image);
@@ -523,10 +526,10 @@ public class FormattingPreferencePage extends PreferencePage implements IWorkben
 	/**
 	 * Save the formatting rules to the preference store in JSON format.
 	 */
-	private void save(){
+	private void save() {
 		Gson gson = new Gson();
 		FormattingRule[] rules = new FormattingRule[table.getItemCount()];
-		for (int i = 0; i < rules.length; i++){
+		for (int i = 0; i < rules.length; i++) {
 			rules[i] = (FormattingRule) table.getItem(i).getData();
 		}
 		Activator.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_RULES, gson.toJson(rules));

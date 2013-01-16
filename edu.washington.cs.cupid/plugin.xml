@@ -73,12 +73,6 @@
             id="edu.washington.cs.cupid.preferences.inspector"
             name="Selection Inspector">
       </page>
-      <page
-            category="edu.washington.cs.cupid.preferences"
-            class="edu.washington.cs.cupid.preferences.TypeViewPreferencePage"
-            id="edu.washington.cs.cupid.preferences.tostring"
-            name="Type Views">
-      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

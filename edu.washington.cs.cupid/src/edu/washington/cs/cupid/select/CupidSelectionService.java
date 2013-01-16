@@ -106,6 +106,9 @@ public final class CupidSelectionService extends NullPartListener implements ISe
 	 * @param listener the selection listener
 	 */
 	public static void addListener(final ICupidSelectionListener listener) {
+		if (listener == null){
+			throw new NullPointerException("Selection listener cannot be null");
+		}
 		getInstance().listeners.add(listener);
 	}
 	

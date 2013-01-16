@@ -154,8 +154,7 @@ public final class TypeManager {
 	 * @param argument the suggested argument
 	 * @return <code>argument</code> iff it is compatible with <code>capability</code>; 
 	 * a corresponding compatible argument, otherwise
-	 * @see {@link Utility#isCompatible(ICapability, Object)}
-	 * @see {@link Utility#corresponding(Object)}
+	 * @see {@link TypeManager#isCompatible(ICapability, Object)}
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object getCompatible(final ICapability<?, ?> capability, final Object argument) {

@@ -149,7 +149,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 				try {
 					IDE.openEditor(active, file);
 				} catch (PartInitException e) {
-					// NO OP
+					throw new RuntimeException("Error opening script editor", e);
 				}
 			}
 		});

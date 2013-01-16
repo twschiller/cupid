@@ -22,7 +22,7 @@ public final class CapabilityUtil {
 	/**
 	 * Compares capabilities by name (ascending).
 	 */
-	public static Comparator<ICapability<?, ?>> COMPARE_NAME = new Comparator<ICapability<?, ?>>() {
+	public static final Comparator<ICapability<?, ?>> COMPARE_NAME = new Comparator<ICapability<?, ?>>() {
 		@Override
 		public int compare(final ICapability<?, ?> lhs, final ICapability<?, ?> rhs) {
 			return lhs.getName().compareToIgnoreCase(rhs.getName());

@@ -104,7 +104,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 	private void makeRuleTable(final Composite parent) {
 		List<ViewRule> rules = gson.fromJson(
 				preferences.getString(PreferenceConstants.P_TYPE_VIEWS),
-				new com.google.gson.reflect.TypeToken<List<ViewRule>>() { }.getType());
+				new com.google.gson.reflect.TypeToken<List<ViewRule>>(){}.getType());
 		
 		table = new Table(parent, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL);
 		GridData data = new GridData(GridData.FILL_BOTH);
@@ -138,7 +138,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 			setItemHeightMethod.setAccessible(true);
 			setItemHeightMethod.invoke(table, ROW_HEIGHT);
 		} catch (Exception ex) {
-			// TODO log error
+			throw new RuntimeException("Error setting table row height", ex);
 		}
 	}
 		

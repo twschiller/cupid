@@ -179,7 +179,7 @@ public final class LinearPipeline<I, T> implements ICapability<I, T> {
 		 * @return a capability for the constructed pipeline.
 		 */
 		public final LinearPipeline<X, Y> create(final String name, final String description) {
-			return new LinearPipeline<X,Y>(name, description, capabilities.toArray(new ICapability[]{}));
+			return new LinearPipeline<X, Y>(name, description, capabilities.toArray(new ICapability[]{}));
 		}
 	}
 

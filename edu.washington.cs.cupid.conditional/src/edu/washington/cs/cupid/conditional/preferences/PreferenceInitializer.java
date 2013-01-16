@@ -8,7 +8,7 @@ import edu.washington.cs.cupid.conditional.internal.Activator;
 /**
  * Class used to initialize default preference values.
  */
-public class PreferenceInitializer extends AbstractPreferenceInitializer {
+public final class PreferenceInitializer extends AbstractPreferenceInitializer {
 
 	@Override
 	public void initializeDefaultPreferences() {

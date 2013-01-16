@@ -58,7 +58,7 @@ import edu.washington.cs.cupid.jobs.NullJobListener;
  * Applies conditional formatting rules to workbench items.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class Formatter extends NullPartListener implements IPropertyChangeListener, DisposeListener, IInvalidationListener{
+public class Formatter extends NullPartListener implements IPropertyChangeListener, DisposeListener, IInvalidationListener {
 
 	// TODO Later rules will override the formatting specified by earlier rule.
 	// TODO Check if a rule was removed before applying it
@@ -92,7 +92,11 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	
 	private final ISchedulingRuleRegistry scheduler = CapabilityExecutor.getSchedulingRuleRegistry();
 	
-	public Formatter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
+	/**
+	 * Construct a listener that applies conditional formatting rules to workbench items.
+	 * @throws Exception if instantiation fails
+	 */
+	public Formatter() throws Exception {
 		workbenchPartReferenceClazz = Class.forName("org.eclipse.ui.internal.WorkbenchPartReference");
 		partPaneClazz = Class.forName("org.eclipse.ui.internal.PartPane");
 		getPaneMethod = workbenchPartReferenceClazz.getMethod("getPane");
@@ -107,25 +111,26 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * @param item the item
 	 * @return the data associated with <code>item</code>
 	 */
-	private static Object data(Item item){
+	private static Object data(final Item item) {
 		Object object = item.getData();
 		
-		if (object == null){
+		if (object == null) {
 			return null;
 		}
 		
-		if (object.getClass().isArray()){
+		if (object.getClass().isArray()) {
 			Object result = null;
-			for (Object element : (Object[]) object){
-				if (result == null){
+			for (Object element : (Object[]) object) {
+				if (result == null) {
 					result = element;
-				}else{
+				} else {
+					// TODO log warning properly
 					System.out.println("WARNING: item " + item + " has multiple data");
 					break;
 				}
 			}
 			return result;
-		}else{
+		} else {
 			return object;
 		}
 	}
@@ -134,11 +139,11 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * Set {@link Activator#activeRules} to the list of rules that are active
 	 * and have an associated capability.
 	 */
-	private void updateRules(){
-		synchronized(activeRules){
+	private void updateRules() {
+		synchronized (activeRules) {
 			activeRules.clear();
-			for (FormattingRule rule : Activator.getDefault().storedRules()){
-				if (rule.isActive() && rule.getCapabilityId() != null){
+			for (FormattingRule rule : Activator.getDefault().storedRules()) {
+				if (rule.isActive() && rule.getCapabilityId() != null) {
 					activeRules.add(rule);
 				}
 			}
@@ -146,16 +151,16 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	}
 	
 	@Override
-	public void partActivated(IWorkbenchPartReference partRef) {
+	public final void partActivated(final IWorkbenchPartReference partRef) {
 		applyFormattingRules(partRef);
 	}
 
 	@Override
-	public void partVisible(IWorkbenchPartReference partRef) {
+	public final void partVisible(final IWorkbenchPartReference partRef) {
 		applyFormattingRules(partRef);
 	}
 
-	private static Format getFormat(Widget object){
+	private static Format getFormat(final Widget object) {
 		checkArgument(!object.isDisposed(), "widget is disposed");
 		
 		Format result = new Format();
@@ -195,13 +200,13 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * @param object the target
 	 * @param format the format
 	 */
-	public static void applyFormat(Widget object, Format format){
+	public static void applyFormat(final Widget object, final Format format) {
 		checkArgument(!object.isDisposed(), "widget is disposed");
 		
 		Display display = Display.getDefault();
 		Class<?> clazz = object.getClass();
 		
-		if (format.getBackground() != null){
+		if (format.getBackground() != null) {
 			try {
 				clazz.getMethod("setBackground", Color.class).invoke(object, new Color(display, format.getBackground()));
 			} catch (NoSuchMethodException e) {
@@ -210,7 +215,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				throw new RuntimeException(e);
 			}
 		}
-		if (format.getForeground() != null){
+		if (format.getForeground() != null) {
 			try {
 				clazz.getMethod("setForeground", Color.class).invoke(object, new Color(display, format.getForeground()));
 			} catch (NoSuchMethodException e) {
@@ -219,7 +224,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				throw new RuntimeException(e);
 			}
 		}
-		if (format.getFont() != null){
+		if (format.getFont() != null) {
 			try {
 				clazz.getMethod("setFont", Font.class).invoke(object, new Font(display, format.getFont()));
 			} catch (NoSuchMethodException e) {
@@ -232,30 +237,30 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void asyncFormat(final Item item, final FormattingRule rule, @SuppressWarnings("rawtypes") ICapability capability, Object input){
-		synchronized(activeObjects){
+	private void asyncFormat(final Item item, final FormattingRule rule, @SuppressWarnings("rawtypes") final ICapability capability, final Object input) {
+		synchronized (activeObjects) {
 			activeObjects.put(input, item);
 			activeItems.put(item, input);
 			item.addDisposeListener(this);
 		}
 		
-		CapabilityExecutor.asyncExec(capability, input, Formatter.this, new NullJobListener(){
+		CapabilityExecutor.asyncExec(capability, input, Formatter.this, new NullJobListener() {
 			@SuppressWarnings("rawtypes")
 			@Override
-			public void done(IJobChangeEvent event) {
+			public void done(final IJobChangeEvent event) {
 				CapabilityJob job = (CapabilityJob) event.getJob();
 				CapabilityStatus<Boolean> status = (CapabilityStatus<Boolean>) job.getResult();
 			
-				if (status.getCode() == Status.OK ){
-					if (status.value()){
+				if (status.getCode() == Status.OK) {
+					if (status.value()) {
 						// apply the formatting rule
-						Display.getDefault().asyncExec(new Runnable(){
+						Display.getDefault().asyncExec(new Runnable() {
 							@Override
 							public void run() {
-								synchronized(originalFormats){
+								synchronized (originalFormats) {
 									
-									if (!item.isDisposed()){
-										if (!originalFormats.containsKey(item)){
+									if (!item.isDisposed()) {
+										if (!originalFormats.containsKey(item)) {
 											System.out.println("Saving original format " + item.getText() + " (" + item.hashCode() + ")");
 											originalFormats.put(item, getFormat(item));
 										}
@@ -277,19 +282,14 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * generate the input for the item.
 	 * @param item the item
 	 */
-	private void applyFormattingRules(final Item item){
+	private void applyFormattingRules(final Item item) {
 		Object input = data(item);
 		
-		if (input == null){
-			//System.out.println("No input associated with " + item + "; text: " + item.getText());
+		if (input == null) {
 			return;
-		}else{
-			//System.out.println("Applying formatting rules to " + item);
 		}
 		
-		int matches = 0;
-		
-		for (final FormattingRule rule : activeRules){
+		for (final FormattingRule rule : activeRules) {
 			
 			@SuppressWarnings("rawtypes")
 			ICapability capability = null;
@@ -301,22 +301,19 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				// TODO error information needs to be aggregated and passed up the line
 			}
 
-			if (TypeManager.isCompatible(capability, input)){
-				matches++;
+			if (TypeManager.isCompatible(capability, input)) {
 				asyncFormat(item, rule, capability, TypeManager.getCompatible(capability, input));
 			}
 		}
-		
-		//System.out.println(input.getClass().getSimpleName() + " has " + matches + " predicates");
 	}
 	
 	/**
-	 * Recursively apply formatting rules to a TreeItem and its children
+	 * Recursively apply formatting rules to a TreeItem and its children.
 	 * @param item the tree item
 	 */
-	private void applyFormattingRules(TreeItem item){
+	private void applyFormattingRules(final TreeItem item) {
 		applyFormattingRules((Item) item);
-		for (TreeItem child : item.getItems()){
+		for (TreeItem child : item.getItems()) {
 			applyFormattingRules(child);
 		}
 	}
@@ -325,37 +322,37 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * Recursively apply {@link Activator#activeRules} to <code>control</code> and its children.
 	 * @param control the control
 	 */
-	private void applyFormattingRules(final Control control){
-		if (!activeRules.isEmpty()){
-			if (control instanceof Tree){
+	private void applyFormattingRules(final Control control) {
+		if (!activeRules.isEmpty()) {
+			if (control instanceof Tree) {
 				
 				Tree tree = (Tree) control;
 				
-				tree.addTreeListener(new TreeListener(){
+				tree.addTreeListener(new TreeListener() {
 					@Override
-					public void treeCollapsed(TreeEvent e) {
+					public void treeCollapsed(final TreeEvent e) {
 						// NO OP
 					}
 					@Override
-					public void treeExpanded(TreeEvent e) {
+					public void treeExpanded(final TreeEvent e) {
 						final TreeItem item = ((TreeItem) e.item);
 						System.out.println("Expanding " + item);
 						applyFormattingRules((TreeItem) item);
 					}
 				});
 				
-				for (final TreeItem item : tree.getItems()){
+				for (final TreeItem item : tree.getItems()) {
 					applyFormattingRules(item);
 				}
-			}else if (control instanceof Table){
-				for (final TableItem item : ((Table) control).getItems()){
+			} else if (control instanceof Table) {
+				for (final TableItem item : ((Table) control).getItems()) {
 					applyFormattingRules(item);
 				}
 			}
 			
 			// recursively apply to children
-			if (control instanceof Composite){
-				for (Control child : ((Composite) control).getChildren()){
+			if (control instanceof Composite) {
+				for (Control child : ((Composite) control).getChildren()) {
 					applyFormattingRules(child);
 				}
 			}
@@ -367,10 +364,10 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * to the controls in the view.
 	 * @param partRef the workbench part
 	 */
-	public void applyFormattingRules(IWorkbenchPartReference partRef){
+	public final void applyFormattingRules(final IWorkbenchPartReference partRef) {
 		Control control = null;
 		
-		if (partRef instanceof IViewReference){
+		if (partRef instanceof IViewReference) {
 			try {
 				Object pane = getPaneMethod.invoke(partRef);
 				control = (Control) getControlMethod.invoke(pane);
@@ -378,15 +375,15 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				throw new RuntimeException(e);
 			}
 
-			if (control != null){
+			if (control != null) {
 				applyFormattingRules(control);
 			}
 		}
 	}
 	
 	@Override
-	public void propertyChange(PropertyChangeEvent event) {
-		if (event.getProperty().equals(PreferenceConstants.P_RULES)){
+	public final void propertyChange(final PropertyChangeEvent event) {
+		if (event.getProperty().equals(PreferenceConstants.P_RULES)) {
 			updateRules();
 		}
 	}
@@ -395,15 +392,14 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * When an {@link Item} is disposed, remove it from the set of active items. If
 	 * the item was the last item for an object, remove the object from the set of
 	 * active objects.
+	 * @param e the dispose event
 	 */
 	@Override
-	public void widgetDisposed(DisposeEvent e) {
-		if (e.getSource() instanceof Item){
+	public final void widgetDisposed(final DisposeEvent e) {
+		if (e.getSource() instanceof Item) {
 			Item item = (Item) e.getSource();
 			
-			//System.out.println("Disposing " + item.getText() + " (" + item.hashCode() + ")");
-			
-			synchronized(activeObjects){
+			synchronized (activeObjects) {
 				Object input = activeItems.get(item);	
 				activeObjects.remove(input, item);
 				activeItems.remove(item);
@@ -412,35 +408,34 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	}
 	
 	/**
-	 * Walks a resource delta to invalidate cache lines
+	 * Walks a resource delta to invalidate cache lines.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private class InvalidationVisitor implements IResourceDeltaVisitor{
+	private class InvalidationVisitor implements IResourceDeltaVisitor {
 		@Override
-		public boolean visit(IResourceDelta delta) throws CoreException {
-			if (delta.getAffectedChildren().length == 0){
+		public boolean visit(final IResourceDelta delta) throws CoreException {
+			if (delta.getAffectedChildren().length == 0) {
 				IResource resource = delta.getResource();
-				if (resource != null && interesting(delta)){
+				if (resource != null && interesting(delta)) {
 
 					Set<Object> inputs = Sets.newHashSet(activeObjects.keySet());
 
-					for (Object input : inputs){
+					for (Object input : inputs) {
 						
-						
-						if (resource.isConflicting(scheduler.getSchedulingRule(input))){
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
 							
 							Collection<Item> items = activeObjects.get(input);
 							
 							System.out.println("Conflicting items: " + items.toString());
 							
-							for (final Item item : items){
-								if (!item.isDisposed()){
-									Display.getDefault().asyncExec(new Runnable(){
+							for (final Item item : items) {
+								if (!item.isDisposed()) {
+									Display.getDefault().asyncExec(new Runnable() {
 										@Override
 										public void run() {
-											synchronized(originalFormats){
-												if (!item.isDisposed()){
-													if (originalFormats.containsKey(item)){
+											synchronized (originalFormats) {
+												if (!item.isDisposed()) {
+													if (originalFormats.containsKey(item)) {
 														System.out.println("Resetting " + item.getText() + " (" + item.hashCode() + ")");
 														applyFormat(item, originalFormats.get(item));
 													}
@@ -466,15 +461,15 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		 * @param delta the delta
 		 * @return <code>true</code> iff the delta causes resources to be invalidated
 		 */
-		private boolean interesting(IResourceDelta delta){
+		private boolean interesting(final IResourceDelta delta) {
 			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
 		}
 	}
 
 	@Override
-	public void onResourceChange(Set<Object> invalidated, IResourceChangeEvent event) {
-		if (event.getDelta() != null){
-			synchronized(activeObjects){
+	public final void onResourceChange(final Set<Object> invalidated, final IResourceChangeEvent event) {
+		if (event.getDelta() != null) {
+			synchronized (activeObjects) {
 				try {
 					event.getDelta().accept(new InvalidationVisitor());
 				} catch (CoreException e) {

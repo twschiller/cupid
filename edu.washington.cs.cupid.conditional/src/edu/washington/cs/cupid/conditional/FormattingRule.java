@@ -17,7 +17,7 @@ public class FormattingRule {
 	 * Create a formatting rule with named <code>name</code>.
 	 * @param name the name of the formatting rule
 	 */
-	public FormattingRule(String name){
+	public FormattingRule(final String name) {
 		setName(name);
 	}
 	
@@ -25,22 +25,20 @@ public class FormattingRule {
 	 * Create a new formatting rule named <code>name</code>.
 	 * @param name the name of the formatting rule
 	 * @param capabilityId the associated capability, or <code>null</code>
-	 * @param foreground the foreground override, or <code>null</code>
-	 * @param background the background override, or <code>null</code>
-	 * @param font the font override
+	 * @param format the format
 	 * @param active <code>true</code> iff the rule is active
 	 */
-	public FormattingRule(String name, String capabilityId, Format format, boolean active) {
+	public FormattingRule(final String name, final String capabilityId, final Format format, final boolean active) {
 		this(name);
 		this.capabilityId = capabilityId;
 		this.active = active;
 	}
 	
 	/**
-	 * Returns a copy of the formatting rule. Note: foreground, background, and font are shallow copies.
-	 * @return a copy of the formatting rule
+	 * Returns a <i>shallow</i> copy of the formatting rule. 
+	 * @return a <i>shallow</i> copy of the formatting rule
 	 */
-	public FormattingRule copy(){
+	public final FormattingRule copy() {
 		return new FormattingRule(this.name, this.capabilityId, this.format, this.active);
 	}
 
@@ -48,14 +46,14 @@ public class FormattingRule {
 	/**
 	 * @return the name of the formatting rule
 	 */
-	public String getName() {
+	public final String getName() {
 		return name;
 	}
 
 	/**
 	 * @param name the name of the formatting rule
 	 */
-	public void setName(String name) {
+	public final void setName(final String name) {
 		checkNotNull(name, "formatting rule name cannot be null");
 		this.name = name;
 	}
@@ -63,14 +61,14 @@ public class FormattingRule {
 	/**
 	 * @return the format
 	 */
-	public Format getFormat() {
+	public final Format getFormat() {
 		return format;
 	}
 
 	/**
 	 * @param format the non-<code>null</code> format
 	 */
-	public void setFormat(Format format) {
+	public final void setFormat(final Format format) {
 		checkNotNull(name, "formatting rule format cannot be null");
 		this.format = format;
 	}
@@ -78,28 +76,28 @@ public class FormattingRule {
 	/**
 	 * @return the associated capability, or <code>null</code>
 	 */
-	public String getCapabilityId() {
+	public final String getCapabilityId() {
 		return capabilityId;
 	}
 
 	/**
 	 * @param capabilityId the associated capability, or <code>null</code>
 	 */
-	public void setCapabilityId(String capabilityId) {
+	public final void setCapabilityId(final String capabilityId) {
 		this.capabilityId = capabilityId;
 	}
 
 	/**
 	 * @return <code>true</code> iff the rule is active
 	 */
-	public boolean isActive() {
+	public final boolean isActive() {
 		return active;
 	}
 
 	/**
 	 * @param active <code>true</code> iff the rule is active
 	 */
-	public void setActive(boolean active) {
+	public final void setActive(final boolean active) {
 		this.active = active;
 	} 
 }

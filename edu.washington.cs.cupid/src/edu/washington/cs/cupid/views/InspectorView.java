@@ -553,11 +553,8 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 
 			for (ICapability<?, ?> capability : capabilities) {
 				if (!hidden.contains(capability.getUniqueId())) {
-					Object adapted = TypeManager.getCompatible(capability, argument);
-					
-					System.out.println("Add row for capability " + capability.getName());
+					Object adapted = TypeManager.getCompatible(capability, argument);	
 					rows.add(new CapabilityRow(capability, adapted));
-					System.out.println("Added row for capability " + capability.getName());
 				}
 			}
 

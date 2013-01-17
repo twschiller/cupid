@@ -34,7 +34,6 @@ public class MarkerManager {
 	private final HashMap<IResource, Set<IMarker>> markers = Maps.newHashMap();
 	
 	public MarkerManager(){
-		System.out.println("Registering marker manager");
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(new MarkerListener(), IResourceChangeEvent.POST_BUILD);
 	}
 	

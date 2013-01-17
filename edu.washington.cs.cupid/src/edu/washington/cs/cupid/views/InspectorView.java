@@ -179,7 +179,6 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			for (Object family : cancel) {
 				Job.getJobManager().cancel(family);
 				inspectorFamilies.remove(family);
-				System.out.println("Cancelling family " + family);
 			}
 		}
 	}
@@ -286,7 +285,6 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		private final String rootName;
 		
 		public ListRow(final Row parent, final String rootName, final List<?> list, final int offset, final int length) {
-			System.out.println("create list row for " + rootName);
 			this.parent = parent;
 			this.list = list;
 			this.offset = offset;

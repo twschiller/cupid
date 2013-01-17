@@ -125,7 +125,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 					result = element;
 				} else {
 					// TODO log warning properly
-					System.out.println("WARNING: item " + item + " has multiple data");
 					break;
 				}
 			}
@@ -261,10 +260,8 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 									
 									if (!item.isDisposed()) {
 										if (!originalFormats.containsKey(item)) {
-											System.out.println("Saving original format " + item.getText() + " (" + item.hashCode() + ")");
 											originalFormats.put(item, getFormat(item));
 										}
-										System.out.println("Formatting " + item.getText() + " (" + item.hashCode() + ") with rule " + rule.getName());
 										applyFormat(item, rule.getFormat());
 									}
 
@@ -336,7 +333,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 					@Override
 					public void treeExpanded(final TreeEvent e) {
 						final TreeItem item = ((TreeItem) e.item);
-						System.out.println("Expanding " + item);
 						applyFormattingRules((TreeItem) item);
 					}
 				});
@@ -425,9 +421,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
 							
 							Collection<Item> items = activeObjects.get(input);
-							
-							System.out.println("Conflicting items: " + items.toString());
-							
+								
 							for (final Item item : items) {
 								if (!item.isDisposed()) {
 									Display.getDefault().asyncExec(new Runnable() {
@@ -436,7 +430,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 											synchronized (originalFormats) {
 												if (!item.isDisposed()) {
 													if (originalFormats.containsKey(item)) {
-														System.out.println("Resetting " + item.getText() + " (" + item.hashCode() + ")");
 														applyFormat(item, originalFormats.get(item));
 													}
 												}
@@ -444,7 +437,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 										}
 									});
 									
-									System.out.println("Reformatting " + item.getText() + " (" + item.hashCode() + ")");
 									applyFormattingRules(item);
 								}
 								

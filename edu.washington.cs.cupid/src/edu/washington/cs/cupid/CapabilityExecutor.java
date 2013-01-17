@@ -68,7 +68,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Cupid result caches: Input -> { Capability -> Result }.
 	 */
-	private final Cache<Object, Cache<Object, Object>> resultCaches;
+	private final Cache<Object, Cache<Object, CacheEntry>> resultCaches;
 	
 	/**
 	 * Running jobs: Input -> { Capability -> Result }.
@@ -146,9 +146,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * Initializes the default capability result cache for an input.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private static class CapabilityCacheFactory implements Callable<Cache<Object, Object>> {
+	private static class CapabilityCacheFactory implements Callable<Cache<Object, CacheEntry>> {
 		@Override
-		public Cache<Object, Object> call() throws Exception {
+		public Cache<Object, CacheEntry> call() throws Exception {
 			return CacheBuilder
 					.newBuilder()
 					.build();
@@ -163,20 +163,20 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param <T> output type
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
-	@SuppressWarnings("unchecked") // FP: result is checked dynamically using capabilities return type
-	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input) {
+	@SuppressWarnings("unchecked")
+	private <I,T> T getIfPresent(final ICapability<I, T> capability, final I input) {
 		synchronized (resultCaches) {
 			try {
-				Cache<Object, Object> cCache = resultCaches.get(input, CACHE_FACTORY);
+				Cache<Object, CacheEntry> cCache = resultCaches.get(input, CACHE_FACTORY);
 				
-				Object cached = cCache.getIfPresent(capability);
+				CacheEntry cached = cCache.getIfPresent(capability);
 				
 				if (cached == null) {
 					return null;
-				} else if (capability.getReturnType().isAssignableFrom(cached.getClass())) {
-					return (T) cached;
+				} else if (TypeManager.isJavaCompatible(capability.getReturnType(), cached.type)) {
+					return (T) cached.value;
 				} else {
-					throw new TypeException(capability.getReturnType(), TypeToken.of(cached.getClass()));
+					throw new TypeException(capability.getReturnType(), cached.type);
 				}
 			} catch (ExecutionException e) {
 				CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.WARNING, "error creating capability cache"));
@@ -214,7 +214,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			
 			if (result.isOK()) {
 				if (!capability.isTransient()) {
-					getInstance().resultCaches.getIfPresent(input).put(capability, result);
+					getInstance().resultCaches.getIfPresent(input).put(capability, new CacheEntry(capability.getReturnType(), result));
 				}
 				return result.value();
 			} else {
@@ -388,7 +388,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					try {
-						resultCaches.get(job.getInput(), CACHE_FACTORY).put(job.getCapability(), value);
+						ICapability<?, ?> capability = job.getCapability();
+						resultCaches.get(job.getInput(), CACHE_FACTORY).put(capability, new CacheEntry(capability.getReturnType(), value));
 					} catch (ExecutionException e) {
 						CupidActivator.getDefault().logError("Error adding cache result", e);
 						throw new RuntimeException("Error adding result cache", e);
@@ -466,6 +467,16 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	public static void addCacheListener(final IInvalidationListener listener) {
 		synchronized (getInstance().cacheListeners) {
 			getInstance().cacheListeners.add(listener);
+		}
+	}
+	
+	private static class CacheEntry {
+		private final TypeToken<?> type;
+		private final Object value;
+		
+		private CacheEntry(final TypeToken<?> type, final Object value) {
+			this.type = type;
+			this.value = value;
 		}
 	}
 }

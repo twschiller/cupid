@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.eclipse.scripting.java"
-      label="Cupid for Eclipse Java Scripting"
+      id="edu.washington.cs.cupid.eclipse.mercurial"
+      label="Cupid Mercurial Integration"
       version="1.0.0.0"
       provider-name="University of Washington PLSE">
 
-   <description url="http://cupidplugin.com">
+   <description url="http://www.example.com/description">
       [Enter Feature Description here.]
    </description>
 
@@ -20,16 +20,13 @@
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="edu.washington.cs.cupid" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="com.vectrace.MercurialEclipse" version="2.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.resources" version="3.7.101" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.7.3" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.ide" version="3.7.0" match="greaterOrEqual"/>
-      <import plugin="edu.washington.cs.cupid"/>
-      <import plugin="org.eclipse.jdt.launching" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.ui" version="3.7.2" match="greaterOrEqual"/>
    </requires>
 
    <plugin
-         id="edu.washington.cs.cupid.scripting.java"
+         id="edu.washington.cs.cupid.hg"
          download-size="0"
          install-size="0"
          version="0.0.0"

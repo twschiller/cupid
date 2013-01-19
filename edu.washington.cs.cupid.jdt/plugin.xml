@@ -17,7 +17,19 @@
       </initializer>
    </extension>
    <extension
-         point="edu.washington.cupid.typeAdapters">
+         point="edu.washington.cs.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.jdt.Activator">
+      </publisher>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.schedulingRules">
+      <rule
+            class="edu.washington.cs.cupid.jdt.scheduling.JavaSchedulingRule">
+      </rule>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.typeAdapters">
       <adapter
             class="edu.washington.cs.cupid.jdt.types.JavaProjectAdapter">
       </adapter>
@@ -27,18 +39,6 @@
       <adapter
             class="edu.washington.cs.cupid.jdt.types.ProjectAdapter">
       </adapter>
-   </extension>
-   <extension
-         point="edu.washington.cupid.publishers">
-      <publisher
-            class="edu.washington.cs.cupid.jdt.Activator">
-      </publisher>
-   </extension>
-   <extension
-         point="edu.washington.cupid.schedulingRules">
-      <rule
-            class="edu.washington.cs.cupid.jdt.scheduling.JavaSchedulingRule">
-      </rule>
    </extension>
 
 </plugin>

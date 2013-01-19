@@ -73,7 +73,7 @@
       </objectContribution>
    </extension>
    <extension
-         point="edu.washington.cupid.publishers">
+         point="edu.washington.cs.cupid.publishers">
       <publisher
             class="edu.washington.cs.cupid.wizards.internal.Activator">
       </publisher>

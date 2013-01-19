@@ -53,13 +53,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 	
 	private static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.schedulingRules"; //$NON-NLS-1$
 
-	private static final String PUBLISHER_PROPERTY = "publisher"; //$NON-NLS-1$
-
-	private static final String CAPABILITY_PROPERTY = "capability"; //$NON-NLS-1$
-
-	private static final String TYPE_ADAPTER_PROPERTY = "adapter"; //$NON-NLS-1$
-
-	private static final String SCHEDULING_RULE_PROPERTY = "rule"; //$NON-NLS-1$
+	private static final String EXTENSION_CLASS_PROPERTY = "class"; //$NON-NLS-1$
 	
 	private static CupidActivator plugin;
 	
@@ -163,7 +157,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 		for (IConfigurationElement extension : extensions) {
 			try {
 				
-				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension(SCHEDULING_RULE_PROPERTY));
+				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 				CapabilityExecutor.getSchedulingRuleRegistry().registerSchedulingRule(rule);
 				
 			} catch (CoreException ex) {
@@ -179,7 +173,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 		for (IConfigurationElement extension : extensions) {
 			try {
 				
-				ITypeAdapter<?, ?> adapter = ((ITypeAdapter<?, ?>) extension.createExecutableExtension(TYPE_ADAPTER_PROPERTY));
+				ITypeAdapter<?, ?> adapter = ((ITypeAdapter<?, ?>) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 				TypeManager.getTypeAdapterRegistry().registerAdapter(adapter);
 				
 			} catch (CoreException ex) {
@@ -197,7 +191,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension(CAPABILITY_PROPERTY));
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error registering capabilities for extension " + extension.getName(), ex);
 			}
@@ -213,7 +207,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerPublisher((ICapabilityPublisher) extension.createExecutableExtension(PUBLISHER_PROPERTY));
+				CupidPlatform.getCapabilityRegistry().registerPublisher((ICapabilityPublisher) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error publishing capabilities for extension " + extension.getName(), ex);
 			}

@@ -4,7 +4,7 @@
    <extension
          point="edu.washington.cs.cupid.publish">
       <client
-            class="edu.washington.cs.cupid.resources.internal.Activator">
+            class="edu.washington.cs.cupid.egit.internal.Activator">
       </client>
    </extension>
 

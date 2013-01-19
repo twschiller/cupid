@@ -14,17 +14,16 @@ import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class CompilerMessages extends AbstractCapability<ICompilationUnit, List<Message>> {
+public class CompilerMessagesCapability extends AbstractCapability<ICompilationUnit, List<Message>> {
 	
 	public final static TypeToken<List<Message>> COMPILER_MESSAGES = new TypeToken<List<Message>>(){
 		private static final long serialVersionUID = 1L;
 	};
 	
-	
-	public CompilerMessages(){
+	public CompilerMessagesCapability(){
 		super("Compiler Messages", 
 			  "edu.washington.cs.cupid.jdt.messages", 
-			  "Number of compiler messages (e.g., warnings and errors)",
+			  "Compiler messages (e.g., warnings and errors)",
 			  TypeToken.of(ICompilationUnit.class),
 			  COMPILER_MESSAGES,
 			  Flag.PURE);

@@ -17,16 +17,28 @@
       </initializer>
    </extension>
    <extension
-         point="edu.washington.cs.cupid.publish">
-      <client
-            class="edu.washington.cs.cupid.jdt.Activator">
-      </client>
+         point="edu.washington.cupid.typeAdapters">
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.JavaProjectAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.JavaResourceAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.ProjectAdapter">
+      </adapter>
    </extension>
    <extension
-         point="edu.washington.cs.cupid.type.adapter">
-      <adapter
-            adapter="edu.washington.cs.cupid.jdt.types.JdtTypeAdapters">
-      </adapter>
+         point="edu.washington.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.jdt.Activator">
+      </publisher>
+   </extension>
+   <extension
+         point="edu.washington.cupid.schedulingRules">
+      <rule
+            class="edu.washington.cs.cupid.jdt.scheduling.JavaSchedulingRule">
+      </rule>
    </extension>
 
 </plugin>

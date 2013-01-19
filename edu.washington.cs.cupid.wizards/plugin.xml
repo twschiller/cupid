@@ -44,12 +44,6 @@
       </actionSet>
    </extension>
    <extension
-         point="edu.washington.cs.cupid.publish">
-      <client
-            class="edu.washington.cs.cupid.wizards.internal.Activator">
-      </client>
-   </extension>
-   <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="edu.washington.cs.cupid.wizards.contribution1"
@@ -77,6 +71,12 @@
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="edu.washington.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.wizards.internal.Activator">
+      </publisher>
    </extension>
 
 </plugin>

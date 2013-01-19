@@ -3,12 +3,6 @@
 <plugin>
 
    <extension
-         point="edu.washington.cs.cupid.publish">
-      <client
-            class="edu.washington.cs.cupid.junit.internal.Activator">
-      </client>
-   </extension>
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             category="edu.washington.cs.cupid.preferences"
@@ -22,6 +16,12 @@
       <initializer
             class="edu.washington.cs.cupid.junit.preferences.PreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="edu.washington.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.junit.internal.Activator">
+      </publisher>
    </extension>
 
 </plugin>

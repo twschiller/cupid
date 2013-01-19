@@ -3,10 +3,10 @@
 <schema targetNamespace="edu.washington.cs.cupid" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appinfo>
-         <meta.schema plugin="edu.washington.cs.cupid" id="capability" name="Capability"/>
+         <meta.schema plugin="edu.washington.cs.cupid" id="capabilities" name="Cupid Capabilities"/>
       </appinfo>
       <documentation>
-         [Enter description of this extension point.]
+         An extension point for contributing a capability directly to Cupid.
       </documentation>
    </annotation>
 
@@ -17,7 +17,7 @@
          </appinfo>
       </annotation>
       <complexType>
-         <choice>
+         <choice minOccurs="1" maxOccurs="unbounded">
             <element ref="capability" minOccurs="1" maxOccurs="unbounded"/>
          </choice>
          <attribute name="point" type="string" use="required">
@@ -30,17 +30,20 @@
          <attribute name="id" type="string">
             <annotation>
                <documentation>
-                  
+                  The unique id of the extension; currently unused.
                </documentation>
+               <appinfo>
+                  <meta.attribute deprecated="true"/>
+               </appinfo>
             </annotation>
          </attribute>
          <attribute name="name" type="string">
             <annotation>
                <documentation>
-                  
+                  The name of the extension; currently unused.
                </documentation>
                <appinfo>
-                  <meta.attribute translatable="true"/>
+                  <meta.attribute translatable="true" deprecated="true"/>
                </appinfo>
             </annotation>
          </attribute>
@@ -49,10 +52,10 @@
 
    <element name="capability">
       <complexType>
-         <attribute name="capability" type="string" use="required">
+         <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  A Cupid capability.
                </documentation>
                <appinfo>
                   <meta.attribute kind="java" basedOn=":edu.washington.cs.cupid.capability.ICapability"/>
@@ -67,36 +70,32 @@
          <meta.section type="since"/>
       </appinfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         Cupid Alpha (1.0.0)
       </documentation>
    </annotation>
 
-   <annotation>
-      <appinfo>
-         <meta.section type="examples"/>
-      </appinfo>
-      <documentation>
-         [Enter extension point usage example here.]
-      </documentation>
-   </annotation>
 
    <annotation>
       <appinfo>
          <meta.section type="apiinfo"/>
       </appinfo>
       <documentation>
-         [Enter API information here.]
+         Plug-ins that want to extend this extension point must implement the &lt;samp&gt;edu.washington.cs.cupid.capability.ICapability&lt;/samp&gt; interface.
       </documentation>
    </annotation>
+
 
    <annotation>
       <appinfo>
-         <meta.section type="implementation"/>
+         <meta.section type="copyright"/>
       </appinfo>
       <documentation>
-         [Enter information about supplied implementation of this extension point.]
+         Copyright (c) 2013 Todd Schiller.
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the Eclipse Public License
+v1.0 which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v10.html
       </documentation>
    </annotation>
-
 
 </schema>

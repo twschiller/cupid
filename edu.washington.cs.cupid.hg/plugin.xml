@@ -2,10 +2,10 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="edu.washington.cs.cupid.publish">
-      <client
+         point="edu.washington.cupid.publishers">
+      <publisher
             class="edu.washington.cs.cupid.hg.internal.Activator">
-      </client>
+      </publisher>
    </extension>
 
 </plugin>

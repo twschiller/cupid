@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="edu.washington.cupid.publishers">
+         point="edu.washington.cs.cupid.publishers">
       <publisher
             class="edu.washington.cs.cupid.egit.internal.Activator">
       </publisher>

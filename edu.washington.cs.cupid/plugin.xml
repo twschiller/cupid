@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="edu.washington.cupid.publishers" name="Capability Publishers" schema="schema/publisher.exsd"/>
-   <extension-point id="edu.washington.cupid.schedulingRules" name="Job Scheduling Rules" schema="schema/schedule-rule.exsd"/>
-   <extension-point id="edu.washington.cupid.typeAdapters" name="Type Adapters" schema="schema/type-adapter.exsd"/>
-   <extension-point id="edu.washington.cupid.capabilities" name="Cupid Capabilities" schema="schema/capability.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.publishers" name="Capability Publishers" schema="schema/publisher.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.schedulingRules" name="Job Scheduling Rules" schema="schema/schedule-rule.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.typeAdapters" name="Type Adapters" schema="schema/type-adapter.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.capabilities" name="Cupid Capabilities" schema="schema/capability.exsd"/>
  
    <extension
          point="org.eclipse.ui.views">

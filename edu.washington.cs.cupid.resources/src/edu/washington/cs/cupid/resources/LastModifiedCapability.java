@@ -15,9 +15,8 @@ public class LastModifiedCapability extends AbstractCapability<IFile, Date>{
 		super(
 				"Last Modified",
 				"edu.washington.cs.cupid.resources.lastmodified",
-				"A file's last modified date",
-				IFile.class,
-				Date.class,
+				"The file's last modified date",
+				IFile.class, Date.class,
 				Flag.PURE, Flag.LOCAL);
 	}
 

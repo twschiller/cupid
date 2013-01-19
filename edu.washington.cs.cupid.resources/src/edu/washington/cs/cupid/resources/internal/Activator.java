@@ -1,4 +1,4 @@
-package edu.washington.cs.cupid.resources;
+package edu.washington.cs.cupid.resources.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -6,6 +6,8 @@ import org.osgi.framework.BundleContext;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.resources.LastModifiedCapability;
+import edu.washington.cs.cupid.resources.ProjectForResourceCapability;
 
 public class Activator implements BundleActivator, ICapabilityPublisher{
 
@@ -27,7 +29,10 @@ public class Activator implements BundleActivator, ICapabilityPublisher{
 
 	@Override
 	public ICapability<?, ?>[] publish() {
-		return new ICapability<?, ?>[] { new LastModifiedCapability() };
+		return new ICapability<?, ?>[] { 
+				new LastModifiedCapability(),
+				new ProjectForResourceCapability(),
+		};
 	}
 
 	@Override

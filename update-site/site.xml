@@ -27,6 +27,9 @@
    <feature url="features/edu.washington.cs.cupid.eclipse.mapping_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.mapping" version="1.0.0.0">
       <category name="edu.washington.cs.cupid.eclipse.visualize"/>
    </feature>
+   <feature url="features/edu.washington.cs.cupid.eclipse.egit_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.egit" version="1.0.0.0">
+      <category name="edu.washington.cs.cupid.eclipse.discover"/>
+   </feature>
    <category-def name="edu.washington.cs.cupid.eclipse.scripting" label="Scripting">
       <description>
          Features for scripting Cupid capabilities within Eclipse.

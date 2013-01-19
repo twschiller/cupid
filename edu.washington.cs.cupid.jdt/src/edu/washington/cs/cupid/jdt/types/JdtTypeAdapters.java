@@ -7,7 +7,11 @@ public class JdtTypeAdapters implements ITypeAdapterPublisher{
 
 	@Override
 	public ITypeAdapter<?, ?>[] publish() {
-		return new ITypeAdapter<?,?>[] { new JavaProjectAdapter(), new JavaResourceAdapter() };
+		return new ITypeAdapter<?,?>[] { 
+				new JavaProjectAdapter(), 
+				new JavaResourceAdapter(), 
+				new ProjectAdapter(),
+		};
 	}
 
 }

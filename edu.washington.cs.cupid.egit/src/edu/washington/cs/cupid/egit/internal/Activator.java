@@ -1,4 +1,4 @@
-package edu.washington.cs.cupid.jdt;
+package edu.washington.cs.cupid.egit.internal;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -6,26 +6,23 @@ import org.osgi.framework.BundleContext;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
-import edu.washington.cs.cupid.jdt.compiler.CompilerMessagePredicate;
-import edu.washington.cs.cupid.jdt.compiler.CompilerMessagesCapability;
+import edu.washington.cs.cupid.egit.GitHistoryCapability;
+import edu.washington.cs.cupid.egit.GitProjectRepositoriesCapability;
 
 /**
- * The activator class controls the plug-in life cycle
+ * The activator for the Cupid EGit capabilities plug-in.
  */
-public class Activator extends AbstractUIPlugin implements ICapabilityPublisher {
+public final class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 
 	/**
-	 *  The plug-in ID
+	 * The id for the Cupid EGit capabilities plug-in.
 	 */
-	public static final String PLUGIN_ID = "edu.washington.cs.cupid.jdt"; //$NON-NLS-1$
+	public static final String PLUGIN_ID = "edu.washington.cupid.egit"; //$NON-NLS-1$
 
-	/**
-	 *  The shared instance
-	 */
 	private static Activator plugin;
 	
 	/**
-	 * The constructor
+	 * Construct the activator for the Cupid EGit capabilities plug-in.
 	 */
 	public Activator() {
 	}
@@ -43,20 +40,11 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	}
 
 	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
+	 * Returns the shared instance.
+	 * @return the shared instance.
 	 */
 	public static Activator getDefault() {
 		return plugin;
-	}
-
-	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?,?>[]{ 
-				new CompilerMessagesCapability(), 
-				new CompilerMessagePredicate()
-		};
 	}
 
 	@Override
@@ -67,6 +55,14 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	@Override
 	public void removeChangeListener(ICapabilityChangeListener listener) {
 		// NO OP
+	}
+
+	@Override
+	public ICapability<?, ?>[] publish() {
+		return new ICapability<?, ?>[] {
+			new GitHistoryCapability(),
+			new GitProjectRepositoriesCapability(),
+		};
 	}
 
 }

@@ -40,6 +40,14 @@ public final class JavaProjectManager implements IResourceChangeListener {
 
 	private static final String JAVA_NATURE = "org.eclipse.jdt.core.javanature";
 
+	private static final String [] ECLIPSE_BUNDLES = new String[] {
+			"org.eclipse.core.runtime",
+			"org.eclipse.core.resources",
+			"org.eclipse.equinox.common",
+			"org.eclipse.core.expressions",
+			"org.eclipse.core.jobs",
+	};
+	
 	/**
 	 * Setup the Cupid script project. Creates source directory, bin directory, and constructs the
 	 * classpath.
@@ -89,19 +97,19 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		IPath containerPath = new Path(JavaRuntime.JRE_CONTAINER);
 		classpath.add(JavaCore.newContainerEntry(containerPath));
 		
-		String [] bundles = new String[] {
-			"org.eclipse.core.runtime",
-			"org.eclipse.core.resources",
-			"org.eclipse.equinox.common",
-			"org.eclipse.core.expressions",
-		};
-		
-		for (String bundle : bundles) {
-			classpath.add(JavaCore.newLibraryEntry(bundlePath(Platform.getBundle(bundle)), null, null));
+		for (String symbolicName : ECLIPSE_BUNDLES) {
+			Bundle bundle = Platform.getBundle(symbolicName);
+			
+			if (bundle == null) {
+				throw new RuntimeException("Cannot locate bundle " + symbolicName);
+			}
+			
+			classpath.add(JavaCore.newLibraryEntry(bundlePath(bundle), null, null));
 		}
 		
-		CodeSource src = Lists.class.getProtectionDomain().getCodeSource();
-		classpath.add(JavaCore.newLibraryEntry(urlToPath(src.getLocation()), null, null));
+		// Add Google Guava
+		CodeSource guavaSrc = Lists.class.getProtectionDomain().getCodeSource();
+		classpath.add(JavaCore.newLibraryEntry(urlToPath(guavaSrc.getLocation()), null, null));
 			
 		Bundle cupid = Platform.getBundle("edu.washington.cs.cupid");
 		
@@ -135,6 +143,10 @@ public final class JavaProjectManager implements IResourceChangeListener {
 	}
 	
 	private static IPath bundlePath(final Bundle bundle) throws IOException {
+		if (bundle == null) {
+			throw new NullPointerException("Bundle cannot be null");
+		}
+		
 		URL url = FileLocator.resolve(bundle.getEntry("/"));
 		return urlToPath(url);
 	}

@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.eclipse.scripting.java"
-      label="Cupid for Eclipse Java Scripting"
+      id="edu.washington.cs.cupid.eclipse.charts"
+      label="Cupid Chart Views"
       version="1.0.0.0"
       provider-name="University of Washington PLSE"
       license-feature="edu.washington.cs.cupid.eclipse.core"
       license-feature-version="1.0.0.0">
 
    <description url="http://cupidplugin.com">
-      Java scripting support for Cupid. Creates a workspace project where you can write capability scripts that are dynamically loaded by Cupid.
+      Chart views for Cupid; currently includes support for histograms
+and bar charts.
    </description>
 
    <copyright>
@@ -25,15 +26,11 @@ All rights reserved. This program and the accompanying materials are made availa
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources" version="3.7.101" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.7.3" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.ide" version="3.7.0" match="greaterOrEqual"/>
       <import plugin="edu.washington.cs.cupid"/>
-      <import plugin="org.eclipse.jdt.launching" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.ui" version="3.7.2" match="greaterOrEqual"/>
    </requires>
 
    <plugin
-         id="edu.washington.cs.cupid.scripting.java"
+         id="edu.washington.cs.cupid.chart"
          download-size="0"
          install-size="0"
          version="0.0.0"

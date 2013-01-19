@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            canFinishEarly="false"
+            category="edu.washington.cs.cupid.scripting.wizards"
+            class="edu.washington.cs.cupid.scripting.java.wizards.JavaCapabilityWizard"
+            icon="icons/cup_add.png"
+            id="edu.washington.cs.cupid.scripting.java.wizard"
+            name="Java Capability">
+      </wizard>
+      <category
+            id="edu.washington.cs.cupid.scripting.wizards"
+            name="Cupid">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="edu.washington.cs.cupid.scripting.java.actionSet"
+            label="Cupid Action Set"
+            visible="true">
+         <action
+               class="edu.washington.cs.cupid.scripting.java.wizards.JavaCapabilityAction"
+               icon="icons/cup_add.png"
+               id="edu.washington.cs.cupid.scripting.java.CreateScript"
+               label="Java Capability"
+               style="push"
+               toolbarPath="cupidGroup">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
+      </publisher>
+   </extension>
+
+</plugin>

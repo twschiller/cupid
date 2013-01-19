@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.chart.PieChartView"
+            icon="icons/Pie-chart-icon.png"
+            id="edu.washington.cs.cupid.chart.PieChartView"
+            name="Pie Chart View">
+      </view>
+      <view
+            allowMultiple="true"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.chart.HistogramView"
+            icon="icons/chart-icon.png"
+            id="edu.washington.cs.cupid.chart.HistogramView"
+            name="Histogram View"
+            restorable="false">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+
+</plugin>

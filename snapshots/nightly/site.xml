@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <description name="Cupid Update Site (HEAD)" url="http://cupid.eclipselabs.org.codespot.com/hg/update-site/">
+   <description name="Cupid (Nightly Snapshot Build)" url="http://cupid.eclipselabs.org.codespot.com/hg/snapshots/nightly">
       Cupid is a pipeline-based information ecosystem for Eclipse. The pipeline model, made popular by Unix, provides greater flexibility than Eclipse&apos;s static extension point model by allowing you to dynamically modify the connection between components. Coupling pipeline creation and visualization interfaces, Cupid enables you to easily discover, synthesize, and visualize information.
    </description>
    <feature url="features/edu.washington.cs.cupid.eclipse.core_1.0.0.0.jar" id="edu.washington.cs.cupid.eclipse.core" version="1.0.0.0">

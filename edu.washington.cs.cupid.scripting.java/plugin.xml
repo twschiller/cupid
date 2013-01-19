@@ -2,12 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="edu.washington.cs.cupid.publish">
-      <client
-            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
-      </client>
-   </extension>
-   <extension
          point="org.eclipse.ui.newWizards">
       <wizard
             canFinishEarly="false"
@@ -37,6 +31,12 @@
                toolbarPath="cupidGroup">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="edu.washington.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
+      </publisher>
    </extension>
 
 </plugin>

@@ -33,7 +33,6 @@ import edu.washington.cs.cupid.standard.Max;
 import edu.washington.cs.cupid.standard.MostFrequent;
 import edu.washington.cs.cupid.standard.NonEmpty;
 import edu.washington.cs.cupid.types.ITypeAdapter;
-import edu.washington.cs.cupid.types.ITypeAdapterPublisher;
 
 /**
  * Activator and life-cycle manager for Cupid.
@@ -46,13 +45,21 @@ public final class CupidActivator extends AbstractUIPlugin {
 	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid"; //$NON-NLS-1$
 
-	private static final String PUBLISH_ID = "edu.washington.cs.cupid.publish"; //$NON-NLS-1$
+	private static final String PUBLISH_ID = "edu.washington.cs.cupid.publishers"; //$NON-NLS-1$
 	
-	private static final String CAPABILITY_ID = "edu.washington.cs.cupid.capability"; //$NON-NLS-1$
+	private static final String CAPABILITY_ID = "edu.washington.cs.cupid.capabilities"; //$NON-NLS-1$
 	
-	private static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.type.adapter"; //$NON-NLS-1$
+	private static final String TYPE_ADAPTER_ID = "edu.washington.cs.cupid.typeAdapters"; //$NON-NLS-1$
 	
-	private static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.scheduling.rule"; //$NON-NLS-1$
+	private static final String SCHEDULING_RULE_ID = "edu.washington.cs.cupid.schedulingRules"; //$NON-NLS-1$
+
+	private static final String PUBLISHER_PROPERTY = "publisher"; //$NON-NLS-1$
+
+	private static final String CAPABILITY_PROPERTY = "capability"; //$NON-NLS-1$
+
+	private static final String TYPE_ADAPTER_PROPERTY = "adapter"; //$NON-NLS-1$
+
+	private static final String SCHEDULING_RULE_PROPERTY = "rule"; //$NON-NLS-1$
 	
 	private static CupidActivator plugin;
 	
@@ -156,7 +163,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 		for (IConfigurationElement extension : extensions) {
 			try {
 				
-				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension("rule"));
+				ICupidSchedulingRule<?> rule = ((ICupidSchedulingRule<?>) extension.createExecutableExtension(SCHEDULING_RULE_PROPERTY));
 				CapabilityExecutor.getSchedulingRuleRegistry().registerSchedulingRule(rule);
 				
 			} catch (CoreException ex) {
@@ -172,13 +179,11 @@ public final class CupidActivator extends AbstractUIPlugin {
 		for (IConfigurationElement extension : extensions) {
 			try {
 				
-				ITypeAdapterPublisher publisher = ((ITypeAdapterPublisher) extension.createExecutableExtension("adapter"));
+				ITypeAdapter<?, ?> adapter = ((ITypeAdapter<?, ?>) extension.createExecutableExtension(TYPE_ADAPTER_PROPERTY));
+				TypeManager.getTypeAdapterRegistry().registerAdapter(adapter);
 				
-				for (ITypeAdapter<?, ?> adapter : publisher.publish()) {
-					TypeManager.getTypeAdapterRegistry().registerAdapter(adapter);
-				}
 			} catch (CoreException ex) {
-				logError("Error registering capabilities for extension " + extension.getName(), ex);
+				logError("Error type adapter from extension " + extension.getName(), ex);
 			}
 		}
 	}
@@ -192,7 +197,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension("class"));
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension(CAPABILITY_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error registering capabilities for extension " + extension.getName(), ex);
 			}
@@ -208,7 +213,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerPublisher((ICapabilityPublisher) extension.createExecutableExtension("class"));
+				CupidPlatform.getCapabilityRegistry().registerPublisher((ICapabilityPublisher) extension.createExecutableExtension(PUBLISHER_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error publishing capabilities for extension " + extension.getName(), ex);
 			}

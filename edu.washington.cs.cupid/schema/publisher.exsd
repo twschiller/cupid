@@ -3,10 +3,10 @@
 <schema targetNamespace="edu.washington.cs.cupid" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appinfo>
-         <meta.schema plugin="edu.washington.cs.cupid" id="schedulingRules" name="Scheduling Rules"/>
+         <meta.schema plugin="edu.washington.cs.cupid" id="publishers" name="Cupid Capability Publishers"/>
       </appinfo>
       <documentation>
-         An extension point for defining scheduling rules for types. Scheduling rules are used to determine which Cupid capabilities can run simultaneously, and additionally affect caching.
+         An extension point for publishing capabilities to Cupid, or other plugins. Since the set of provided capabilities may change, listeners can subscribe to capability publishers to be notified when capabilities are added or removed.
       </documentation>
    </annotation>
 
@@ -18,7 +18,7 @@
       </annotation>
       <complexType>
          <choice minOccurs="1" maxOccurs="unbounded">
-            <element ref="rule"/>
+            <element ref="publisher"/>
          </choice>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -30,7 +30,7 @@
          <attribute name="id" type="string">
             <annotation>
                <documentation>
-                  A unique id for the scheduling rule; not currently used.
+                  The unique id of the extension; currently unused.
                </documentation>
                <appinfo>
                   <meta.attribute deprecated="true"/>
@@ -40,32 +40,32 @@
          <attribute name="name" type="string">
             <annotation>
                <documentation>
-                  A name for the scheduling rule; not currently used.
+                  
                </documentation>
                <appinfo>
-                  <meta.attribute translatable="true" deprecated="true"/>
+                  <meta.attribute translatable="true"/>
                </appinfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
-   <element name="rule">
+   <element name="publisher">
       <complexType>
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  A scheduling rule.
+                  An &lt;samp&gt;edu.washington.cs.cupid.capability.ICapabilityPublisher&lt;/samp&gt;
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn=":edu.washington.cs.cupid.jobs.ICupidSchedulingRule"/>
+                  <meta.attribute kind="java" basedOn=":edu.washington.cs.cupid.capability.ICapabilityPublisher"/>
                </appinfo>
             </annotation>
          </attribute>
          <attribute name="name" type="string">
             <annotation>
                <documentation>
-                  An optional displayable name for the scheduling rule.
+                  An optional displayable name for the publisher.
                </documentation>
                <appinfo>
                   <meta.attribute translatable="true"/>
@@ -84,13 +84,31 @@
       </documentation>
    </annotation>
 
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         The following is an example of the extension point usage:
+
+&lt;p&gt;
+&lt;pre&gt;
+   &lt;extension point=&quot;edu.washington.cs.cupid.publishers&quot;&gt;
+      &lt;client
+            class=&quot;edu.washington.cs.cupid.resources.internal.Activator&quot;&gt;
+      &lt;/client&gt;
+   &lt;/extension&gt;
+&lt;/pre&gt;
+&lt;/p&gt;
+      </documentation>
+   </annotation>
 
    <annotation>
       <appinfo>
          <meta.section type="apiinfo"/>
       </appinfo>
       <documentation>
-         Plug-ins that want to extend this extension point must implement the &lt;samp&gt;edu.washington.cs.cupid.jobs.ICupidSchedulingRule&lt;/samp&gt; interface.
+         Plug-ins that want to extend this extension point must implement the &lt;samp&gt;du.washington.cs.cupid.capability.ICapabilityPublisher&lt;/samp&gt; interface.
       </documentation>
    </annotation>
 

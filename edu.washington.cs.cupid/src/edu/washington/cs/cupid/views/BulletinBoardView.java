@@ -1,7 +1,9 @@
 package edu.washington.cs.cupid.views;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -121,6 +123,13 @@ public final class BulletinBoardView extends ViewPart {
 				return TypeManager.simpleTypeName(((ICapability<?, ?>) element).getReturnType().getType());
 			}
 		});
+		
+		TableLayout layout = new TableLayout();
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(4));
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(1));
+		viewer.getTable().setLayout(layout);
 		
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);

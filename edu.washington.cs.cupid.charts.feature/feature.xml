@@ -30,7 +30,7 @@ All rights reserved. This program and the accompanying materials are made availa
    </requires>
 
    <plugin
-         id="edu.washington.cs.cupid.chart"
+         id="edu.washington.cs.cupid.charts"
          download-size="0"
          install-size="0"
          version="0.0.0"

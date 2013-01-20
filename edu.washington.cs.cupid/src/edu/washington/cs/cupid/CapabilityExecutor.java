@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2013 Todd Schiller.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Todd Schiller - initial API, implementation, and documentation
+ ******************************************************************************/
 package edu.washington.cs.cupid;
 
 import java.util.Set;
@@ -164,7 +174,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
 	@SuppressWarnings("unchecked")
-	private <I,T> T getIfPresent(final ICapability<I, T> capability, final I input) {
+	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input) {
 		synchronized (resultCaches) {
 			try {
 				Cache<Object, CacheEntry> cCache = resultCaches.get(input, CACHE_FACTORY);

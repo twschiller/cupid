@@ -112,4 +112,9 @@
     <property name="message" value="Line has trailing spaces."/>
     <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
   </module>
+  <module name="Header">
+    <property name="headerFile" value="/Users/tschiller/Projects/cupid-google/copyright"/>
+    <property name="ignoreLines" value="2"/>
+    <property name="fileExtensions" value=".java"/>
+  </module>
 </module>

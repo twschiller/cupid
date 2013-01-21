@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -72,7 +73,13 @@ public class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
 				
 				try{
 					for (I x : input){
-						Object out = x.getClass().getMethod(field).invoke(x);
+						Method method = x.getClass().getMethod(field);
+						
+						if (!method.isAccessible()){
+							method.setAccessible(true);
+						}
+						
+						Object out = method.invoke(x);
 						// TODO check the conversion
 						result.add((V) out);
 					}

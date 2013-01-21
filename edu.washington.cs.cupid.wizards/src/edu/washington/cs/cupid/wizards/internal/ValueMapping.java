@@ -11,6 +11,7 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -58,11 +59,13 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 	}
 
 	private Object link(Object value, String valueLink) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
-		return valueLink == null 
-				? value
-				: value.getClass().getMethod(valueLink).invoke(value);
+		if (valueLink == null){
+			return value;
+		} else {
+			Method method = value.getClass().getMethod(valueLink);
+			return method.invoke(value);
+		}
 	}
-	
 
 	@Override
 	public CapabilityJob<I, Map<I,Set<V>>> getJob(I input) {

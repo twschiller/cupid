@@ -79,6 +79,10 @@ public class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>>{
 					for (I x : input){
 						Method method = x.getClass().getMethod(field);
 					
+						if (!method.isAccessible()){
+							method.setAccessible(true);
+						}
+						
 						if (ListGetter.this.result.isAssignableFrom(method.getGenericReturnType())){
 							Object out = method.invoke(x);
 							result.add((V) out);

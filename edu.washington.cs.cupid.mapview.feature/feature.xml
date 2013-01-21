@@ -4,7 +4,8 @@
       label="Cupid Mapping View"
       version="1.0.2"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.license.feature"
+      plugin="edu.washington.cs.cupid"
+      license-feature="edu.washington.cs.cupid.license"
       license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">

@@ -195,49 +195,6 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 	
-	/**
-	 * Synchronously execute a capability.
-	 * @param capability the capability
-	 * @param input the input
-	 * @param <I> input type
-	 * @param <T> output type
-	 * @return the result of the capability
-	 * @deprecated execute capabilities asynchronously instead
-	 */
-	public static <I, T> T exec(final ICapability<I, T> capability, final I input) {
-		CapabilityExecutor executor = getInstance();
-		
-		T cached = executor.getIfPresent(capability, input);
-		
-		if (cached == null) {
-			CapabilityJob<I, T> job = capability.getJob(input);
-			job.addJobChangeListener(executor.logger);
-			job.schedule();
-			
-			try {
-				job.join();
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			
-			CapabilityStatus<T> result = (CapabilityStatus<T>) job.getResult();
-			
-			if (result.isOK()) {
-				if (!capability.isTransient()) {
-					getInstance().resultCaches.getIfPresent(input).put(capability, new CacheEntry(capability.getReturnType(), result));
-				}
-				return result.value();
-			} else {
-				throw new RuntimeException(result.getException());
-			}
-		} else {
-			if (executor.logCacheStatus) {
-				CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
-			}
-		
-			return cached;
-		}
-	}
 	
 	/**
 	 * Asynchronously execute a capability.
@@ -398,11 +355,15 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					try {
-						ICapability<?, ?> capability = job.getCapability();
-						resultCaches.get(job.getInput(), CACHE_FACTORY).put(capability, new CacheEntry(capability.getReturnType(), value));
-					} catch (ExecutionException e) {
+						if (job.getInput() != null) {
+							ICapability<?, ?> capability = job.getCapability();
+							
+							resultCaches
+								.get(job.getInput(), CACHE_FACTORY)
+								.put(capability, new CacheEntry(capability.getReturnType(), value));
+						}
+					} catch (Exception e) {
 						CupidActivator.getDefault().logError("Error adding cache result", e);
-						throw new RuntimeException("Error adding result cache", e);
 					}
 				}
 			}

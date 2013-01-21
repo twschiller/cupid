@@ -29,6 +29,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
@@ -37,20 +38,43 @@ import edu.washington.cs.cupid.markers.IMarkerBuilder;
 import edu.washington.cs.cupid.markers.MarkerBuilder;
 import edu.washington.cs.cupid.utility.ResourceDeltaVisitor;
 
-public class MarkerManager {
+/**
+ * Manages markers created with Cupid.
+ * @author Todd Schiller
+ */
+public final class MarkerManager {
 	
 	// TODO manage deleted resources
 	
 	private final HashMap<IResource, Set<IMarker>> markers = Maps.newHashMap();
 	
-	public MarkerManager(){
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(new MarkerListener(), IResourceChangeEvent.POST_BUILD);
+	private final MarkerListener listener;
+	
+	/**
+	 * Construct the marker manager.
+	 */
+	public MarkerManager() {
+		listener = new MarkerListener();
 	}
 	
-	private void deleteMarkers(IResource resource){
-		synchronized(markers){
-			if (markers.containsKey(resource)){
-				for (IMarker marker : markers.get(resource)){
+	/**
+	 * Start the marker manager by adding it as a workspace resource change listener.
+	 */
+	public void start() {
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(listener, IResourceChangeEvent.POST_BUILD);		
+	}
+	
+	/**
+	 * Stop the marker manager.
+	 */
+	public void stop() {
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(listener);
+	}
+	
+	private void deleteMarkers(final IResource resource) {
+		synchronized (markers) {
+			if (markers.containsKey(resource)) {
+				for (IMarker marker : markers.get(resource)) {
 					try {
 						marker.delete();
 					} catch (CoreException e) {
@@ -62,19 +86,19 @@ public class MarkerManager {
 		}
 	}
 	
-	private void registerMarker(IResource resource, IMarker marker){
-		synchronized(markers){
-			if (!markers.containsKey(resource)){
+	private void registerMarker(final IResource resource, final IMarker marker) {
+		synchronized (markers) {
+			if (!markers.containsKey(resource)) {
 				markers.put(resource, Sets.newHashSet(marker));
-			}else{
+			} else {
 				markers.get(resource).add(marker);
 			}
 		}
 	}
 	
-	private class MarkerListener implements IResourceChangeListener{
+	private class MarkerListener implements IResourceChangeListener {
 		@Override
-		public void resourceChanged(IResourceChangeEvent event) {
+		public void resourceChanged(final IResourceChangeEvent event) {
 			ResourceDeltaVisitor visitor = new ResourceDeltaVisitor(IResourceDelta.CONTENT | IResourceDelta.TYPE);
 			try {
 				event.getDelta().accept(visitor);
@@ -83,28 +107,33 @@ public class MarkerManager {
 			}
 	
 			ICapabilityRegistry registry = CupidPlatform.getCapabilityRegistry();
-			for (IResource input : visitor.getMatches()){
-				deleteMarkers(input);
+			for (IResource resource : visitor.getMatches()) {
+				deleteMarkers(resource);
 				
-				for (ICapability<?,?> capability : registry.getCapabilities(TypeToken.of(input.getClass()), IMarkerBuilder.MARKER_RESULT )){
-					asyncAddMarkers(capability, input, input);
+				for (ICapability<?, ?> capability : registry.getCapabilities(TypeToken.of(resource.getClass()), IMarkerBuilder.MARKER_RESULT)) {
+					Object argument = TypeManager.getCompatible(capability, resource);
+					asyncAddMarkers(capability, resource, argument);
 				}
 			}
 		}
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		private void asyncAddMarkers(ICapability capability, final IResource resource, Object input){
-			CapabilityExecutor.asyncExec(capability, input, MarkerListener.this, new NullJobListener(){
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		private void asyncAddMarkers(final ICapability capability, final IResource resource, final Object input) {
+			CapabilityExecutor.asyncExec(capability, input, MarkerListener.this, new NullJobListener() {
 				@Override
-				public void done(IJobChangeEvent event) {
+				public void done(final IJobChangeEvent event) {
 					CapabilityStatus result = (CapabilityStatus) event.getResult();
 
-					for (MarkerBuilder marker : (Collection<MarkerBuilder>) result.value()){
-						try {
-							registerMarker(resource, marker.create(IMarker.PROBLEM));
-						} catch (CoreException e) {
-							// NO OP
+					if (result.value() != null) {
+						for (MarkerBuilder marker : (Collection<MarkerBuilder>) result.value()) {
+							try {
+								registerMarker(resource, marker.create(IMarker.PROBLEM));
+							} catch (CoreException e) {
+								// NO OP
+							}
 						}
+					} else {
+						// TODO report error
 					}
 				}
 			});

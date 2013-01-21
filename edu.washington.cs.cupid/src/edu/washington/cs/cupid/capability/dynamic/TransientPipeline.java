@@ -113,54 +113,49 @@ public class TransientPipeline<I, V> extends AbstractTransientCapability<I, V> {
 		return new CapabilityJob(this, input) {
 			@Override
 			protected CapabilityStatus run(final IProgressMonitor monitor) {
-				Object result = getInput();
-				
-				monitor.beginTask(this.getName(), TransientPipeline.this.capabilities.size());
-
-				List<ICapability<?, ?>> resolved;
 				try {
-					resolved = inorder();
-				} catch (NoSuchCapabilityException e) {
-					return CapabilityStatus.makeError(e);
-				}
-				
-				List<Object> intermediateResults = Lists.newArrayList();
-				intermediateResults.add(result);
 
-				for (ICapability capability : resolved) {
-					if (monitor.isCanceled()) {
-						return CapabilityStatus.makeCancelled();
-					}
+					Object result = getInput();
 
-					CapabilityJob<?, ?> subtask = capability.getJob(result);
-					
-					if (subtask == null) {
-						throw new RuntimeException("Capability " + capability.getName() + " produced null job");
-					}
-					
-					monitor.subTask(subtask.getName());
-					subtask.schedule();
-					try {
+					monitor.beginTask(this.getName(), TransientPipeline.this.capabilities.size());
+
+					List<ICapability<?, ?>> resolved = inorder();
+
+					List<Object> intermediateResults = Lists.newArrayList();
+					intermediateResults.add(result);
+
+					for (ICapability capability : resolved) {
+						if (monitor.isCanceled()) {
+							return CapabilityStatus.makeCancelled();
+						}
+
+						CapabilityJob<?, ?> subtask = capability.getJob(result);
+
+						if (subtask == null) {
+							throw new RuntimeException("Capability " + capability.getName() + " produced null job");
+						}
+
+						monitor.subTask(subtask.getName());
+
+						subtask.schedule();
 						subtask.join();
-					} catch (InterruptedException e) {
-						monitor.done();
-						return CapabilityStatus.makeError(e);
-					}
 
-					CapabilityStatus status = ((CapabilityStatus) subtask.getResult());
+						CapabilityStatus status = ((CapabilityStatus) subtask.getResult());
 
-					if (status.getCode() == Status.OK) {
-						result = status.value();
-						intermediateResults.add(result);
-						monitor.worked(1);
-					} else {
-						monitor.done();
-						return CapabilityStatus.makeError(status.getException());
+						if (status.getCode() == Status.OK) {
+							result = status.value();
+							intermediateResults.add(result);
+							monitor.worked(1);
+						} else {
+							throw status.getException();
+						}
 					}
+					return CapabilityStatus.makeOk(result);
+				} catch (Throwable ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
-
-				monitor.done();
-				return CapabilityStatus.makeOk(result);
 			}
 		};
 	}

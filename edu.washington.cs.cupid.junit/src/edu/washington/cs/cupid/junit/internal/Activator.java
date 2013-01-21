@@ -129,8 +129,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 					LAUNCH_CONFIGURATIONS.get(config).add(
 							new LinearPipeline.PipelineBuilder(new JUnitCapability(config))
 							.attach(new JUnitMarkers())
-							.create("Place Test Failure Markers (" + config + ")", 
-									"The number of JUnit test failures (" + config + ")"));
+							.create("JUnit Test Failure Markers (" + config + ")", 
+									"JUnit test failure markers (" + config + ")"));
 				}
 				
 				capabilities.addAll(LAUNCH_CONFIGURATIONS.get(config));

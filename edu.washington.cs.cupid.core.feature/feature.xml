@@ -4,7 +4,8 @@
       label="Cupid for Eclipse"
       version="1.0.3"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.license.feature"
+      plugin="edu.washington.cs.cupid"
+      license-feature="edu.washington.cs.cupid.license"
       license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">
@@ -247,7 +248,7 @@ its rights to a jury trial in any resulting litigation.
    </license>
 
    <includes
-         id="edu.washington.cs.cupid.license.feature"
+         id="edu.washington.cs.cupid.license"
          version="0.0.0"/>
 
    <requires>

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.hg.feature"
-      label="MercurialEclipse Capabilities"
-      version="1.0.1"
+      id="edu.washington.cs.cupid.hg"
+      label="Cupid MercurialEclipse Capabilities"
+      version="1.0.2"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.license.feature"
+      plugin="edu.washington.cs.cupid"
+      license-feature="edu.washington.cs.cupid.license"
       license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">

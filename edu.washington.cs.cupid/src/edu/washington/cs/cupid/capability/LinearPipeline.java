@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -71,30 +72,37 @@ public final class LinearPipeline<I, T> implements ICapability<I, T> {
 		return new CapabilityJob(this, input) {
 			@Override
 			protected CapabilityStatus<T> run(final IProgressMonitor monitor) {
-				Object result = getInput();
-				
-				monitor.beginTask(LinearPipeline.this.getName(), LinearPipeline.this.capabilities.size());
-
-				for (ICapability capability : capabilities) {
-					if (monitor.isCanceled()) {
-						return CapabilityStatus.makeCancelled();
-					}
+				try {
+					Object result = getInput();
 					
-					CapabilityJob subtask = capability.getJob(result);
-					monitor.subTask(subtask.getName());
-					subtask.schedule();
-					try {
+					monitor.beginTask(LinearPipeline.this.getName(), LinearPipeline.this.capabilities.size());
+
+					for (ICapability capability : capabilities) {
+						if (monitor.isCanceled()) {
+							return CapabilityStatus.makeCancelled();
+						}
+						
+						CapabilityJob subtask = capability.getJob(result);
+						monitor.subTask(subtask.getName());
+						
+						subtask.schedule();
 						subtask.join();
-					} catch (InterruptedException e) {
-						monitor.done();
-						return CapabilityStatus.makeError(e);
+						
+						CapabilityStatus status = (CapabilityStatus) subtask.getResult();
+						
+						if (status.getCode() == Status.OK) {
+							result = status.value();
+							monitor.worked(1);
+						} else {
+							throw status.getException();
+						}		
 					}
-					result = ((CapabilityStatus) subtask.getResult()).value();
-					monitor.worked(1);
+					return CapabilityStatus.makeOk((T) result);
+				} catch (Throwable ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
-				
-				monitor.done();
-				return CapabilityStatus.makeOk((T) result);
 			}
 		};
 	}

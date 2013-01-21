@@ -38,24 +38,31 @@ import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.junit.internal.Activator;
 
-public class JUnitPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
+/**
+ * The JUnit capabilities preference page.
+ * @author Todd Schiller
+ */
+public final class JUnitPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
 	private Table table;
 	
+	/**
+	 * Construct the JUnit capabilities preference page.
+	 */
 	public JUnitPreferencePage() {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		setDescription("Cupid JUnit Preference Page");
 	}
 	
 	@Override
-	public void init(IWorkbench workbench) {
+	public void init(final IWorkbench workbench) {
 	}
 	
-	public void update(){
+	private void update(){
 		List<String> active = Lists.newArrayList();
 		
-		for (TableItem item : table.getItems()){
-			if (item.getChecked()){
+		for (TableItem item : table.getItems()) {
+			if (item.getChecked()) {
 				active.add(item.getText());
 			}
 		}
@@ -64,7 +71,7 @@ public class JUnitPreferencePage extends PreferencePage implements IWorkbenchPre
 	}
 
 	@Override
-	protected Control createContents(Composite parent) {
+	protected Control createContents(final Composite parent) {
 		
 		Set<String> current = Sets.newHashSet(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE).split(";"));
 		
@@ -90,19 +97,19 @@ public class JUnitPreferencePage extends PreferencePage implements IWorkbenchPre
 		
 		String[] titles = { "Test Configuration" };
 		
-		for (int i = 0 ; i < titles.length; i++){
+		for (int i = 0; i < titles.length; i++) {
 			TableColumn column = new TableColumn(table, SWT.NULL);
 			column.setText(titles[i]);
 		}
 		
 		ILaunchManager launches = DebugPlugin.getDefault().getLaunchManager();
 		try {
-			for (ILaunchConfiguration config : launches.getLaunchConfigurations()){
+			for (ILaunchConfiguration config : launches.getLaunchConfigurations()) {
 				TableItem item = new TableItem(table, SWT.NULL);
 				item.setText(config.getName());
 				item.setText(0, config.getName());
 				
-				if (current.contains(config.getName())){
+				if (current.contains(config.getName())) {
 					item.setChecked(true);
 				}
 			}
@@ -110,20 +117,20 @@ public class JUnitPreferencePage extends PreferencePage implements IWorkbenchPre
 			// NO OP
 		}
 		
-		for (int i = 0; i < titles.length; i++){
+		for (int i = 0; i < titles.length; i++) {
 			table.getColumn(i).pack();
 		}
 		
-		table.addSelectionListener(new SelectionListener(){
+		table.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (e.detail == SWT.CHECK){
+			public void widgetSelected(final SelectionEvent e) {
+				if (e.detail == SWT.CHECK) {
 					update();
 				}
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(final SelectionEvent e) {
 				// NO OP
 			}
 		});

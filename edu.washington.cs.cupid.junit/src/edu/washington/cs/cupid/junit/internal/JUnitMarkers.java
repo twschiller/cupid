@@ -18,7 +18,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.junit.model.TestCaseElement;
 import org.eclipse.jdt.internal.junit.model.TestElement;
 import org.eclipse.jdt.internal.junit.model.TestRunSession;
@@ -61,58 +60,54 @@ public final class JUnitMarkers extends AbstractCapability<TestRunSession, Colle
 				monitor.beginTask("Building JUnit Markers", input.getAllFailedTestElements().length);
 				Collection<IMarkerBuilder> result = Sets.newHashSet();
 				
-				for (TestElement element : input.getAllFailedTestElements()) {
-					if (element instanceof TestCaseElement) {
-						TestCaseElement test = (TestCaseElement) element;
-						
-						IResource resource = null;
-						IMethod method = null;
-						
-						try {
+				try {
+
+					for (TestElement element : input.getAllFailedTestElements()) {
+						if (element instanceof TestCaseElement) {
+							TestCaseElement test = (TestCaseElement) element;
+
+							IResource resource = null;
+							IMethod method = null;
+
 							IType type = test.getTestRunSession().getLaunchedProject().findType(test.getClassName());
-							
+
 							if (type == null) {
 								resource = test.getTestRunSession().getLaunchedProject().getCorrespondingResource();
 							} else {
 								ICompilationUnit cunit = type.getCompilationUnit();
 								method = type.getMethod(test.getTestMethodName(), new String[]{});
-								
+
 								if (cunit == null) {
 									resource = test.getTestRunSession().getLaunchedProject().getCorrespondingResource();
 								} else {
 									resource = cunit.getCorrespondingResource();
 								}
 							}
-						} catch (JavaModelException e) {
-							monitor.done();
-							return CapabilityStatus.makeError(e);
-						}
-						
-						if (resource != null) {
-							MarkerBuilder builder = new MarkerBuilder(resource)
-								.set(IMarker.MESSAGE, "Test failed: " + element.getTestName())
-								.set(IMarker.TRANSIENT, true)
-								.set(IMarker.PRIORITY, IMarker.PRIORITY_NORMAL);
-							
-							if (method != null) {
-								try {
+
+							if (resource != null) {
+								MarkerBuilder builder = new MarkerBuilder(resource)
+									.set(IMarker.MESSAGE, "Test failed: " + element.getTestName())
+									.set(IMarker.TRANSIENT, true)
+									.set(IMarker.PRIORITY, IMarker.PRIORITY_NORMAL);
+
+								if (method != null) {
 									builder
 										.set(IMarker.CHAR_START, method.getSourceRange().getOffset())
 										.set(IMarker.CHAR_END, method.getSourceRange().getOffset() + method.getSourceRange().getLength());
-								} catch (JavaModelException e) {
-									monitor.done();
-									return CapabilityStatus.makeError(e);
 								}
-							}
 
-							result.add(builder);
+								result.add(builder);
+							}
 						}
+
+						monitor.worked(1);
 					}
-				
-					monitor.worked(1);
-				}
-				monitor.done();
-				return CapabilityStatus.makeOk(result);
+					return CapabilityStatus.makeOk(result);
+				} catch (Exception e){
+					return CapabilityStatus.makeError(e);
+				} finally {
+					monitor.done();
+				}	
 			}
 		};
 	}

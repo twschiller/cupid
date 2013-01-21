@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.core.feature"
+      id="edu.washington.cs.cupid.core"
       label="Cupid for Eclipse"
-      version="1.0.1"
+      version="1.0.3"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.license.feature"
+      plugin="edu.washington.cs.cupid"
+      license-feature="edu.washington.cs.cupid.license"
       license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">
@@ -247,7 +248,7 @@ its rights to a jury trial in any resulting litigation.
    </license>
 
    <includes
-         id="edu.washington.cs.cupid.license.feature"
+         id="edu.washington.cs.cupid.license"
          version="0.0.0"/>
 
    <requires>
@@ -282,20 +283,6 @@ its rights to a jury trial in any resulting litigation.
          unpack="false"/>
 
    <plugin
-         id="edu.washington.cs.cupid.jdt"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="edu.washington.cs.cupid.junit"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="edu.washington.cs.cupid.resources"
          download-size="0"
          install-size="0"
@@ -310,7 +297,7 @@ its rights to a jury trial in any resulting litigation.
          unpack="false"/>
 
    <plugin
-         id="edu.washington.cs.cupid.markers"
+         id="edu.washington.cs.cupid.jdt"
          download-size="0"
          install-size="0"
          version="0.0.0"

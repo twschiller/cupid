@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="edu.washington.cs.cupid.junit"
+      label="Cupid JUnit Capabilities"
+      version="1.0.0"
+      provider-name="University of Washington PLSE"
+      plugin="edu.washington.cs.cupid"
+      license-feature="edu.washington.cs.cupid.license"
+      license-feature-version="1.0.0">
+
+   <description url="http://cupidplugin.com">
+      Cupid JUnit capabilities.
+   </description>
+
+   <copyright>
+      Copyright (c) 2013 Todd Schiller.
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the Eclipse Public License
+v1.0 which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v10.html
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <includes
+         id="edu.washington.cs.cupid.markers"
+         version="0.0.0"
+         name=""/>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="edu.washington.cs.cupid" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.junit" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.junit" version="4.8.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.debug.core" version="3.7.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt" version="3.7.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.debug.ui" version="3.7.102" match="greaterOrEqual"/>
+      <import plugin="edu.washington.cs.cupid.markers" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.jdt.junit.core"/>
+   </requires>
+
+   <plugin
+         id="edu.washington.cs.cupid.junit"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

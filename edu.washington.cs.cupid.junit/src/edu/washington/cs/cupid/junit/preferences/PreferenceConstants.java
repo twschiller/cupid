@@ -11,10 +11,17 @@
 package edu.washington.cs.cupid.junit.preferences;
 
 /**
- * Constant definitions for plug-in preferences
+ * Constant definitions for plug-in preferences.
  */
-public class PreferenceConstants {
+public final class PreferenceConstants {
 
+	private PreferenceConstants() {
+		
+	}
+	
+	/**
+	 * The active JUnit configurations.
+	 */
 	public static final String P_ACTIVE = "activeJUnitCapabilities";
 	
 }

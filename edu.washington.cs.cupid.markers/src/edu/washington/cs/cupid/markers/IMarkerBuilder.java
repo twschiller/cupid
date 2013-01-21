@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.CoreException;
 import com.google.common.reflect.TypeToken;
 
 /**
+ * Interface for a 
  * @author Todd Schiller (tws@cs.washington.edu)
  */
 public interface IMarkerBuilder {
@@ -26,5 +27,12 @@ public interface IMarkerBuilder {
 		private static final long serialVersionUID = 1L;
 	};
 	
+	/**
+	 * Returns the marker; the new marker has the specified type.
+	 * @param type a type string, specifying its type (e.g. "<tt>org.eclipse.core.resources.taskmarker</tt>")
+	 * @return the marker; the new marker has the specified type.
+	 * @throws CoreException if an error occurs when building the marker
+	 * @see IMarker
+	 */
 	public IMarker create(String type) throws CoreException;
 }

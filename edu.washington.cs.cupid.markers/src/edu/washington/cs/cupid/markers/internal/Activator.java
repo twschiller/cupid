@@ -15,45 +15,42 @@ import org.osgi.framework.BundleContext;
 
 
 /**
- * The activator class controls the plug-in life cycle
+ * The activator for the Cupid marker plug-in.
  */
-public class Activator extends AbstractUIPlugin {
+public final class Activator extends AbstractUIPlugin {
 
 	/**
-	 *  The plug-in ID
+	 *  The plug-in ID for the Cupid marker plug-in.
 	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid.markers"; //$NON-NLS-1$
 
-	/**
-	 *  The shared instance
-	 */
 	private static Activator plugin;
 	
 	/**
-	 * The constructor
+	 * Constructs the activator for the Cupid marker plug-in.
 	 */
 	public Activator() {
 	}
 
-	@SuppressWarnings("unused")
 	private MarkerManager manager;
 	
 	@Override
-	public void start(BundleContext context) throws Exception {
+	public void start(final BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 		manager = new MarkerManager();
+		manager.start();
 	}
 
 	@Override
-	public void stop(BundleContext context) throws Exception {
+	public void stop(final BundleContext context) throws Exception {
 		plugin = null;
+		manager.stop();
 		super.stop(context);
 	}
 
 	/**
-	 * Returns the shared instance
-	 *
+	 * Returns the shared instance.
 	 * @return the shared instance
 	 */
 	public static Activator getDefault() {

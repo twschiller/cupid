@@ -58,11 +58,10 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 
 	@Override
 	protected final CapabilityStatus<TestRunSession> run(final IProgressMonitor monitor) {
-		ILaunchManager launches = DebugPlugin.getDefault().getLaunchManager();
-
-		monitor.beginTask("Run JUnit Configuration", IProgressMonitor.UNKNOWN);
-		
 		try {
+			ILaunchManager launches = DebugPlugin.getDefault().getLaunchManager();
+			monitor.beginTask("Run JUnit Configuration", 100);
+						
 			ILaunchConfiguration configuration = null;
 			for (ILaunchConfiguration config : launches.getLaunchConfigurations()) {
 				if (config.getName().equals(configName)) {
@@ -82,7 +81,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 				// Don't build or register the launch, the JUnit monitor will watch it
 				ILaunch launch = copy.launch(
 						ILaunchManager.RUN_MODE, 
-						new SubProgressMonitor(monitor, IProgressMonitor.UNKNOWN), 
+						new SubProgressMonitor(monitor, 100), 
 						false /* build */, false /* register */);
 
 				do {

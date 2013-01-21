@@ -39,8 +39,7 @@ public final class JUnitFailures extends AbstractCapability<TestRunSession, Set<
 		super("JUnit Failed Tests",
 			  "edu.washington.cs.cupid.junit.internal.failed",
 			  "Extract failed tests",
-			  TypeToken.of(TestRunSession.class),
-			  Types.TEST_ELEMENTS,
+			  TypeToken.of(TestRunSession.class), Types.TEST_ELEMENTS,
 			  Flag.PURE, Flag.LOCAL);
 	}
 	

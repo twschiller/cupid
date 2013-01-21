@@ -11,6 +11,7 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -60,13 +61,17 @@ public class CapabilityMapping<I,K,V> extends AbstractMapping<I,K,V> {
 		return Sets.union(inputGenerator.getDynamicDependencies(), valueGenerator.getDynamicDependencies());
 	}
 
-	private Object link(Object value, String valueLink) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
-		return valueLink == null 
-				? value
-				: value.getClass().getMethod(valueLink).invoke(value);
+	private Object link(Object value, String valueLink) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		if (valueLink == null) {
+			return value;
+		} else {
+			Method method = value.getClass().getMethod(valueLink);
+			if (!method.isAccessible()){
+				method.setAccessible(true);
+			}
+			return method.invoke(value);
+		}
 	}
-	
-
 	
 	@Override
 	public CapabilityJob<I, Map<K, Set<V>>> getJob(I input) {		

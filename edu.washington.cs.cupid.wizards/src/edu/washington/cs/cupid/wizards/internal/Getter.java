@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -68,7 +69,13 @@ public class Getter<I,V> implements IExtractCapability<I,V>{
 			@Override
 			protected CapabilityStatus<V> run(IProgressMonitor monitor) {
 				try{
-					Object out = input.getClass().getMethod(field).invoke(input);
+					Method method = input.getClass().getMethod(field);
+					
+					if (!method.isAccessible()){
+						method.setAccessible(true);
+					}
+					
+					Object out = method.invoke(input);
 					// TODO check the conversion
 					return CapabilityStatus.makeOk((V) out);
 				}catch(Exception ex){

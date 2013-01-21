@@ -2,10 +2,10 @@
 <feature
       id="edu.washington.cs.cupid.svn.feature"
       label="Cupid Subversion Capabilities"
-      version="1.0.0.0"
+      version="1.0.1"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.core.feature"
-      license-feature-version="1.0.0.0">
+      license-feature="edu.washington.cs.cupid.license.feature"
+      license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">
       Subclipse capabilities for Cupid
@@ -31,7 +31,7 @@ All rights reserved. This program and the accompanying materials are made availa
       <import plugin="edu.washington.cs.cupid" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.resources" version="3.7.101" match="greaterOrEqual"/>
       <import plugin="org.tmatesoft.svnkit" version="1.3.5" match="greaterOrEqual"/>
-      <import plugin="org.tigris.subversion.subclipse.core" version="1.6.0"/>
+      <import plugin="org.tigris.subversion.subclipse.core" version="1.6.0" match="compatible"/>
    </requires>
 
    <plugin

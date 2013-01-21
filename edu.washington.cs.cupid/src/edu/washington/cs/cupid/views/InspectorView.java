@@ -238,7 +238,14 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			case 0:
 				return name;
 			case 1:
-				return value == null ? "null" : value.toString();
+				if (value == null) {
+					return "null";
+				} else if (value instanceof Exception){
+					String msg = ((Exception) value).getLocalizedMessage();
+					return msg == null ? "<error>" : ("<error:" + msg + ">");  
+				} else {
+					return value.toString();
+				}
 			default:
 				throw new IllegalArgumentException("Invalid column index");
 			}
@@ -676,6 +683,10 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 					&& !method.getName().equalsIgnoreCase("getClass")) {
 					
 					try {
+						if (!method.isAccessible()){
+							method.setAccessible(true);
+						}
+						
 						Object child = method.invoke(value);
 						
 						if (child != null || INCLUDE_NULL_OUTPUT) {

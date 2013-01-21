@@ -2,10 +2,10 @@
 <feature
       id="edu.washington.cs.cupid.mapview.feature"
       label="Cupid Mapping View"
-      version="1.0.0.0"
+      version="1.0.1"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.core.feature"
-      license-feature-version="1.0.0.0">
+      license-feature="edu.washington.cs.cupid.license.feature"
+      license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">
       A Cupid view for mappings; requires the Zest plugin.

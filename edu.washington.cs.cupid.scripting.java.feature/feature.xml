@@ -4,8 +4,8 @@
       label="Cupid Java Capability Scripting"
       version="1.0.1"
       provider-name="University of Washington PLSE"
-      license-feature="edu.washington.cs.cupid.core.feature"
-      license-feature-version="1.0.0.0">
+      license-feature="edu.washington.cs.cupid.license.feature"
+      license-feature-version="1.0.0">
 
    <description url="http://cupidplugin.com">
       Java scripting support for Cupid. Creates a workspace project where you can write capability scripts that are dynamically loaded by Cupid.

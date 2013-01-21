@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.mylyn.feature"
       label="Cupid Mylyn Capabilities"
-      version="1.0.0.0"
+      version="1.0.1"
       provider-name="University of Washington PLSE"
       license-feature="edu.washington.cs.cupid.core.feature"
       license-feature-version="1.0.0.0">

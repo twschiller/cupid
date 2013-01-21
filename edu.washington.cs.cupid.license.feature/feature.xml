@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.license.feature"
+      id="edu.washington.cs.cupid.license"
       label="Cupid License"
       version="1.0.0"
       provider-name="University of Washington PLSE">

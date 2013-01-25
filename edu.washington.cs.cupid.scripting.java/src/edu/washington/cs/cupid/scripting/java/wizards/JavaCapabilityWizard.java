@@ -11,16 +11,22 @@
 package edu.washington.cs.cupid.scripting.java.wizards;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -38,9 +44,13 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.osgi.framework.Bundle;
 
+import com.floreysoft.jmte.Engine;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import edu.washington.cs.cupid.scripting.java.internal.Activator;
 
@@ -167,49 +177,29 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		monitor.done();
 	}
 	
-	private InputStream openContents(final String name, final String id, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws UnsupportedEncodingException, ParserConfigurationException, TransformerException {
-		String className = formClassName(name);
+	private InputStream openContents(final String name, final String id, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
 		String separator = System.getProperty("line.separator");
 		
-		StringBuilder builder = new StringBuilder();
+		Bundle bundle = Activator.getDefault().getBundle();
+		URL fileURL = bundle.getEntry("templates/AbstractCapability.template");
+		File file = new File(FileLocator.resolve(fileURL).toURI());
 		
-		builder.append("import edu.washington.cs.cupid.capability.AbstractCapability;").append(separator);
-		builder.append("import edu.washington.cs.cupid.capability.CapabilityJob;").append(separator);
-		builder.append("import edu.washington.cs.cupid.jobs.ImmediateJob;").append(separator);
-		
-		for (String clazz : Sets.newHashSet(paramType.getName(), returnType.getName())) {
-			builder.append("import " + clazz + ";").append(separator);
-		}
-		
-		builder.append("public class " + className + " extends AbstractCapability<" + paramType.getSimpleName() + "," + returnType.getSimpleName() + ">{").append(separator);
-		
-		String [] ctorLines = new String[]{
-				"public " + className + "(){",
-				"\tsuper(\"" + className + "\", \"" + id + "\",",
-				"\t\"" + description + "\",",
-				"\t" + paramType.getSimpleName() + ".class, " + returnType.getSimpleName() + ".class,",
-				"\tFlag.PURE, Flag.LOCAL);",
-				"}"
-		};
-		
-		for (String line : ctorLines) {
-			builder.append("\t").append(line).append(separator);
-		}
+		String template = Joiner.on(separator).join(Files.readLines(file, Charset.defaultCharset()));
 	
-		String [] lines = new String[]{
-				"@Override",
-				"public CapabilityJob<" + paramType.getSimpleName() + ", " + returnType.getSimpleName() + "> getJob(" + paramType.getSimpleName() + " input) {",
-				"\treturn null;",
-				"}"
-		};
+		Engine engine = new Engine();
+		Map<String, Object> model = new HashMap<String, Object>();
 		
-		for (String line : lines) {
-			builder.append("\t").append(line).append(separator);
-		}
-
-		builder.append("}");
+		model.put("CLASS", formClassName(name));
+		model.put("NAME", name);
+		model.put("UNIQUE_ID", id);
+		model.put("DESCRIPTION", description);
+		model.put("INPUT_TYPE", paramType.getSimpleName());
+		model.put("OUTPUT_TYPE", returnType.getSimpleName());
+		model.put("IMPORTS", Lists.newArrayList(paramType.getName(), returnType.getName()));
 		
-		return new ByteArrayInputStream(builder.toString().getBytes(charSet));
+		String content = engine.transform(template, model);
+		
+		return new ByteArrayInputStream(content.getBytes(charSet));
 	}
 	
 	@Override 

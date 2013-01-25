@@ -81,25 +81,35 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		cupidProject = root.getProject(CUPID_PROJECT);
 		
+		try {
 		// force cupid to load first?
-		CupidPlatform.class.toString();
+			CupidPlatform.class.toString();
+		}	catch (Exception ex) {
+			logError("Error loading CupidPlatform", ex);
+		}
 		
 		if (cupidProject.exists()) {
 			new Job("Open Cupid Project") {
 
 				@Override
 				protected IStatus run(final IProgressMonitor monitor) {
+					monitor.beginTask("Open Cupid Project", 100);
+					
 					try {
-						cupidProject.open(monitor);
+						cupidProject.open(new SubProgressMonitor(monitor, 90));
+						ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+						new UpdateCupidClasspath().schedule();
+						
 					} catch (CoreException ex) {
 						logError("Unable to open Cupid project in workspace", ex);
 						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error opening Cupid project", ex);
+					
+					} finally {
+						monitor.done();
 					}
-		
-					ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+	
 					return Status.OK_STATUS;
 				}
-				
 			}.schedule();
 		} else {
 			new Job("Create Cupid Project") {

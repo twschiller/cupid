@@ -152,7 +152,7 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		return new Path(absolute);
 	}
 	
-	private static IPath bundlePath(final Bundle bundle) throws IOException {
+	public static IPath bundlePath(final Bundle bundle) throws IOException {
 		if (bundle == null) {
 			throw new NullPointerException("Bundle cannot be null");
 		}

@@ -24,7 +24,7 @@ public final class ${CLASS} extends AbstractCapability<${INPUT_TYPE}, ${OUTPUT_T
                                 try {
                                         monitor.beginTask("${NAME}", 100);
 
-                                        ${OUTPUT_TYPE} result = null; /* perform computation */
+                                        ${OUTPUT_TYPE} result = null; // perform computation 
 
                                         return CapabilityStatus.makeOk(result);
                                 } catch (Exception e) {

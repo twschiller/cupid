@@ -92,14 +92,15 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				
-				viewer.setContentProvider(model);
-				viewer.setLabelProvider(new GraphLabelProvider());
-				viewer.setInput(model.getNodes());
-				viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
-				viewer.applyLayout();
-				
-				fillToolBar();
+				if (!viewer.getGraphControl().isDisposed()){
+					viewer.setContentProvider(model);
+					viewer.setLabelProvider(new GraphLabelProvider());
+					viewer.setInput(model.getNodes());
+					viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+					viewer.applyLayout();
+					
+					fillToolBar();
+				}	
 			};
 		});
 	}

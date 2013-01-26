@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.svn"
       label="Cupid Subversion Capabilities"
-      version="1.0.2"
+      version="1.0.3"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"

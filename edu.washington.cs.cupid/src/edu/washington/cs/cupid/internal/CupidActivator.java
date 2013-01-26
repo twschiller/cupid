@@ -12,6 +12,7 @@ package edu.washington.cs.cupid.internal;
 
 import java.util.List;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.ILog;
@@ -101,17 +102,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 		for (ICapability<?, ?> capability : standard) {
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			
 		}
-		
-//      TWS: disabled while getting pure plug-ins to work
-//		for (IProject p :  ResourcesPlugin.getWorkspace().getRoot().getProjects() ){
-//			if (!p.isHidden() && !ProjectSynchronizer.isShadowProject(p)){
-//				ProjectSynchronizer sync = new ProjectSynchronizer("CUPID", p);
-//				sync.init();
-//				syncs.put(p, sync);
-//				sync.stop();
-//			}
-//		}
-		
+				
 		selectionManager = CupidSelectionService.getInstance();
 		
 		final IWorkbench workbench = PlatformUI.getWorkbench();
@@ -226,9 +217,10 @@ public final class CupidActivator extends AbstractUIPlugin {
 	
 	@Override
 	public void stop(final BundleContext context) throws Exception {
-		Job.getJobManager().cancel(this); // cancel all jobs created by Cupid
-		plugin = null;
 		super.stop(context);
+		Job.getJobManager().cancel(this); // cancel all jobs created by Cupid
+		CapabilityExecutor.stop();
+		plugin = null;
 	}
 
 	/**

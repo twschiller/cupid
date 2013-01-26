@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -38,7 +39,7 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability<I
 	private static final long serialVersionUID = 1L;
 	
 	private final List<Serializable> capabilities;
-
+	
 	/**
 	 * Construct a serializable pipeline of capabilities.
 	 * @param name the capability name
@@ -138,8 +139,7 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability<I
 							throw new RuntimeException("Capability " + capability.getName() + " produced null job");
 						}
 
-						monitor.subTask(subtask.getName());
-
+						subtask.setProgressGroup(new SubProgressMonitor(monitor, 1), 1);
 						subtask.schedule();
 						subtask.join();
 
@@ -148,7 +148,6 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability<I
 						if (status.getCode() == Status.OK) {
 							result = status.value();
 							intermediateResults.add(result);
-							monitor.worked(1);
 						} else {
 							throw status.getException();
 						}

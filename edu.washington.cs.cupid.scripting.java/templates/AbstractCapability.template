@@ -1,0 +1,38 @@
+import edu.washington.cs.cupid.capability.AbstractCapability;
+import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.CapabilityStatus;
+import org.eclipse.core.runtime.IProgressMonitor;
+
+${foreach IMPORTS import}import ${import};
+${end}
+
+public final class ${CLASS} extends AbstractCapability<${INPUT_TYPE}, ${OUTPUT_TYPE}>{
+
+        public ${CLASS}() {
+                super("${NAME}",
+                      "${UNIQUE_ID}",
+                      "${DESCRIPTION}",
+                      ${INPUT_TYPE}.class, ${OUTPUT_TYPE}.class,
+                      Flag.PURE);
+        }
+        
+        @Override
+        public CapabilityJob<${INPUT_TYPE}, ${OUTPUT_TYPE}> getJob(final ${INPUT_TYPE} input) {
+                return new CapabilityJob<${INPUT_TYPE}, ${OUTPUT_TYPE}>(this, input){
+                        @Override
+                        protected CapabilityStatus<${OUTPUT_TYPE}> run(final IProgressMonitor monitor) {
+                                try {
+                                        monitor.beginTask("${NAME}", 100);
+
+                                        ${OUTPUT_TYPE} result = null; // perform computation 
+
+                                        return CapabilityStatus.makeOk(result);
+                                } catch (Exception e) {
+                                        return CapabilityStatus.makeError(e);
+                                } finally {
+                                        monitor.done();
+                                }
+                        }
+                };
+        }
+}

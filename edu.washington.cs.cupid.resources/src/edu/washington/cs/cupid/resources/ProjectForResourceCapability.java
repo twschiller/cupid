@@ -18,9 +18,16 @@ import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class ProjectForResourceCapability extends AbstractCapability<IResource, IProject>{
+/**
+ * A capability that returns the project that contains a resource.
+ * @author Todd Schiller
+ */
+public final class ProjectForResourceCapability extends AbstractCapability<IResource, IProject> {
 
-	public ProjectForResourceCapability(){
+	/**
+	 * Construct a capability that returns the project that contains a resource.
+	 */
+	public ProjectForResourceCapability() {
 		super(
 				"Containing Project",
 				"edu.washington.cs.cupid.resources.project",
@@ -30,11 +37,18 @@ public class ProjectForResourceCapability extends AbstractCapability<IResource, 
 	}
 
 	@Override
-	public CapabilityJob<IResource, IProject> getJob(IResource input) {
-		return new CapabilityJob<IResource, IProject>(this, input){
+	public CapabilityJob<IResource, IProject> getJob(final IResource input) {
+		return new CapabilityJob<IResource, IProject>(this, input) {
 			@Override
-			protected CapabilityStatus<IProject> run(IProgressMonitor monitor) {
-				return CapabilityStatus.makeOk(input.getProject());
+			protected CapabilityStatus<IProject> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 1);
+					return CapabilityStatus.makeOk(input.getProject());
+				} catch (Exception ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
+				}
 			}
 		};
 	}

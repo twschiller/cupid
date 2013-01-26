@@ -58,26 +58,6 @@ public abstract class AbstractTransientCapability<I, V> implements ICapability<I
 	}
 
 	/**
-	 * Returns a mapping from unique ids to resolved capabilities for the component capabilities. 
-	 * @return a mapping from unique ids to resolved capabilities for the component capabilities. 
-	 * @throws NoSuchCapabilityException if a dynamic binding cannot be resolved
-	 */
-	public final Map<String, ICapability<?, ?>> current() throws NoSuchCapabilityException {
-		Map<String, ICapability<?, ?>> result = Maps.newHashMap();
-		for (Object capability : capabilities) {
-			if (capability instanceof ICapability) {
-				ICapability<?, ?> x = (ICapability<?, ?>) capability;
-				result.put(x.getUniqueId(), x);
-			} else if (capability instanceof String) {
-				result.put((String) capability, CupidPlatform.getCapabilityRegistry().findCapability((String) capability));
-			} else {
-				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
-			}
-		}
-		return result;
-	}
-	
-	/**
 	 * Resolve the capability binding for <code>key</code>.
 	 * @param key a capability id or {@link ICapability}
 	 * @return the capability binding for <code>key</code>
@@ -93,6 +73,27 @@ public abstract class AbstractTransientCapability<I, V> implements ICapability<I
 		}
 	}
 
+
+	/**
+	 * Returns a mapping from unique IDs to resolved capabilities for the component capabilities. 
+	 * @return a mapping from unique IDs to resolved capabilities for the component capabilities. 
+	 * @throws NoSuchCapabilityException if a dynamic binding cannot be resolved
+	 */
+	public final Map<String, ICapability<?, ?>> current() throws NoSuchCapabilityException {
+		Map<String, ICapability<?, ?>> result = Maps.newHashMap();
+		for (Object capability : capabilities) {
+			if (capability instanceof ICapability) {
+				ICapability<?, ?> x = (ICapability<?, ?>) capability;
+				result.put(x.getUniqueId(), x);
+			} else if (capability instanceof String) {
+				result.put((String) capability, CupidPlatform.getCapabilityRegistry().findCapability((String) capability));
+			} else {
+				throw new RuntimeException("Unexpected component of type " + capability.getClass().getName());
+			}
+		}
+		return result;
+	}
+	
 	@Override
 	public final boolean isPure() {
 		try {

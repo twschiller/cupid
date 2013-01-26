@@ -66,18 +66,28 @@ public abstract class AbstractMapping<I,K,V> implements ISerializableCapability<
 		 	.where(new TypeParameter<V>(){}, valueType);
 	}
 	
-	protected <R> R runSubtask(CapabilityJob<?, R> subtask, IProgressMonitor monitor) throws Throwable{
-		
+	/**
+	 * Synchronously runs a subtask in a progress monitor group.
+	 * @param subtask the subtask to run
+	 * @param monitor the subprogress monitor
+	 * @param ticks progress monitor ticks allocated to the subtask
+	 * @return the output of the subtask
+	 * @throws Throwable if the subtask crashes, or returns an exceptional result
+	 */
+	protected <R> R runSubtask(CapabilityJob<?, R> subtask, IProgressMonitor monitor, int ticks) throws Throwable{
+
+		subtask.setProgressGroup(monitor, ticks);
 		subtask.schedule();
 		subtask.join();
-		
+
 		CapabilityStatus<R> status = ((CapabilityStatus<R>)subtask.getResult());
-		
+
 		if (status.getCode() == Status.OK){
 			return status.value();
 		}else{
 			throw status.getException();
 		}
+
 	}
 	
 }

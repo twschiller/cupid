@@ -143,7 +143,16 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			return instance;
 		}
 	}
-
+	
+	public static void stop() {
+		synchronized (INSTANCE_MONITOR) {
+			if (instance != null) {
+				ResourcesPlugin.getWorkspace().removeResourceChangeListener(instance);
+				instance = null;
+			}
+		}
+	}
+	
 	/**
 	 * Returns the job scheduling rule registry.
 	 * @return the job scheduling rule registry.
@@ -441,7 +450,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 	
-	private static class CacheEntry {
+	private final static class CacheEntry {
 		private final TypeToken<?> type;
 		private final Object value;
 		

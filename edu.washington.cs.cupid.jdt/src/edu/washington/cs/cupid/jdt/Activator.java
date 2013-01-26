@@ -16,7 +16,6 @@ import org.osgi.framework.BundleContext;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
-import edu.washington.cs.cupid.jdt.compiler.CompilerMessagePredicate;
 import edu.washington.cs.cupid.jdt.compiler.CompilerMessagesCapability;
 
 /**
@@ -65,7 +64,6 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	public ICapability<?, ?>[] publish() {
 		return new ICapability<?,?>[]{ 
 				new CompilerMessagesCapability(), 
-				new CompilerMessagePredicate()
 		};
 	}
 

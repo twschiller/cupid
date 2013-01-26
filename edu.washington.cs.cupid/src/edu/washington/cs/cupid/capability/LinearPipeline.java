@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -83,8 +84,8 @@ public final class LinearPipeline<I, T> implements ICapability<I, T> {
 						}
 						
 						CapabilityJob subtask = capability.getJob(result);
-						monitor.subTask(subtask.getName());
 						
+						subtask.setProgressGroup(new SubProgressMonitor(monitor, 1), 1);
 						subtask.schedule();
 						subtask.join();
 						
@@ -92,7 +93,6 @@ public final class LinearPipeline<I, T> implements ICapability<I, T> {
 						
 						if (status.getCode() == Status.OK) {
 							result = status.value();
-							monitor.worked(1);
 						} else {
 							throw status.getException();
 						}		

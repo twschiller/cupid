@@ -14,7 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -39,7 +42,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 	private static final int TEST_POLLING_TIME_MILLIS = 10;
 	private final String configName;
 	private final AtomicBoolean cancelled = new AtomicBoolean(false);
-
+	
 	/**
 	 * Construct a job that runs a JUnit launch configuration, and returns the test results.
 	 * @param capability the source capability
@@ -59,16 +62,17 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 	@Override
 	protected final CapabilityStatus<TestRunSession> run(final IProgressMonitor monitor) {
 		try {
-			ILaunchManager launches = DebugPlugin.getDefault().getLaunchManager();
 			monitor.beginTask("Run JUnit Configuration", 100);
-						
+			
+			ILaunchManager launches = DebugPlugin.getDefault().getLaunchManager();
+			
 			ILaunchConfiguration configuration = null;
 			for (ILaunchConfiguration config : launches.getLaunchConfigurations()) {
 				if (config.getName().equals(configName)) {
 					configuration = config;
 				}
 			}
-
+			
 			if (configuration == null) {
 				monitor.done();
 				return CapabilityStatus.makeError(new IllegalArgumentException("No launch configuration named " + configName));
@@ -94,7 +98,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 
 				return CapabilityStatus.makeOk(Activator.getDefaultMonitor().forLaunch(launch));
 			}
-		} catch (CoreException ex) {
+		} catch (Exception ex) {
 			return CapabilityStatus.makeError(ex);
 		} finally {
 			monitor.done();

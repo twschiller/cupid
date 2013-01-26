@@ -18,7 +18,7 @@ import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class CompilationUnit extends AbstractCapability<IJavaElement, ICompilationUnit> {
+public final class CompilationUnit extends AbstractCapability<IJavaElement, ICompilationUnit> {
 
 	public CompilationUnit(){
 		super("Compilation Unit", 
@@ -30,21 +30,26 @@ public class CompilationUnit extends AbstractCapability<IJavaElement, ICompilati
 	}
 	
 	@Override
-	public CapabilityJob<IJavaElement, ICompilationUnit> getJob(IJavaElement input) {
-		return new CapabilityJob<IJavaElement, ICompilationUnit>(this, input){
+	public CapabilityJob<IJavaElement, ICompilationUnit> getJob(final IJavaElement input) {
+		return new CapabilityJob<IJavaElement, ICompilationUnit>(this, input) {
 
 			@Override
-			protected CapabilityStatus<ICompilationUnit> run(IProgressMonitor monitor) {
-				IJavaElement cu = input.getAncestor(IJavaElement.COMPILATION_UNIT);
-				
-				if (cu != null){
-					return CapabilityStatus.makeError(new RuntimeException("No associated compilation unit"));
-				}else{
-					return CapabilityStatus.makeOk((ICompilationUnit)  cu);
+			protected CapabilityStatus<ICompilationUnit> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 1);
+					IJavaElement cu = input.getAncestor(IJavaElement.COMPILATION_UNIT);
+					
+					if (cu != null) {
+						return CapabilityStatus.makeError(new RuntimeException("No associated compilation unit"));
+					} else {
+						return CapabilityStatus.makeOk((ICompilationUnit)  cu);
+					}
+				} catch (Exception ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
-			
 		};
 	}
-
 }

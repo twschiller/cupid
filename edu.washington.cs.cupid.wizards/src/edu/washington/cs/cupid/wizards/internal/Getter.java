@@ -21,17 +21,17 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class Getter<I,V> implements IExtractCapability<I,V>{
+public final class Getter<I,V> implements IExtractCapability<I,V>{
 
 	private static final long serialVersionUID = 1L;
 
-	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
+	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
 	
 	private final TypeToken<I> type;
 	private final String field;
 	private final TypeToken<V> result;
 	
-	public Getter(String field, TypeToken<I> type, TypeToken<V> result) {
+	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
 		super();
 		this.field = field;
 		this.type = type;
@@ -64,22 +64,26 @@ public class Getter<I,V> implements IExtractCapability<I,V>{
 	}
 
 	@Override
-	public CapabilityJob<I,V> getJob(final I input) {
+	public CapabilityJob<I, V> getJob(final I input) {
 		return new CapabilityJob<I,V>(this, input){
 			@Override
-			protected CapabilityStatus<V> run(IProgressMonitor monitor) {
-				try{
+			protected CapabilityStatus<V> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 1);
+					
 					Method method = input.getClass().getMethod(field);
 					
-					if (!method.isAccessible()){
+					if (!method.isAccessible()) {
 						method.setAccessible(true);
 					}
 					
 					Object out = method.invoke(input);
 					// TODO check the conversion
 					return CapabilityStatus.makeOk((V) out);
-				}catch(Exception ex){
+				} catch (Exception ex) {
 					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

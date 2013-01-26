@@ -25,10 +25,17 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 
-public class HgLogCapability extends GenericAbstractCapability<IResource, List<JHgChangeSet>> {
+/**
+ * A capability that returns the Hg log for a resource.
+ * @author Todd Schiller
+ */
+public final class HgLogCapability extends GenericAbstractCapability<IResource, List<JHgChangeSet>> {
 
 	public static final int RESOURCE_LOG_LIMIT = 100;
 	
+	/**
+	 * Construct a capability that returns the Hg log for a resource.
+	 */
 	public HgLogCapability() {
 		super("Hg Log",
 			  "edu.washington.cs.cupid.hg.log",
@@ -47,12 +54,12 @@ public class HgLogCapability extends GenericAbstractCapability<IResource, List<J
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(IResource input) {
+	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input) {
 		return new CapabilityJob<IResource, List<JHgChangeSet>>(this, input){
 			@Override
-			protected CapabilityStatus<List<JHgChangeSet>> run(IProgressMonitor monitor) {
-				monitor.beginTask("Getting Hg log for resource " + input.getName(), 1);
+			protected CapabilityStatus<List<JHgChangeSet>> run(final IProgressMonitor monitor) {
 				try{
+					monitor.beginTask("Getting Hg log for resource " + input.getName(), 1);
 					HgRoot root = MercurialRootCache.getInstance().getHgRoot(input);
 					
 					if (root == null){

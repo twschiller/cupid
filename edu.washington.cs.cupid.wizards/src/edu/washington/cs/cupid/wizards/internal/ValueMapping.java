@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -71,17 +72,18 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 	public CapabilityJob<I, Map<I,Set<V>>> getJob(I input) {
 		return new CapabilityJob<I, Map<I,Set<V>>>(this, input){
 			@Override
-			protected CapabilityStatus<Map<I, Set<V>>> run(IProgressMonitor monitor) {
+			protected CapabilityStatus<Map<I, Set<V>>> run(final IProgressMonitor monitor) {
 				try{
+					monitor.beginTask(getName(), 20);
+					
 					Object key = link(input, keyLink);
 
 					CapabilityJob<?,Collection<V>> subtask = valueGenerator.getJob(null);
 					monitor.subTask("Generating Values");
-					Collection<V> values = runSubtask(subtask, monitor);
-
-
+					Collection<V> values = runSubtask(subtask, new SubProgressMonitor(monitor, 10), 10 );
+					
+					monitor.subTask("Linking Key and Values");
 					Set<V> collection = Sets.newHashSet();
-
 					for (V v : values){
 						if (key.equals(link(v, valueLink))){
 							collection.add(v);
@@ -93,9 +95,10 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 
 					return CapabilityStatus.makeOk(result);
 
-				}catch(Throwable ex){
-					monitor.done();
+				} catch(Throwable ex) {
 					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

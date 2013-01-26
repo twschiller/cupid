@@ -14,6 +14,7 @@ import java.util.Collection;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.egit.core.project.RepositoryFinder;
 import org.eclipse.egit.core.project.RepositoryMapping;
 
@@ -45,11 +46,14 @@ public final class GitProjectRepositoriesCapability extends AbstractCapability<I
 		return new CapabilityJob<IProject, Collection<RepositoryMapping>>(this, input) {
 			@Override
 			protected CapabilityStatus<Collection<RepositoryMapping>> run(final IProgressMonitor monitor) {
-				RepositoryFinder finder = new RepositoryFinder(input);
 				try {
-					return CapabilityStatus.makeOk(finder.find(monitor));
+					monitor.beginTask(getName(), 100);
+					RepositoryFinder finder = new RepositoryFinder(input);
+					return CapabilityStatus.makeOk(finder.find(new SubProgressMonitor(monitor, 100)));
 				} catch (Exception e) {
 					return CapabilityStatus.makeError(e);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

@@ -26,8 +26,15 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.GenericAbstractCapability;
 
-public class HgHeadsCapability extends GenericAbstractCapability<IResource, List<ChangeSet>> {
+/**
+ * A capability that returns the Hg heads for a resource.
+ * @author Todd Schiller
+ */
+public final class HgHeadsCapability extends GenericAbstractCapability<IResource, List<ChangeSet>> {
 
+	/**
+	 * Construct a capability that returns the Hg heads for a resource.
+	 */
 	public HgHeadsCapability() {
 		super("Hg Heads",
 			  "edu.washington.cs.cupid.hg.heads",
@@ -43,28 +50,28 @@ public class HgHeadsCapability extends GenericAbstractCapability<IResource, List
 	@SuppressWarnings("serial")
 	@Override
 	public TypeToken<List<ChangeSet>> getReturnType() {
-		return new TypeToken<List<ChangeSet>>(getClass()){};
+		return new TypeToken<List<ChangeSet>>(getClass()) {};
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<ChangeSet>> getJob(IResource input) {
-		return new CapabilityJob<IResource, List<ChangeSet>>(this, input){
+	public CapabilityJob<IResource, List<ChangeSet>> getJob(final IResource input) {
+		return new CapabilityJob<IResource, List<ChangeSet>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<ChangeSet>> run(IProgressMonitor monitor) {
-				monitor.beginTask("Getting Hg Repository Heads", 1);
-				try{
+			protected CapabilityStatus<List<ChangeSet>> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 1);
 					HgRoot root = MercurialRootCache.getInstance().getHgRoot(input);
 					
-					if (root == null){
+					if (root == null) {
 						return CapabilityStatus.makeError(new ResourceNotHgVersionedException(input));
 					}
 					
 					List<ChangeSet> result = 
-							Lists.newArrayList(HgLogClient.getChangeSets(root,HgLogClient.getHeads(root)));
+							Lists.newArrayList(HgLogClient.getChangeSets(root, HgLogClient.getHeads(root)));
 					return CapabilityStatus.makeOk(result);
-				}catch (Exception ex){
+				} catch (Exception ex) {
 					return CapabilityStatus.makeError(ex);
-				}finally{
+				} finally {
 					monitor.done();
 				}
 			}

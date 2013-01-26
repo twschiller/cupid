@@ -48,13 +48,21 @@ public final class MostFrequent<V> extends GenericAbstractCapability<List<V>, V>
 		return new CapabilityJob<List<V>, V>(this, input) {
 			@Override
 			protected CapabilityStatus<V> run(final IProgressMonitor monitor) {
-				Multiset<V> set = HashMultiset.create();
-				set.addAll(input);
-				for (V val : Multisets.copyHighestCountFirst(set)) {
-					return CapabilityStatus.makeOk(val);
+				try {
+					monitor.beginTask(getName(), 100);
+					
+					Multiset<V> set = HashMultiset.create();
+					set.addAll(input);
+					for (V val : Multisets.copyHighestCountFirst(set)) {
+						return CapabilityStatus.makeOk(val);
+					}
+					
+					return CapabilityStatus.makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
+				} catch (Exception ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
-				return CapabilityStatus.makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
-				
 			}
 		};
 	}

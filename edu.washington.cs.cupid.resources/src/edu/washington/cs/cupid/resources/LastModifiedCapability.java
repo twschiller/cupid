@@ -19,9 +19,16 @@ import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class LastModifiedCapability extends AbstractCapability<IFile, Date>{
+/**
+ * Capability that returns a file's last modified date.
+ * @author Todd Schiller
+ */
+public final class LastModifiedCapability extends AbstractCapability<IFile, Date> {
 
-	public LastModifiedCapability(){
+	/**
+	 * Construct a capability that returns a file's last modified date.
+	 */
+	public LastModifiedCapability() {
 		super(
 				"Last Modified",
 				"edu.washington.cs.cupid.resources.lastmodified",
@@ -31,11 +38,18 @@ public class LastModifiedCapability extends AbstractCapability<IFile, Date>{
 	}
 
 	@Override
-	public CapabilityJob<IFile, Date> getJob(IFile input) {
-		return new CapabilityJob<IFile, Date>(this, input){
+	public CapabilityJob<IFile, Date> getJob(final IFile input) {
+		return new CapabilityJob<IFile, Date>(this, input) {
 			@Override
-			protected CapabilityStatus<Date> run(IProgressMonitor monitor) {
-				return CapabilityStatus.makeOk(new Date(this.input.getLocalTimeStamp()));
+			protected CapabilityStatus<Date> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 1);
+					return CapabilityStatus.makeOk(new Date(this.input.getLocalTimeStamp()));
+				} catch (Exception ex) {
+					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
+				}
 			}
 		};
 	}

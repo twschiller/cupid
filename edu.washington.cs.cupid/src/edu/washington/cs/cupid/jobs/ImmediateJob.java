@@ -63,7 +63,13 @@ public final class ImmediateJob<I, V> extends CapabilityJob<I, V> {
 
 	@Override
 	protected CapabilityStatus<V> run(final IProgressMonitor monitor) {
-		monitor.done();
-		return value != null ? CapabilityStatus.makeOk(value) : CapabilityStatus.<V>makeError(exception);
+		try {
+			monitor.beginTask(getName(), 1);
+			return value != null ? CapabilityStatus.makeOk(value) : CapabilityStatus.<V>makeError(exception);
+		} catch (Exception ex) {
+			return CapabilityStatus.makeError(ex);
+		} finally {
+			monitor.done();
+		}
 	}
 }

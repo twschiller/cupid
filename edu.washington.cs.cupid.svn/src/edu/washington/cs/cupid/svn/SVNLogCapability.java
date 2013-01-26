@@ -31,60 +31,54 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
 /**
- * Capability that returns the full log of an SVN project
+ * Capability that returns the full log of an SVN project.
  * @author Todd Schiller
  */
-public class SVNLogCapability extends AbstractCapability<IResource, List<SVNLogEntry>>{
+public final class SVNLogCapability extends AbstractCapability<IResource, List<SVNLogEntry>> {
 
 	// http://wiki.svnkit.com/Printing_Out_Repository_History
 
+	/**
+	 * Construct a capability that returns the full log of an SVN project.
+	 */
 	public SVNLogCapability() {
-		super("SVN Log",
+		super("Project SVN Log",
 			  "edu.washington.cs.cupid.svn.log",
 			  "SVN log entries for the project",
-			  TypeToken.of(IResource.class), Types.SVN_LOG,
+			  TypeToken.of(IResource.class), new TypeToken<List<SVNLogEntry>>(){},
 			  Flag.PURE, Flag.TRANSIENT);
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<SVNLogEntry>> getJob(IResource input) {
+	public CapabilityJob<IResource, List<SVNLogEntry>> getJob(final IResource input) {
 
-		return new CapabilityJob<IResource, List<SVNLogEntry>>(this, input){
+		return new CapabilityJob<IResource, List<SVNLogEntry>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<SVNLogEntry>> run(IProgressMonitor monitor) {
-				try{
-
+			protected CapabilityStatus<List<SVNLogEntry>> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 100);
+					
 					SVNClientManager svn = SVNClientManager.newInstance();
 					SVNLogClient log = svn.getLogClient();
 					SVNWCClient workingCopy = svn.getWCClient();
 
 					// local working copy information
-					SVNInfo info = null;
-
-					try {
-						info = workingCopy.doInfo(input.getLocation().toFile(), SVNRevision.HEAD);
-					} catch (SVNException e) {
-						CapabilityStatus.makeError(e);
-					}
+					SVNInfo info = workingCopy.doInfo(input.getLocation().toFile(), SVNRevision.HEAD);
 
 					final List<SVNLogEntry> entries = Lists.newArrayList();
 
-					
-					
-					try {
-						log.doLog(info.getURL(), new String[]{""}, SVNRevision.create(0), SVNRevision.create(0), SVNRevision.HEAD, true, false, -1, new ISVNLogEntryHandler(){
-							@Override
-							public void handleLogEntry(SVNLogEntry entry) throws SVNException {
-								entries.add(entry);
-							}
-						});
-					} catch (SVNException e) {
-						return CapabilityStatus.makeError(e);
-					}
-
+					log.doLog(info.getURL(), new String[]{""}, SVNRevision.create(0), SVNRevision.create(0), SVNRevision.HEAD, true, false, -1, new ISVNLogEntryHandler() {
+						@Override
+						public void handleLogEntry(final SVNLogEntry entry) throws SVNException {
+							entries.add(entry);
+						}
+					});
+				
 					return CapabilityStatus.makeOk(entries);
-				}catch(Exception e){
+				} catch (Exception e) {
 					return CapabilityStatus.makeError(e);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

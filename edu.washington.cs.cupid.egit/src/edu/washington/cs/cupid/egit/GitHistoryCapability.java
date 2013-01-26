@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.egit.core.internal.storage.GitFileHistoryProvider;
 import org.eclipse.team.core.history.IFileHistory;
 import org.eclipse.team.core.history.IFileHistoryProvider;
@@ -50,14 +51,20 @@ public final class GitHistoryCapability extends AbstractCapability<IResource, Li
 		return new CapabilityJob<IResource, List<IFileRevision>>(this, input) {
 			@Override
 			protected CapabilityStatus<List<IFileRevision>> run(final IProgressMonitor monitor) {
-				GitFileHistoryProvider provider = new GitFileHistoryProvider();
-				IFileHistory history = provider.getFileHistoryFor(input, IFileHistoryProvider.SINGLE_LINE_OF_DESCENT, monitor);
 				
 				try {
+					monitor.beginTask(getName(), 100);
+					
+					GitFileHistoryProvider provider = new GitFileHistoryProvider();
+					IFileHistory history = provider.getFileHistoryFor(input, IFileHistoryProvider.SINGLE_LINE_OF_DESCENT, new SubProgressMonitor(monitor, 100));
+					
 					List<IFileRevision> revisions = Lists.newArrayList(history.getFileRevisions());
+					
 					return CapabilityStatus.makeOk(revisions);
 				} catch (Exception ex) {
 					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

@@ -23,11 +23,14 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
 /**
- * Capability that returns the SVN information for a working copy resource
+ * Capability that returns the SVN information for a working copy resource.
  * @author Todd Schiller
  */
-public class SVNInfoCapability extends AbstractCapability<IResource, SVNInfo>{
+public final class SVNInfoCapability extends AbstractCapability<IResource, SVNInfo> {
 
+	/**
+	 * Construct a capability that returns the SVN information for a working copy resource.
+	 */
 	public SVNInfoCapability() {
 		super("SVN Info",
 			  "edu.washington.cs.cupid.svn.info",
@@ -37,21 +40,24 @@ public class SVNInfoCapability extends AbstractCapability<IResource, SVNInfo>{
 	}
 	
 	@Override
-	public CapabilityJob<IResource, SVNInfo> getJob(IResource input) {
-		return new CapabilityJob<IResource, SVNInfo>(this, input){
+	public CapabilityJob<IResource, SVNInfo> getJob(final IResource input) {
+		return new CapabilityJob<IResource, SVNInfo>(this, input) {
 			@Override
-			protected CapabilityStatus<SVNInfo> run(IProgressMonitor monitor) {
-				SVNClientManager svn = SVNClientManager.newInstance();
-				SVNWCClient wc = svn.getWCClient();
-				
+			protected CapabilityStatus<SVNInfo> run(final IProgressMonitor monitor) {
 				try {
+					monitor.beginTask("SVN Info", 1);
+					
+					SVNClientManager svn = SVNClientManager.newInstance();
+					SVNWCClient wc = svn.getWCClient();
+				
 					return CapabilityStatus.makeOk(wc.doInfo(input.getLocation().toFile(), SVNRevision.HEAD));
 				} catch (SVNException e) {
 					return CapabilityStatus.makeError(e);
+				} finally {
+					monitor.done();
 				}
 			}
 		};
 	}
-
 
 }

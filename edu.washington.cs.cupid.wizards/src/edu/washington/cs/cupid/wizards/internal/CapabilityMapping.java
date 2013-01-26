@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -77,43 +78,40 @@ public class CapabilityMapping<I,K,V> extends AbstractMapping<I,K,V> {
 	public CapabilityJob<I, Map<K, Set<V>>> getJob(I input) {		
 		return new CapabilityJob<I, Map<K, Set<V>>>(this, input){
 			@Override
-			protected CapabilityStatus<Map<K, Set<V>>> run(IProgressMonitor monitor) {
+			protected CapabilityStatus<Map<K, Set<V>>> run(final IProgressMonitor monitor) {
 				try{
+					monitor.beginTask(getName(), 30);
+					
 					CapabilityJob<I,Collection<K>> keySubtask = inputGenerator.getJob(input);
 					CapabilityJob<I,Collection<V>> valueSubtask = valueGenerator.getJob(input);
-					
-					try{
-						monitor.subTask("Generating Keys");
-						Collection<K> keys = runSubtask(keySubtask, monitor);
-						
-						monitor.subTask("Generating Values");
-						Collection<V> values = runSubtask(valueSubtask, monitor);
-						
-						monitor.subTask("Building Map");
-						
-						Map<K, Set<V>> result = Maps.newHashMap();
-						
-						for (K key : keys){
-							Set<V> collection = Sets.newHashSet();
-							
-							for (V v : values){
-								if (key != null && link(key, keyLink).equals(link(v, valueLink))){
-									collection.add(v);
-								}
+
+					monitor.subTask("Generating Keys");
+					Collection<K> keys = runSubtask(keySubtask, new SubProgressMonitor(monitor, 10), 10);
+
+					monitor.subTask("Generating Values");
+					Collection<V> values = runSubtask(valueSubtask, new SubProgressMonitor(monitor, 10), 10);
+
+					monitor.subTask("Linking Keys and Values");
+
+					Map<K, Set<V>> result = Maps.newHashMap();
+
+					for (K key : keys){
+						Set<V> collection = Sets.newHashSet();
+
+						for (V v : values){
+							if (key != null && link(key, keyLink).equals(link(v, valueLink))){
+								collection.add(v);
 							}
-							result.put(key, collection);
 						}
-						
-						return CapabilityStatus.makeOk(result);
-						
-					}catch(Throwable t){
-						return CapabilityStatus.makeError(t);
-					}finally{
-						monitor.done();
+						result.put(key, collection);
 					}
-					
-				}catch(Exception ex){
-					return CapabilityStatus.makeError(ex);
+
+					return CapabilityStatus.makeOk(result);
+
+				}catch(Throwable t){
+					return CapabilityStatus.makeError(t);
+				}finally{
+					monitor.done();
 				}
 			}
 		};

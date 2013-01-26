@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Message;
@@ -24,31 +25,36 @@ import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class CompilerMessagesCapability extends AbstractCapability<ICompilationUnit, List<Message>> {
-	
-	public final static TypeToken<List<Message>> COMPILER_MESSAGES = new TypeToken<List<Message>>(){
-		private static final long serialVersionUID = 1L;
-	};
-	
-	public CompilerMessagesCapability(){
+/**
+ * Capability that returns the compiler messages for a compilation unit.
+ * @author Todd Schiller
+ */
+public final class CompilerMessagesCapability extends AbstractCapability<ICompilationUnit, List<Message>> {
+		
+	/**
+	 * Construct a capability that returns the compiler messages for a compilation unit.
+	 */
+	public CompilerMessagesCapability() {
 		super("Compiler Messages", 
 			  "edu.washington.cs.cupid.jdt.messages", 
 			  "Compiler messages (e.g., warnings and errors)",
-			  TypeToken.of(ICompilationUnit.class),
-			  COMPILER_MESSAGES,
+			  TypeToken.of(ICompilationUnit.class), new TypeToken<List<Message>>() {},
 			  Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<ICompilationUnit, List<Message>> getJob(ICompilationUnit input) {
-		return new CapabilityJob<ICompilationUnit, List<Message>>(this, input){
+	public CapabilityJob<ICompilationUnit, List<Message>> getJob(final ICompilationUnit input) {
+		return new CapabilityJob<ICompilationUnit, List<Message>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<Message>> run(IProgressMonitor monitor) {
-				try{
-					CompilationUnit unit = ParseUtil.parse(input, monitor);	
+			protected CapabilityStatus<List<Message>> run(final IProgressMonitor monitor) {
+				try {
+					monitor.beginTask(getName(), 100);
+					CompilationUnit unit = ParseUtil.parse(input, new SubProgressMonitor(monitor, 100));	
 					return CapabilityStatus.makeOk(Arrays.asList(unit.getMessages()));
-				}catch(Exception ex){
+				} catch (Exception ex) {
 					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

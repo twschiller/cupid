@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.junit"
       label="Cupid JUnit Capabilities"
-      version="1.0.0"
+      version="1.0.1"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"

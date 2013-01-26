@@ -12,7 +12,6 @@ package edu.washington.cs.cupid.scripting.java.wizards;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -119,9 +118,9 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
-	private boolean inClasspath(List<IClasspathEntry> classpath, IPath query){
-		for (IClasspathEntry entry : classpath){
-			if (entry.getPath().equals(query)){
+	private boolean inClasspath(final List<IClasspathEntry> classpath, final IPath query){
+		for (IClasspathEntry entry : classpath) {
+			if (entry.getPath().equals(query)) {
 				return true;
 			}
 		}

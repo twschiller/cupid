@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -46,8 +47,9 @@ public final class UpdateCupidClasspath extends Job implements ISchedulingRule {
 			IJavaProject project = Activator.getDefault().getCupidJavaProject();
 			
 			int work = project.getRawClasspath().length;
+			boolean any = false;
 			
-			monitor.beginTask("Update Cupid Classpath", work + 1);
+			monitor.beginTask("Update Cupid Classpath", work + 2);
 			
 			List<IClasspathEntry> updated = Lists.newArrayList(project.getRawClasspath());
 			
@@ -67,6 +69,7 @@ public final class UpdateCupidClasspath extends Job implements ISchedulingRule {
 						Bundle bundle = Platform.getBundle(parts[0]);
 						if (bundle != null) {
 							replacement = JavaProjectManager.bundlePath(bundle);
+							any = true;
 						}
 					}
 				}
@@ -76,7 +79,13 @@ public final class UpdateCupidClasspath extends Job implements ISchedulingRule {
 				monitor.worked(1);
 			}
 			
-			project.setRawClasspath(updated.toArray(new IClasspathEntry[]{}), null);
+			if (any) {
+				// clear old path
+				project.setRawClasspath(null, new SubProgressMonitor(monitor, 1));
+				
+				// perform update
+				project.setRawClasspath(updated.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
+			}
 			
 			return Status.OK_STATUS;
 		} catch (Exception ex) {

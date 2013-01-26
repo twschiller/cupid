@@ -23,16 +23,16 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
+public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
 	private static final long serialVersionUID = 1L;
 
-	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.set.getter";
+	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.set.getter";
 	
 	private final TypeToken<I> type;
 	private final String field;
 	private final TypeToken<V> result;
 	
-	public SetGetter(String field, TypeToken<I> type, TypeToken<V> result) {
+	public SetGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
 		super();
 		this.field = field;
 		this.type = type;
@@ -65,28 +65,34 @@ public class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
 	}
 
 	@Override
-	public CapabilityJob<Set<I>,Set<V>> getJob(final Set<I> input) {
-		return new CapabilityJob<Set<I>,Set<V>>(this, input){
+	public CapabilityJob<Set<I>, Set<V>> getJob(final Set<I> input) {
+		return new CapabilityJob<Set<I>, Set<V>>(this, input){
 			@Override
-			protected CapabilityStatus<Set<V>> run(IProgressMonitor monitor) {
-				Set<V> result = Sets.newHashSet();
-				
+			protected CapabilityStatus<Set<V>> run(final IProgressMonitor monitor) {
 				try{
-					for (I x : input){
+					monitor.beginTask(getName(), input.size());
+					
+					Set<V> result = Sets.newHashSet();
+					
+					for (I x : input) {
 						Method method = x.getClass().getMethod(field);
 						
-						if (!method.isAccessible()){
+						if (!method.isAccessible()) {
 							method.setAccessible(true);
 						}
 						
 						Object out = method.invoke(x);
 						// TODO check the conversion
 						result.add((V) out);
+						
+						monitor.worked(1);
 					}
 					
 					return CapabilityStatus.makeOk(result);
-				}catch(Exception ex){
+				} catch (Exception ex) {
 					return CapabilityStatus.makeError(ex);
+				} finally {
+					monitor.done();
 				}
 			}
 		};

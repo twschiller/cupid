@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -135,8 +136,7 @@ public class TransientPipeline<I, V> extends AbstractTransientCapability<I, V> {
 							throw new RuntimeException("Capability " + capability.getName() + " produced null job");
 						}
 
-						monitor.subTask(subtask.getName());
-
+						subtask.setProgressGroup(new SubProgressMonitor(monitor, 1), 1);
 						subtask.schedule();
 						subtask.join();
 
@@ -144,8 +144,8 @@ public class TransientPipeline<I, V> extends AbstractTransientCapability<I, V> {
 
 						if (status.getCode() == Status.OK) {
 							result = status.value();
-							intermediateResults.add(result);
 							monitor.worked(1);
+							intermediateResults.add(result);
 						} else {
 							throw status.getException();
 						}

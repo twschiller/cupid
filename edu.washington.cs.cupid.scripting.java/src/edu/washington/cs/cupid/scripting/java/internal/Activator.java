@@ -58,6 +58,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	private static List<ICapability<?, ?>> dynamic = Lists.newArrayList();
 	private static ChangeNotifier notifier;
 	
+	private JavaProjectManager projectManager = new JavaProjectManager();
+	
 	/**
 	 * The name of the Cupid script project.
 	 */
@@ -93,12 +95,14 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 				@Override
 				protected IStatus run(final IProgressMonitor monitor) {
-					monitor.beginTask("Open Cupid Project", 100);
 					
 					try {
+						monitor.beginTask("Open Cupid Project", 100);
+						
 						cupidProject.open(new SubProgressMonitor(monitor, 90));
-						ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
+						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
 						new UpdateCupidClasspath().schedule();
+						return Status.OK_STATUS;
 						
 					} catch (CoreException ex) {
 						logError("Unable to open Cupid project in workspace", ex);
@@ -107,8 +111,6 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 					} finally {
 						monitor.done();
 					}
-	
-					return Status.OK_STATUS;
 				}
 			}.schedule();
 		} else {
@@ -123,6 +125,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 						cupidProject.open(new SubProgressMonitor(monitor, 1));
 						JavaProjectManager.populateCupidProject(cupidProject, new SubProgressMonitor(monitor, 1));
 					
+						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
+						return Status.OK_STATUS;
 					} catch (Exception ex) {
 						logError("Unable to create Cupid project in workspace", ex);
 						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating Cupid project", ex);
@@ -130,9 +134,6 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 					} finally {
 						monitor.done();
 					}
-					
-					ResourcesPlugin.getWorkspace().addResourceChangeListener(new JavaProjectManager(), IResourceChangeEvent.POST_BUILD);
-					return Status.OK_STATUS;
 				}
 			}.schedule();
 		}
@@ -142,6 +143,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	public void stop(final BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
+		
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(projectManager);
 	}
 	
 	/**

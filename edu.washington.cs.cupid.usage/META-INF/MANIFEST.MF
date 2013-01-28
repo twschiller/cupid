@@ -11,4 +11,7 @@ Require-Bundle: org.eclipse.ui,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
- lib/gson-2.2.2.jar
+ lib/gson-2.2.2.jar,
+ lib/httpclient-4.2.3.jar,
+ lib/httpcore-4.2.2.jar,
+ lib/commons-logging-1.1.1.jar

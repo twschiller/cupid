@@ -8,27 +8,31 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.events;
+package edu.washington.cs.cupid.usage.server;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.OneToMany;
 
 /**
  * The {@link CupidEvent} class captures information about a single event. Adapted from
  * Eclipse's {@link UsageDataEvent} class.
  * @author Todd Schiller
  */
-public final class CupidEvent implements Serializable {
-
+@Embeddable
+public class CupidEvent implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String what;
 	
 	private final String kind;
 	
+	@OneToMany(cascade = CascadeType.ALL) 
 	private final Map<String, Serializable> data;
 	
 	private final String bundleId;
@@ -37,10 +41,15 @@ public final class CupidEvent implements Serializable {
 	
 	private final long when;
 
+	@SuppressWarnings("unused")
+	private CupidEvent(){
+		this(null, null, new HashMap<String, Serializable>(), null, null, -1L);
+	}
+	
 	public CupidEvent(String what, String kind, Map<String, Serializable> data, String bundleId, String bundleVersion, long when) {
 		this.what = what;
 		this.kind = kind;
-		this.data = Maps.newHashMap(data);
+		this.data = data;
 		this.bundleId = bundleId;
 		this.bundleVersion = bundleVersion;
 		this.when = when;

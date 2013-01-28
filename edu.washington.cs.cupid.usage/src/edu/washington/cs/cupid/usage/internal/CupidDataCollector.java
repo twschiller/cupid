@@ -21,9 +21,20 @@ import java.lang.management.RuntimeMXBean;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -70,7 +81,7 @@ public class CupidDataCollector {
 		
 		long timestamp = System.currentTimeMillis();
 		logFile = new File(logDirectory, "cupid-usage." + timestamp + ".json");	
-		system = create(timestamp);
+		system = create();
 		sessionLog = Lists.newLinkedList();
 		init = true;
 	
@@ -111,7 +122,59 @@ public class CupidDataCollector {
 		}
 	}
 	
-	public synchronized String getAllJson(String indent) throws IOException {
+	public synchronized boolean hasData(){
+		for (File file : logDirectory.listFiles()){
+			if (file.getName().endsWith(".json")){
+				return true;		
+			}
+		}
+		return false;
+	}
+	
+	public Job upload = new Job("Report Cupid Usage Data"){
+		@Override
+		protected IStatus run(final IProgressMonitor monitor) {
+			try {
+				HttpClient client = new DefaultHttpClient();
+			    
+				List<File> files = Lists.newArrayList();
+				for (File file : logDirectory.listFiles()){
+					if (file.getName().endsWith(".json")){
+						files.add(file);
+					}
+				}
+				
+				monitor.beginTask(getName(), files.size() * 2);
+				
+				for (File file : files){
+					monitor.subTask("Reading Cupid Session Log");
+					String content = Joiner.on(" ").join(Files.readLines(file, Charset.defaultCharset()));
+					monitor.worked(1);
+					
+					monitor.subTask("Uploading Cupid Session Log");
+					HttpPost post = new HttpPost("http://cupidplugin.appspot.com/CupidUsageData");
+				    post.setEntity(new StringEntity(content));
+					
+				    HttpResponse response = client.execute(post);
+				    
+				    if (response.getStatusLine().getStatusCode() == 200) {
+				    	response.getEntity().consumeContent();
+				    	Activator.getDefault().logInformation("Uploaded session data " + file.getName());
+				    	file.delete();
+				    	monitor.worked(1);
+				    } else {
+				    	return new Status(Status.ERROR, Activator.PLUGIN_ID, response.getStatusLine().getReasonPhrase(), null);
+				    }
+				}
+				return Status.OK_STATUS;
+			} catch (IOException e) {
+				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error uploading Cupid usage data", e);
+			} finally {
+				monitor.done();
+			}	
+		}
+	};
+	public synchronized String getAllJson(String indent, boolean includeNow) throws IOException {
 		List<SessionLog> logs = Lists.newArrayList();
 		
 		for (File file : logDirectory.listFiles()){
@@ -147,12 +210,11 @@ public class CupidDataCollector {
 		}
 	}
 	
-	private static SystemData create(long timestamp){
+	private static SystemData create(){
 		RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
 		
 		return new SystemData(
 				Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_UUID),
-				timestamp,
 				Platform.getNL(),
 				Platform.getOS(),
 				Platform.getOSArch(),

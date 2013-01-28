@@ -28,6 +28,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.UIJob;
 import org.osgi.framework.BundleContext;
+
 import edu.washington.cs.cupid.usage.preferences.PreferenceConstants;
 
 /**
@@ -70,6 +71,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 		
 		if (preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION)){
 			collector.start();
+			collector.upload.schedule();
 		}
 		
 		if (!preferences.getBoolean(PreferenceConstants.P_SHOWN_ENABLE_DIALOG)){
@@ -101,6 +103,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 				}
 			}.schedule();
 		}
+		
 	}
 
 	@Override

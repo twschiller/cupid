@@ -82,7 +82,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 	
 	private void updatePreview(){
 		try{
-			session.setText(Activator.getDefault().getCollector().getAllJson("   "));
+			session.setText(Activator.getDefault().getCollector().getAllJson("   ", true));
 		}catch(Exception ex){
 			session.setText("Error reading workspace usage data: " + ex.getLocalizedMessage());
 		}

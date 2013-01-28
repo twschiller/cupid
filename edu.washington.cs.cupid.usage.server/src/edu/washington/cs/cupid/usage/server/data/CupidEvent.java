@@ -8,45 +8,75 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.server;
+package edu.washington.cs.cupid.usage.server.data;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
+import javax.jdo.annotations.IdGeneratorStrategy;
+import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.PrimaryKey;
 import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.datanucleus.annotations.Unowned;
 
 /**
  * The {@link CupidEvent} class captures information about a single event. Adapted from
  * Eclipse's {@link UsageDataEvent} class.
  * @author Todd Schiller
  */
-@Embeddable
+@Entity
 public class CupidEvent implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final String what;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Key key;
 	
-	private final String kind;
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="uuid")
+	@Unowned
+	private CupidUser user;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="sessionKey")
+	@Unowned
+	private CupidSession session;
+	
+	private String what;
+	
+	private String kind;
 	
 	@OneToMany(cascade = CascadeType.ALL) 
-	private final Map<String, Serializable> data;
+	private Map<String, String> data;
 	
-	private final String bundleId;
+	private String bundleId;
 	
 	private String bundleVersion;
 	
-	private final long when;
+	private long when;
 
-	@SuppressWarnings("unused")
 	private CupidEvent(){
-		this(null, null, new HashMap<String, Serializable>(), null, null, -1L);
+		// NO OP
 	}
 	
-	public CupidEvent(String what, String kind, Map<String, Serializable> data, String bundleId, String bundleVersion, long when) {
+	
+	public CupidEvent(CupidUser user, CupidSession session, String what,
+			String kind, Map<String, String> data, String bundleId,
+			String bundleVersion, long when) {
+		this.user = user;
+		this.session = session;
 		this.what = what;
 		this.kind = kind;
 		this.data = data;
@@ -55,6 +85,18 @@ public class CupidEvent implements Serializable {
 		this.when = when;
 	}
 
+	public Key getKey() {
+		return key;
+	}
+
+	public CupidUser getUser() {
+		return user;
+	}
+
+	public CupidSession getSession() {
+		return session;
+	}
+	
 	public String getBundleVersion() {
 		return bundleVersion;
 	}
@@ -71,7 +113,7 @@ public class CupidEvent implements Serializable {
 		return kind;
 	}
 
-	public Map<String, Serializable> getData() {
+	public Map<String, String> getData() {
 		return Collections.unmodifiableMap(data);
 	}
 

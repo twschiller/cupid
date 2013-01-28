@@ -8,21 +8,17 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.events;
+package edu.washington.cs.cupid.usage.server.json;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
 /**
- * The {@link CupidEvent} class captures information about a single event. Adapted from
+ * The {@link JsonCupidEvent} class captures information about a single event. Adapted from
  * Eclipse's {@link UsageDataEvent} class.
  * @author Todd Schiller
  */
-public final class CupidEvent implements Serializable {
+public final class JsonCupidEvent implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -38,67 +34,29 @@ public final class CupidEvent implements Serializable {
 	 * The {@link #kind} field describes the kind of thing that caused
 	 * the event (e.g. "view", "workbench", "menu", "bundle").
 	 */
-	private String kind;
+	public String kind;
 	
-	private Map<String, String> data;
+	public Map<String, String> data;
 	
 	/**
 	 * The {@link #bundleId} field contains symbolic name of the bundle that
 	 * owns the thing that caused the event.
 	 */
-	private String bundleId;
+	public String bundleId;
 	
 	/**
 	 * The {@link #bundleVersion} field contains the version of the bundle
 	 * that owns the thing that caused the event.
 	 */
-	private String bundleVersion;
+	public String bundleVersion;
 	
 	/**
 	 * The {@link #when} field contains a time stamp, expressed as
 	 * milliseconds in UNIX time (using <code>System.currentTimeMillis()</code>);
 	 */
-	private long when;
+	public long when;
 
-	@SuppressWarnings("unused")
-	private CupidEvent(){
-		this(null, null, new HashMap<String, String>(), null, null, -1L);
-	}
-	
-	public CupidEvent(String what, String kind, Map<String, String> data, String bundleId, String bundleVersion, long when) {
-		this.what = what;
-		this.kind = kind;
-		this.data = Maps.newHashMap(data);
-		this.bundleId = bundleId;
-		this.bundleVersion = bundleVersion;
-		this.when = when;
-	}
-
-	public String getBundleVersion() {
-		return bundleVersion;
-	}
-
-	public void setBundleVersion(String bundleVersion) {
-		this.bundleVersion = bundleVersion;
-	}
-
-	public String getWhat() {
-		return what;
-	}
-
-	public String getKind() {
-		return kind;
-	}
-
-	public Map<String, String> getData() {
-		return Collections.unmodifiableMap(data);
-	}
-
-	public String getBundleId() {
-		return bundleId;
-	}
-
-	public long getWhen() {
-		return when;
-	}
+	private JsonCupidEvent(){
+		// NO OP
+	}	
 }

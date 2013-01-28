@@ -18,6 +18,8 @@ import org.eclipse.jface.wizard.Wizard;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 
 /**
@@ -39,6 +41,7 @@ public class CreatePipelineWizard extends Wizard{
 		try {
 			Activator.getDefault().getHydrationService().store(pipe);
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+			CupidDataCollector.record(CupidEventBuilder.createCapabilityEvent("PipelineWizard", pipe, Activator.getDefault()));
 			return true;
 		} catch (IOException e) {
 			ErrorDialog.openError(

@@ -8,7 +8,7 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.server;
+package edu.washington.cs.cupid.usage.server.data;
 
 import java.io.Serializable;
 
@@ -18,7 +18,6 @@ import javax.persistence.Embeddable;
 public final class SystemData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String uuid; 	
 	private String locale;
 	private String os;
 	private String ws;
@@ -29,10 +28,10 @@ public final class SystemData implements Serializable {
 	
 	@SuppressWarnings("unused")
 	private SystemData(){
-		this(null, null, null, null, null, null, null, null);
+		// NO OP
 	}
 	
-	public SystemData(String uuid, String locale, String os, String osArch, 
+	public SystemData(String locale, String os, String osArch, 
 			String ws, String vmName, String vmVendor, String vmVersion) {
 		this.locale = locale;
 		this.os = os;
@@ -41,11 +40,6 @@ public final class SystemData implements Serializable {
 		this.vmName = vmName;
 		this.vmVendor = vmVendor;
 		this.vmVersion = vmVersion;
-		this.uuid = uuid;
-	}
-
-	public String getUUID() {
-		return uuid;
 	}
 
 	public String getLocale() {

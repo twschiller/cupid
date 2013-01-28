@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Cupid Data Collector
+Bundle-SymbolicName: edu.washington.cs.cupid.usage;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: edu.washington.cs.cupid.usage.internal.Activator
+Bundle-Vendor: University of Washington PLSE
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ edu.washington.cs.cupid;bundle-version="1.0.3"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ lib/gson-2.2.2.jar

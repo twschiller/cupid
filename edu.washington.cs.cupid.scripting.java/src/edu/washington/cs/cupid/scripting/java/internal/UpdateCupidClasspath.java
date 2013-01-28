@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.ui.progress.UIJob;
 import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Lists;
@@ -32,7 +33,7 @@ import com.google.common.collect.Lists;
  * updating a plug-in changes the filename. Uses the scheduling rule of the Cupid Java project.
  * @author Todd Schiller
  */
-public final class UpdateCupidClasspath extends Job implements ISchedulingRule {
+public final class UpdateCupidClasspath extends UIJob implements ISchedulingRule {
 
 	/**
 	 * Create a job that updates the Cupid classpath.
@@ -42,7 +43,7 @@ public final class UpdateCupidClasspath extends Job implements ISchedulingRule {
 	}
 	
 	@Override
-	protected IStatus run(final IProgressMonitor monitor) {
+	public IStatus runInUIThread(final IProgressMonitor monitor) {
 		try {
 			IJavaProject project = Activator.getDefault().getCupidJavaProject();
 			

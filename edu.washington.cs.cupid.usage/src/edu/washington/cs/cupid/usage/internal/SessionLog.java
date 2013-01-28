@@ -8,44 +8,31 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.server;
+package edu.washington.cs.cupid.usage.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import com.google.common.collect.Lists;
 
-import com.google.appengine.api.datastore.Key;
+import edu.washington.cs.cupid.usage.events.CupidEvent;
 
-@Entity
-public class SessionLog implements Serializable {
+public final class SessionLog implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	@SuppressWarnings("unused")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Id
-	private Key sessionKey;
-	
+	private String uuid;
 	private SystemData system;
-	
-	@OneToMany(cascade = CascadeType.ALL)
 	private List<CupidEvent> events;
 	
-	@SuppressWarnings("unused")
-	private SessionLog(){
-		this(null, new ArrayList<CupidEvent>());
+	public SessionLog(String uuid, SystemData system, List<CupidEvent> events) {
+		this.uuid = uuid;
+		this.system = system;
+		this.events = Lists.newArrayList(events);
 	}
 	
-	public SessionLog(SystemData system, List<CupidEvent> events) {
-		this.system = system;
-		this.events = events;
+	public String getUUID() {
+		return uuid;
 	}
 
 	public SystemData getSystem() {
@@ -55,5 +42,4 @@ public class SessionLog implements Serializable {
 	public List<CupidEvent> getEvents() {
 		return Collections.unmodifiableList(events);
 	}
-
 }

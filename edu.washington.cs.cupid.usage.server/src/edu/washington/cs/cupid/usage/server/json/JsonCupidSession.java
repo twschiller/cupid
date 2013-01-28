@@ -8,30 +8,16 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.events;
+package edu.washington.cs.cupid.usage.server.json;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
-public final class SessionLog implements Serializable {
+public final class JsonCupidSession implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private SystemData system;
-	private List<CupidEvent> events;
+	public String uuid;
+	public JsonSystemData system;
+	public List<JsonCupidEvent> events;
 	
-	public SessionLog(SystemData system, List<CupidEvent> events) {
-		this.system = system;
-		this.events = Lists.newArrayList(events);
-	}
-
-	public SystemData getSystem() {
-		return system;
-	}
-
-	public List<CupidEvent> getEvents() {
-		return Collections.unmodifiableList(events);
-	}
 }

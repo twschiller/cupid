@@ -21,6 +21,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
+import edu.washington.cs.cupid.usage.server.data.CupidEvent;
+import edu.washington.cs.cupid.usage.server.data.CupidSession;
+import edu.washington.cs.cupid.usage.server.data.CupidUser;
+import edu.washington.cs.cupid.usage.server.data.SystemData;
+import edu.washington.cs.cupid.usage.server.json.JsonCupidEvent;
+import edu.washington.cs.cupid.usage.server.json.JsonCupidSession;
+
 @SuppressWarnings("serial")
 public class CupidUsageDataServlet extends HttpServlet {
 	
@@ -30,12 +37,34 @@ public class CupidUsageDataServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		BufferedReader reader = req.getReader();
 		try {
-			SessionLog session = gson.fromJson(reader, SessionLog.class);
+			JsonCupidSession raw = gson.fromJson(reader, JsonCupidSession.class);
+			
+			CupidUser user = new CupidUser(raw.uuid);
+			SystemData system = new SystemData(
+					raw.system.locale, raw.system.os, raw.system.osArch, raw.system.ws,
+					raw.system.vmName, raw.system.vmVendor, raw.system.vmVersion);
+			
+			CupidSession session = new CupidSession(user, system);
+			for (JsonCupidEvent rawEvent : raw.events){
+				session.addEvent(new CupidEvent(
+						user, session,
+						rawEvent.what, rawEvent.kind, rawEvent.data,
+						rawEvent.bundleId, rawEvent.bundleVersion, rawEvent.when));
+			}
 			
 			EntityManager em = EMFService.get().createEntityManager();
+			try {
+				if (!em.contains(user)){
+					em.persist(user);
+				}
+			} finally {
+				em.close();
+			}
+			
+			em = EMFService.get().createEntityManager();
 			try{
 				em.persist(session);
-			}finally{
+			} finally{
 				em.close();
 			}
 			

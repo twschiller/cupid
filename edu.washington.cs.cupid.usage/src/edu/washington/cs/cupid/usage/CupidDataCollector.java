@@ -8,7 +8,7 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.usage.internal;
+package edu.washington.cs.cupid.usage;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -41,17 +42,21 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import edu.washington.cs.cupid.usage.events.CupidEvent;
-import edu.washington.cs.cupid.usage.events.SessionLog;
-import edu.washington.cs.cupid.usage.events.SystemData;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.usage.internal.Activator;
+import edu.washington.cs.cupid.usage.internal.SessionLog;
+import edu.washington.cs.cupid.usage.internal.SystemData;
 import edu.washington.cs.cupid.usage.preferences.PreferenceConstants;
 
 /**
  * Cupid plug-in data collector.
  * @author Todd Schiller
  */
-public class CupidDataCollector {
+public final class CupidDataCollector {
 
 	private Gson gson; 
+	
+	private static final Charset CHARSET = Charset.forName("UTF-8");
 	
 	private File logDirectory;
 	private File logFile;
@@ -61,14 +66,23 @@ public class CupidDataCollector {
 	private	SystemData system;
 	private List<CupidEvent> sessionLog;
 	
+	private static CupidDataCollector instance;
+	
 	/**
 	 * Construct the Cupid plug-in data collector.
 	 */
-	public CupidDataCollector(){
+	private CupidDataCollector(){
 		gson = new Gson();
 		logDirectory = Activator.getDefault().getStateLocation().toFile();	
 	}
-		
+	
+	public synchronized static CupidDataCollector getInstance(){
+		if (instance == null){
+			instance = new CupidDataCollector();
+		}
+		return instance;
+	}
+	
 	/**
 	 * Start the data collector; creates a new session file in the Eclipse user data location labeled with
 	 * the time the session began.
@@ -81,11 +95,14 @@ public class CupidDataCollector {
 		
 		long timestamp = System.currentTimeMillis();
 		logFile = new File(logDirectory, "cupid-usage." + timestamp + ".json");	
-		system = create();
+		system = fetchSystemData();
 		sessionLog = Lists.newLinkedList();
 		init = true;
 	
 		Activator.getDefault().logInformation("Cupid data collection started");
+	
+		record(new CupidEventBuilder("START", CupidDataCollector.class, Activator.getDefault()).create());
+		
 	}
 	
 	/**
@@ -105,10 +122,10 @@ public class CupidDataCollector {
 	}
 	
 	private synchronized void writeSession() throws IOException {
-		JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(logFile), Charset.forName("UTF-8")));
-		gson.toJson(new SessionLog(system, sessionLog), SessionLog.class, writer);
+		JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(logFile), CHARSET));
+		gson.toJson(new SessionLog(uuid(), system, sessionLog), SessionLog.class, writer);
 		writer.close();
-		Activator.getDefault().logInformation("Wrote Cupid session log: " + logFile.getAbsolutePath());
+		Activator.getDefault().logInformation("Wrote Cupid session log: " + logFile.getName());
 	}
 	
 	public synchronized void deleteLocalData(){
@@ -148,11 +165,11 @@ public class CupidDataCollector {
 				
 				for (File file : files){
 					monitor.subTask("Reading Cupid Session Log");
-					String content = Joiner.on(" ").join(Files.readLines(file, Charset.defaultCharset()));
+					String content = Joiner.on(" ").join(Files.readLines(file, CHARSET));
 					monitor.worked(1);
 					
 					monitor.subTask("Uploading Cupid Session Log");
-					HttpPost post = new HttpPost("http://cupidplugin.appspot.com/CupidUsageData");
+					HttpPost post = new HttpPost("http://cupidplugin.appspot.com/CupidUsageData"); 
 				    post.setEntity(new StringEntity(content));
 					
 				    HttpResponse response = client.execute(post);
@@ -163,17 +180,24 @@ public class CupidDataCollector {
 				    	file.delete();
 				    	monitor.worked(1);
 				    } else {
-				    	return new Status(Status.ERROR, Activator.PLUGIN_ID, response.getStatusLine().getReasonPhrase(), null);
+				    	String reason = response.getStatusLine().getReasonPhrase();
+				    	Activator.getDefault().logInformation("Error uploading Cupid usage data: " + reason);
+				    	return new Status(Status.WARNING, Activator.PLUGIN_ID, reason, null);
 				    }
 				}
 				return Status.OK_STATUS;
 			} catch (IOException e) {
-				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error uploading Cupid usage data", e);
+				return new Status(Status.WARNING, Activator.PLUGIN_ID, "Error uploading Cupid usage data", e);
 			} finally {
 				monitor.done();
 			}	
 		}
 	};
+	
+	private String uuid(){
+		return Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_UUID);
+	}
+	
 	public synchronized String getAllJson(String indent, boolean includeNow) throws IOException {
 		List<SessionLog> logs = Lists.newArrayList();
 		
@@ -186,7 +210,7 @@ public class CupidDataCollector {
 		}
 
 		if (init){
-			logs.add(new SessionLog(system, sessionLog));
+			logs.add(new SessionLog(uuid(), system, sessionLog));
 		}
 		
 		StringWriter result = new StringWriter();
@@ -204,17 +228,18 @@ public class CupidDataCollector {
 	 * Record an event in the Cupid session log. Does nothing if the data collector is not running.
 	 * @param event the event to log
 	 */
-	public synchronized void record(final CupidEvent event) {
-		if (init) {
-			sessionLog.add(event);
+	public static synchronized void record(final CupidEvent event) {
+		CupidDataCollector collector = getInstance();
+		
+		if (collector.init) {
+			collector.sessionLog.add(event);
 		}
 	}
 	
-	private static SystemData create(){
+	private static SystemData fetchSystemData(){
 		RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
 		
 		return new SystemData(
-				Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_UUID),
 				Platform.getNL(),
 				Platform.getOS(),
 				Platform.getOSArch(),

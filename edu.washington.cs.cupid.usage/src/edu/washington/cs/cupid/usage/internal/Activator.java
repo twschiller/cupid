@@ -29,6 +29,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.UIJob;
 import org.osgi.framework.BundleContext;
 
+import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.preferences.PreferenceConstants;
 
 /**
@@ -59,7 +60,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 		super.start(context);
 		plugin = this;
 		pluginLog = Platform.getLog(context.getBundle());
-		collector = new CupidDataCollector();
+		collector = CupidDataCollector.getInstance();
 		
 		final IPreferenceStore preferences = getPreferenceStore();
 		

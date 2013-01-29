@@ -48,6 +48,10 @@ public final class Getter<I,V> implements IExtractCapability<I,V>{
 		return field;
 	}
 
+	public String getField() {
+		return field;
+	}
+	
 	@Override
 	public String getDescription() {
 		return "Get the '" + field + "' of type " + type.toString();

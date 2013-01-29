@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Cupid
 Bundle-SymbolicName: edu.washington.cs.cupid;singleton:=true
-Bundle-Version: 1.0.3
+Bundle-Version: 1.0.4
 Bundle-Activator: edu.washington.cs.cupid.internal.CupidActivator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.filesystem;bundle-version="1.3.100",
  org.eclipse.jface.text,
  org.eclipse.ui.editors,
- org.eclipse.debug.ui;bundle-version="3.7.102"
+ org.eclipse.debug.ui;bundle-version="3.7.102",
+ edu.washington.cs.cupid.usage;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Vendor: University of Washington PLSE
@@ -29,6 +30,7 @@ Export-Package: com.google.common.base,
  edu.washington.cs.cupid.select,
  edu.washington.cs.cupid.standard,
  edu.washington.cs.cupid.types,
+ edu.washington.cs.cupid.usage.events,
  edu.washington.cs.cupid.utility
 Eclipse-BuddyPolicy: global, app, ext, boot
 Bundle-ClassPath: lib/TimeOperations.jar,

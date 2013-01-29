@@ -45,12 +45,16 @@ public class MappingWizard extends Wizard{
 				ValueMapping<?, ?> pipe = page.getValueMapping();
 				Activator.getDefault().getHydrationService().store(pipe);
 				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
-				CupidDataCollector.record(CupidEventBuilder.createCapabilityEvent("MappingWizard", pipe, Activator.getDefault()));
+				
+				CupidDataCollector.record(
+						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());
 			}else{
 				CapabilityMapping<?,?,?> pipe = page.getCapabilityMapping();
 				Activator.getDefault().getHydrationService().store(pipe);
 				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
-				CupidDataCollector.record(CupidEventBuilder.createCapabilityEvent("MappingWizard", pipe, Activator.getDefault()));
+				
+				CupidDataCollector.record(
+						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());
 			}
 			
 			return true;

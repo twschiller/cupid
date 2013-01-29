@@ -127,7 +127,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		dataTab = new TabItem(tabs, SWT.NONE);
 		dataTab.setText("Workspace Data Preview");
 		
-		session = new Text(tabs, SWT.MULTI | SWT.BORDER);
+		session = new Text(tabs, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		session.setEditable(false);		
 		updatePreview();
 		dataTab.setControl(session);
@@ -135,6 +135,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.horizontalSpan = 2;
 		data.heightHint = 350;
+		data.widthHint = 400;
 		tabs.setLayoutData(data);
 		
 		delete.addSelectionListener(new SelectionListener(){

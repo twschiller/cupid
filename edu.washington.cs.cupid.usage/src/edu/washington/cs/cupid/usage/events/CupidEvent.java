@@ -32,7 +32,7 @@ public final class CupidEvent implements Serializable {
 	 * rule of thumb, the value indicates that something has
 	 * already happened (e.g. "activated", "loaded", "clicked").
 	 */
-	public String what;
+	private String what;
 	
 	/**
 	 * The {@link #kind} field describes the kind of thing that caused

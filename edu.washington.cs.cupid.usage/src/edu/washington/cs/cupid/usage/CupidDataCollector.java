@@ -20,6 +20,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -31,6 +32,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.osgi.framework.Bundle;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -42,7 +44,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import edu.washington.cs.cupid.usage.events.CupidEvent;
-import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.usage.internal.Activator;
 import edu.washington.cs.cupid.usage.internal.SessionLog;
 import edu.washington.cs.cupid.usage.internal.SystemData;
@@ -99,10 +100,7 @@ public final class CupidDataCollector {
 		sessionLog = Lists.newLinkedList();
 		init = true;
 	
-		Activator.getDefault().logInformation("Cupid data collection started");
-	
-		record(new CupidEventBuilder("START", CupidDataCollector.class, Activator.getDefault()).create());
-		
+		Activator.getDefault().logInformation("Cupid data collection started");	
 	}
 	
 	/**
@@ -239,6 +237,11 @@ public final class CupidDataCollector {
 	private static SystemData fetchSystemData(){
 		RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
 		
+		Map<String, String> bundles = Maps.newHashMap();
+		for (Bundle bundle : Activator.getDefault().getBundle().getBundleContext().getBundles()){
+			bundles.put(bundle.getSymbolicName(), bundle.getVersion().toString());
+		}
+		
 		return new SystemData(
 				Platform.getNL(),
 				Platform.getOS(),
@@ -246,7 +249,8 @@ public final class CupidDataCollector {
 				Platform.getWS(),
 				RuntimemxBean.getVmName(),
 				RuntimemxBean.getVmVendor(),
-				RuntimemxBean.getVmVersion());
+				RuntimemxBean.getVmVersion(),
+				bundles);
 	}
 	
 }

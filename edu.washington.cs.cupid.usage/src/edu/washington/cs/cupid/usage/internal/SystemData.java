@@ -11,6 +11,7 @@
 package edu.washington.cs.cupid.usage.internal;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public final class SystemData implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -22,9 +23,13 @@ public final class SystemData implements Serializable {
 	private String vmName;
 	private String vmVendor;
 	private String vmVersion;
+	private Map<String, String> bundles;
 	
-	public SystemData(String locale, String os, String osArch, 
-			String ws, String vmName, String vmVendor, String vmVersion) {
+	public SystemData(
+			String locale, String os, String osArch, 
+			String ws, String vmName, String vmVendor, String vmVersion,
+			Map<String, String> bundles) {
+		
 		this.locale = locale;
 		this.os = os;
 		this.ws = ws;
@@ -32,6 +37,11 @@ public final class SystemData implements Serializable {
 		this.vmName = vmName;
 		this.vmVendor = vmVendor;
 		this.vmVersion = vmVersion;
+		this.bundles = bundles;
+	}
+	
+	public Map<String, String> getBundles() {
+		return bundles;
 	}
 
 	public String getLocale() {

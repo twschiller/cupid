@@ -3,10 +3,13 @@
    <description name="Cupid (Nightly Snapshot Build)" url="http://cupid.eclipselabs.org.codespot.com/hg-history/stable/snapshots/nightly/">
       Cupid is a pipeline-based information ecosystem for Eclipse. The pipeline model, made popular by Unix, provides greater flexibility than Eclipse&apos;s static extension point model by allowing you to dynamically modify the connection between components. Coupling pipeline creation and visualization interfaces, Cupid enables you to easily discover, synthesize, and visualize information.
    </description>
-   <feature url="features/edu.washington.cs.cupid.scripting.java_1.0.6.jar" id="edu.washington.cs.cupid.scripting.java" version="1.0.6">
+   <feature url="features/edu.washington.cs.cupid.markers_1.0.1.jar" id="edu.washington.cs.cupid.markers" version="1.0.1">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature url="features/edu.washington.cs.cupid.scripting.java_1.0.7.jar" id="edu.washington.cs.cupid.scripting.java" version="1.0.7">
       <category name="edu.washington.cs.cupid.script"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.core_1.0.4.jar" id="edu.washington.cs.cupid.core" version="1.0.4">
+   <feature url="features/edu.washington.cs.cupid.core_1.0.5.jar" id="edu.washington.cs.cupid.core" version="1.0.5">
       <category name="edu.washington.cs.cupid.core"/>
    </feature>
    <feature url="features/edu.washington.cs.cupid.egit_1.0.3.jar" id="edu.washington.cs.cupid.egit" version="1.0.3">
@@ -24,16 +27,13 @@
    <feature url="features/edu.washington.cs.cupid.svn_1.0.3.jar" id="edu.washington.cs.cupid.svn" version="1.0.3">
       <category name="edu.washington.cs.cupid.discover"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.charts_1.0.3.jar" id="edu.washington.cs.cupid.charts" version="1.0.3">
+   <feature url="features/edu.washington.cs.cupid.charts_1.0.4.jar" id="edu.washington.cs.cupid.charts" version="1.0.4">
       <category name="edu.washington.cs.cupid.visualize"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.mapview_1.0.3.jar" id="edu.washington.cs.cupid.mapview" version="1.0.3">
+   <feature url="features/edu.washington.cs.cupid.conditional_1.0.4.jar" id="edu.washington.cs.cupid.conditional" version="1.0.4">
       <category name="edu.washington.cs.cupid.visualize"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.markers_1.0.1.jar" id="edu.washington.cs.cupid.markers" version="1.0.1">
-      <category name="edu.washington.cs.cupid.visualize"/>
-   </feature>
-   <feature url="features/edu.washington.cs.cupid.conditional_1.0.3.jar" id="edu.washington.cs.cupid.conditional" version="1.0.3">
+   <feature url="features/edu.washington.cs.cupid.mapview_1.0.4.jar" id="edu.washington.cs.cupid.mapview" version="1.0.4">
       <category name="edu.washington.cs.cupid.visualize"/>
    </feature>
    <category-def name="edu.washington.cs.cupid.script" label="Scripting">

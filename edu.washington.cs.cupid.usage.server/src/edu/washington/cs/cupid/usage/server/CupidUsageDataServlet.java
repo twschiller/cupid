@@ -42,7 +42,8 @@ public class CupidUsageDataServlet extends HttpServlet {
 			CupidUser user = new CupidUser(raw.uuid);
 			SystemData system = new SystemData(
 					raw.system.locale, raw.system.os, raw.system.osArch, raw.system.ws,
-					raw.system.vmName, raw.system.vmVendor, raw.system.vmVersion);
+					raw.system.vmName, raw.system.vmVendor, raw.system.vmVersion,
+					raw.system.bundles);
 			
 			CupidSession session = new CupidSession(user, system);
 			for (JsonCupidEvent rawEvent : raw.events){

@@ -16,6 +16,9 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.ui.CreatePipelineWizard;
 
 /**
@@ -39,6 +42,10 @@ public class CreatePipelineAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
+		CupidDataCollector.record(
+				CupidEventBuilder.createAction(action, this, Activator.getDefault())
+				.create());
+		
 		CreatePipelineWizard wizard = new CreatePipelineWizard();
 		WizardDialog dialog = new WizardDialog(window.getShell(), wizard);
 		dialog.create();

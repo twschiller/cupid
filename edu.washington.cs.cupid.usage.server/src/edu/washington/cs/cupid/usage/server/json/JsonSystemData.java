@@ -11,9 +11,10 @@
 package edu.washington.cs.cupid.usage.server.json;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public final class JsonSystemData implements Serializable {
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	public String locale;
 	public String os;
@@ -22,5 +23,6 @@ public final class JsonSystemData implements Serializable {
 	public String vmName;
 	public String vmVendor;
 	public String vmVersion;
+	public Map<String, String> bundles;
 
 }

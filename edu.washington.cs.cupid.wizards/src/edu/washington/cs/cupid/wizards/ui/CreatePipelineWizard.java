@@ -41,7 +41,10 @@ public class CreatePipelineWizard extends Wizard{
 		try {
 			Activator.getDefault().getHydrationService().store(pipe);
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
-			CupidDataCollector.record(CupidEventBuilder.createCapabilityEvent("PipelineWizard", pipe, Activator.getDefault()));
+			CupidDataCollector.record(
+					CupidEventBuilder.createCapabilityEvent(CreatePipelineWizard.class, pipe, Activator.getDefault())
+					.addData("length", Integer.toString(page.getPipelineLength()))
+					.create());
 			return true;
 		} catch (IOException e) {
 			ErrorDialog.openError(

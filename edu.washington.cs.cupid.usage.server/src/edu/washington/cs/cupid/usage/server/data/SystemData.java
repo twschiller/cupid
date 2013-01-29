@@ -11,12 +11,13 @@
 package edu.washington.cs.cupid.usage.server.data;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import javax.persistence.Embeddable;
 
 @Embeddable
 public final class SystemData implements Serializable {
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private String locale;
 	private String os;
@@ -25,14 +26,18 @@ public final class SystemData implements Serializable {
 	private String vmName;
 	private String vmVendor;
 	private String vmVersion;
+	private Map<String, String> bundles;
 	
 	@SuppressWarnings("unused")
 	private SystemData(){
 		// NO OP
 	}
 	
-	public SystemData(String locale, String os, String osArch, 
-			String ws, String vmName, String vmVendor, String vmVersion) {
+	public SystemData(
+			String locale, String os, String osArch, 
+			String ws, String vmName, String vmVendor, String vmVersion,
+			Map<String, String> bundles) {
+		
 		this.locale = locale;
 		this.os = os;
 		this.ws = ws;
@@ -40,6 +45,7 @@ public final class SystemData implements Serializable {
 		this.vmName = vmName;
 		this.vmVendor = vmVendor;
 		this.vmVersion = vmVersion;
+		this.bundles = bundles;
 	}
 
 	public String getLocale() {
@@ -68,5 +74,9 @@ public final class SystemData implements Serializable {
 
 	public String getVmVersion() {
 		return vmVersion;
+	}
+
+	public Map<String, String> getBundles() {
+		return bundles;
 	}
 }

@@ -33,6 +33,7 @@ import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.usage.events.CupidEvent;
 
 
 /**

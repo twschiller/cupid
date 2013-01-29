@@ -48,7 +48,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 
 import com.google.common.collect.Lists;
@@ -68,6 +70,9 @@ import edu.washington.cs.cupid.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.preferences.SelectionInspectorPreferencePage;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.select.ICupidSelectionListener;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.usage.events.EventConstants;
 
 /**
  * View that shows capabilities (and their outputs) that apply to the current workbench selection.
@@ -110,6 +115,17 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	 */
 	private Map<JobFamily, Long> inspectorFamilies;
 	
+	
+	
+	@Override
+	public void init(IViewSite site) throws PartInitException {
+		CupidDataCollector.record(
+				new CupidEventBuilder(EventConstants.LOADED_WHAT, getClass(), CupidActivator.getDefault())
+				.create());
+		
+		super.init(site);
+	}
+
 	@Override
 	public final void createPartControl(final Composite parent) {
 		contentProvider = new ViewContentProvider();
@@ -503,6 +519,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
 			synchronized (viewer) {
 				cancelOldJobs();
+				
+				CupidDataCollector.record(
+						CupidEventBuilder.contextEvent(getClass(), part, selection, CupidActivator.getDefault())
+						.create());
+				
 				if (selection instanceof StructuredSelection) {
 					// TODO handle multiple data case
 					Object argument = ((StructuredSelection) selection).getFirstElement();
@@ -518,6 +539,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			synchronized (viewer) {
 				if (!part.equals(InspectorView.this)) {
 					cancelOldJobs();
+					
+					CupidDataCollector.record(
+							CupidEventBuilder.contextEvent(getClass(), part, data, CupidActivator.getDefault())
+							.create());
+					
 					viewer.setInput(data);			
 				}
 			}
@@ -529,6 +555,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 				if (!part.equals(InspectorView.this)) {
 					// TODO handle multiple data case
 					cancelOldJobs();
+					
+					CupidDataCollector.record(
+							CupidEventBuilder.contextEvent(getClass(), part, data, CupidActivator.getDefault())
+							.create());
+					
 					viewer.setInput(data[0]);
 				}
 			}

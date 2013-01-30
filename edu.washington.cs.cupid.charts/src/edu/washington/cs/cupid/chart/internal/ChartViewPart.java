@@ -17,7 +17,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 
 import com.google.common.collect.Lists;
@@ -32,6 +34,9 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.usage.events.EventConstants;
 
 public abstract class ChartViewPart extends ViewPart implements ISelectionListener {
 
@@ -51,6 +56,15 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 	
 	protected abstract Set<TypeToken<?>> accepts();
 	
+	@Override
+	public void init(IViewSite site) throws PartInitException {
+		super.init(site);
+		
+		CupidDataCollector.record(
+				new CupidEventBuilder(EventConstants.LOADED_WHAT, getClass(), Activator.getDefault())
+				.create());
+	}
+
 	@Override
 	public void createPartControl(Composite parent) {
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
@@ -72,8 +86,6 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 		setContentDescription("Please select a capability.");
 	}
 
-
-	
 	/**
 	 * Add the list of available capabilities to the view's menu
 	 */
@@ -97,6 +109,10 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 										ChartViewPart.this.capability = capability;
 										ChartViewPart.this.setPartName(getName() + ": " + capability.getName());
 										ChartViewPart.this.setContentDescription(capability.getDescription());
+									
+										CupidDataCollector.record(
+												CupidEventBuilder.selectCapabilityEvent(ChartViewPart.this.getClass(), capability, Activator.getDefault())
+												.create());
 									}
 								});
 								break;
@@ -113,7 +129,12 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {	
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
+				.create());
+		
 		if (capability != null && selection instanceof StructuredSelection){
 			ChartViewPart.this.showBusy(true);
 			

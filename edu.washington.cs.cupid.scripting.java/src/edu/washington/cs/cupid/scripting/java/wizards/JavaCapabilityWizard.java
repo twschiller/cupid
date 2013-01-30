@@ -48,6 +48,9 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.usage.events.EventConstants;
 
 /**
  * A wizard for creating a new Java script capability.
@@ -118,7 +121,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
-	private boolean inClasspath(final List<IClasspathEntry> classpath, final IPath query){
+	private boolean inClasspath(final List<IClasspathEntry> classpath, final IPath query) {
 		for (IClasspathEntry entry : classpath) {
 			if (entry.getPath().equals(query)) {
 				return true;
@@ -134,7 +137,15 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	 * @throws IOException 
 	 */
 	private void doFinish(final String name, final String id, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
-				
+			
+		CupidEventBuilder event = 
+				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), Activator.getDefault())
+				.addData("name", name)
+				.addData("id", id)
+				.addData("parameterType", parameterType.getName())
+				.addData("returnType", returnType.getName());
+		CupidDataCollector.record(event.create());
+		
 		// create a sample file
 		String className = formClassName(name);
 		

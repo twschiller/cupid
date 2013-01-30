@@ -21,12 +21,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
-import org.eclipse.zest.core.viewers.ZoomContributionViewItem;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
@@ -40,10 +41,14 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
+import edu.washington.cs.cupid.mapview.internal.Activator;
 import edu.washington.cs.cupid.mapview.internal.GraphLabelProvider;
 import edu.washington.cs.cupid.mapview.internal.GraphNodeContentProvider;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.select.ICupidSelectionListener;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
+import edu.washington.cs.cupid.usage.events.EventConstants;
 
 /**
  * A view that displays the output of a capability as a map for the current selection.
@@ -67,6 +72,15 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	
 	private GraphViewer viewer;
 	
+	@Override
+	public void init(IViewSite site) throws PartInitException {
+		super.init(site);
+		
+		CupidDataCollector.record(
+				new CupidEventBuilder(EventConstants.LOADED_WHAT, getClass(), Activator.getDefault())
+				.create());
+	}
+
 	@Override
 	public final void createPartControl(final Composite parent) {
 		viewer = new GraphViewer(parent, SWT.BORDER);
@@ -117,9 +131,10 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	 * @see http://www.vogella.com/articles/EclipseZest/article.html
 	 */
 	private void fillToolBar() {
-		ZoomContributionViewItem toolbarZoomContributionViewItem = new ZoomContributionViewItem(this);
-		IActionBars bars = getViewSite().getActionBars();
-		bars.getMenuManager().add(toolbarZoomContributionViewItem);
+//	Don't add zoom options to menu, since capabilities are listed there.
+//		ZoomContributionViewItem toolbarZoomContributionViewItem = new ZoomContributionViewItem(this);
+//		IActionBars bars = getViewSite().getActionBars();
+//		bars.getMenuManager().add(toolbarZoomContributionViewItem);
 	}
 
 	@Override
@@ -176,6 +191,10 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 									MapView.this.capability = available;
 									MapView.this.setPartName(NAME + ": " + available.getName());
 									MapView.this.setContentDescription(available.getDescription());
+									
+									CupidDataCollector.record(
+											CupidEventBuilder.selectCapabilityEvent(MapView.this.getClass(), capability, Activator.getDefault())
+											.create());	
 								}
 							});
 						}
@@ -190,7 +209,11 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	
 	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final ISelection selection) {	
-		if (selection instanceof StructuredSelection) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
+				.create());
+		
+		if (selection instanceof StructuredSelection) {	
 			// TODO handle multiple selected elements
 			final StructuredSelection all = ((StructuredSelection) selection);
 			showMapping(all.getFirstElement());
@@ -200,11 +223,19 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	
 	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final Object data) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
+				.create());
+		
 		showMapping(data);
 	}
 
 	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
+				.create());
+		
 		// TODO handle multiple selected objects
 		showMapping(data[0]);
 	}

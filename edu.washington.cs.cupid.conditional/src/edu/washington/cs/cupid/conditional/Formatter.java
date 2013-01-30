@@ -53,16 +53,21 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
+import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.IInvalidationListener;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEvent;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 /**
  * Applies conditional formatting rules to workbench items.
@@ -144,18 +149,51 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		}
 	}
 	
+	private CupidEventBuilder createRuleEvent(String what, FormattingRule rule){
+		CupidEventBuilder event = 
+				new CupidEventBuilder(what, getClass(), Activator.getDefault())
+					.addData("name", rule.getName())
+					.addData("capabilityId", rule.getCapabilityId());
+		
+		try {
+			ICapability<?,?> capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
+			event.addData("capabilityName", capability.getName());
+			event.addData("capabilityId", capability.getParameterType().toString());
+			event.addData("parameterType", capability.getParameterType().toString());	
+		} catch (NoSuchCapabilityException e) {
+			// NO OP
+		}
+		
+		return event;
+	}
+	
 	/**
 	 * Set {@link Activator#activeRules} to the list of rules that are active
 	 * and have an associated capability.
 	 */
 	private void updateRules() {
 		synchronized (activeRules) {
-			activeRules.clear();
+			List<FormattingRule> current = Lists.newArrayList();
+			
 			for (FormattingRule rule : Activator.getDefault().storedRules()) {
 				if (rule.isActive() && rule.getCapabilityId() != null) {
-					activeRules.add(rule);
+					current.add(rule);
 				}
 			}
+
+			Set<FormattingRule> newSet = Sets.newHashSet(current);
+			Set<FormattingRule> oldSet = Sets.newHashSet(activeRules);
+			
+			for (FormattingRule rule : Sets.difference(newSet, oldSet)) {
+				CupidDataCollector.record(createRuleEvent("enableFormattingRule", rule).create());
+			}
+			
+			for (FormattingRule rule : Sets.difference(oldSet, newSet)) {
+				CupidDataCollector.record(createRuleEvent("disableFormattingRule", rule).create());
+			}
+			
+			activeRules.clear();
+			activeRules.addAll(current);
 		}
 	}
 	

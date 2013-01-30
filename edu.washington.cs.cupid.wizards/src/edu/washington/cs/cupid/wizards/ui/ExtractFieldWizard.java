@@ -15,6 +15,9 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEvent;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.Getter;
 
@@ -37,6 +40,14 @@ public class ExtractFieldWizard extends Wizard{
 			Getter<?, ?> pipe = page.getGetter();
 			Activator.getDefault().getHydrationService().store(pipe);
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+			
+			CupidEvent event = CupidEventBuilder
+					.createCapabilityEvent(ExtractFieldWizard.class, pipe, Activator.getDefault())
+					.addData("field", pipe.getField())
+					.create();
+			
+			CupidDataCollector.record(event);
+			
 			return true;
 		} catch (Exception e) {
 			ErrorDialog.openError(

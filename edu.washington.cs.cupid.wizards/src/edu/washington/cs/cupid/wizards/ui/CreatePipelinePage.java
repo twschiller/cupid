@@ -143,7 +143,6 @@ public class CreatePipelinePage extends WizardPage{
 		setControl(composite);
 	}
 	
-
 	private static String friendlyTypeString(Type type){
 		if (type instanceof Class){
 			return ((Class<?>) type).getSimpleName();
@@ -436,6 +435,10 @@ public class CreatePipelinePage extends WizardPage{
 		descriptionEntry.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		metaGroup.pack();
+	}
+	
+	public int getPipelineLength(){
+		return current.size();
 	}
 	
 	public SerializablePipeline createPipeline(){

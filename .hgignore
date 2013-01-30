@@ -6,3 +6,13 @@ syntax: glob
 *~
 
 .DS_Store
+
+edu.washington.cs.cupid.usage.server/war/WEB-INF/appengine-generated
+
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/asm-*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/appengine-*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/datanucleus-*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/geronimo-jpa*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/jdo-api-*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/jsr107cache-*.jar
+edu.washington.cs.cupid.usage.server/war/WEB-INF/lib/jta-*.jar

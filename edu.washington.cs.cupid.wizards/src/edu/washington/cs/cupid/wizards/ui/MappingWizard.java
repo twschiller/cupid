@@ -17,6 +17,8 @@ import org.eclipse.jface.wizard.Wizard;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.usage.CupidDataCollector;
+import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
 import edu.washington.cs.cupid.wizards.internal.ValueMapping;
@@ -42,11 +44,17 @@ public class MappingWizard extends Wizard{
 			if (page.hasKeyAsType()){
 				ValueMapping<?, ?> pipe = page.getValueMapping();
 				Activator.getDefault().getHydrationService().store(pipe);
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);	
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+				
+				CupidDataCollector.record(
+						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());
 			}else{
 				CapabilityMapping<?,?,?> pipe = page.getCapabilityMapping();
 				Activator.getDefault().getHydrationService().store(pipe);
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);	
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+				
+				CupidDataCollector.record(
+						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());
 			}
 			
 			return true;

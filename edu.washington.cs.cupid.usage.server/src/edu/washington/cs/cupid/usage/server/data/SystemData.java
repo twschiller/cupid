@@ -15,6 +15,8 @@ import java.util.Map;
 
 import javax.persistence.Embeddable;
 
+import org.datanucleus.api.jpa.annotations.Extension;
+
 @Embeddable
 public final class SystemData implements Serializable {
 	private static final long serialVersionUID = 2L;
@@ -26,12 +28,9 @@ public final class SystemData implements Serializable {
 	private String vmName;
 	private String vmVendor;
 	private String vmVersion;
-	private Map<String, String> bundles;
 	
-	@SuppressWarnings("unused")
-	private SystemData(){
-		// NO OP
-	}
+	@Extension(vendorName="datanucleus", key="gae.unindexed", value="true")
+	private Map<String, String> bundles;
 	
 	public SystemData(
 			String locale, String os, String osArch, 

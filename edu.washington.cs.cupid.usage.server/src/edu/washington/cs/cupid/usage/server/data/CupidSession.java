@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -41,15 +42,11 @@ public class CupidSession implements Serializable {
 	@Unowned
 	private CupidUser user;
 	
+	@Embedded
 	private SystemData system;
 	
-	@OneToMany(cascade = CascadeType.ALL, mappedBy="session")
+	@OneToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL, mappedBy="session")
 	private List<CupidEvent> events;
-	
-	@SuppressWarnings("unused")
-	private CupidSession(){
-		events = new ArrayList<CupidEvent>();
-	}
 	
 	public CupidSession(CupidUser user, SystemData system){
 		this.user = user;

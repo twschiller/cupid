@@ -9,9 +9,6 @@
    <feature url="features/edu.washington.cs.cupid.scripting.java_1.0.7.jar" id="edu.washington.cs.cupid.scripting.java" version="1.0.7">
       <category name="edu.washington.cs.cupid.script"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.core_1.0.5.jar" id="edu.washington.cs.cupid.core" version="1.0.5">
-      <category name="edu.washington.cs.cupid.core"/>
-   </feature>
    <feature url="features/edu.washington.cs.cupid.egit_1.0.3.jar" id="edu.washington.cs.cupid.egit" version="1.0.3">
       <category name="edu.washington.cs.cupid.discover"/>
    </feature>
@@ -35,6 +32,9 @@
    </feature>
    <feature url="features/edu.washington.cs.cupid.mapview_1.0.4.jar" id="edu.washington.cs.cupid.mapview" version="1.0.4">
       <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature url="features/edu.washington.cs.cupid.core_1.0.6.jar" id="edu.washington.cs.cupid.core" version="1.0.6">
+      <category name="edu.washington.cs.cupid.core"/>
    </feature>
    <category-def name="edu.washington.cs.cupid.script" label="Scripting">
       <description>

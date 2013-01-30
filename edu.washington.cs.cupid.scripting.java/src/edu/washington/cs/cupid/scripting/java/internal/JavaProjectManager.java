@@ -130,7 +130,7 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		monitor.done();
 	}
 	
-	private static Path urlToPath(final URL url) {
+	public static Path urlToPath(final URL url) {
 		String path = url.getPath();
 		
 		if (path.startsWith("file:")) {

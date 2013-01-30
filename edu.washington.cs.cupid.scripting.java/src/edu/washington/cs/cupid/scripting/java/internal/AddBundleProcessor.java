@@ -10,10 +10,14 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.internal;
 
+import java.io.IOException;
+import java.net.URL;
+import java.security.CodeSource;
 import java.util.List;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -21,13 +25,24 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.ITypeNameRequestor;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeDeclarationMatch;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import com.google.common.collect.Lists;
+
+import edu.washington.cs.cupid.CupidPlatform;
 
 public class AddBundleProcessor implements IQuickFixProcessor{
 
@@ -41,6 +56,8 @@ public class AddBundleProcessor implements IQuickFixProcessor{
 				switch (problemId){
 				case IProblem.ImportNotFound:
 				case IProblem.UndefinedType:
+				case IProblem.MissingTypeInMethod:
+				case IProblem.IsClassPathCorrect:
 					return true;
 				default:
 					return false;
@@ -65,7 +82,6 @@ public class AddBundleProcessor implements IQuickFixProcessor{
 		
 		return null;
 	}
-	
 	
 	@Override
 	public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
@@ -94,9 +110,82 @@ public class AddBundleProcessor implements IQuickFixProcessor{
 					}
 				}
 				break;
-			case IProblem.UndefinedType:
-				String type = location.getProblemArguments()[0];
+			case IProblem.MissingTypeInMethod:
+				String [] args =  location.getProblemArguments();
+				
+				String className = args[0];
+				String missing = args[args.length-1];
+				
+				Class<?> test  = null;
+				Bundle testBundle = null;
+				Class<?> missingTest = null;
+				URL loc  = null;
+				try {
+					test = Class.forName("com.vectrace.MercurialEclipse.history.GraphLayout$GraphRow", false, CupidPlatform.class.getClassLoader());
+					testBundle = FrameworkUtil.getBundle(test);
+					missingTest = testBundle.loadClass(missing);
+					CodeSource src = missingTest.getProtectionDomain().getCodeSource();
+					loc = src.getLocation();
+					loc = FileLocator.resolve(loc);
+				} catch (ClassNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				final List<SearchMatch> matches = Lists.newArrayList();
+				
+				SearchRequestor requestor = new SearchRequestor(){
+					@Override
+					public void acceptSearchMatch(SearchMatch match) throws CoreException {
+						matches.add(match);
+					}
+				};
+				
+				SearchEngine engine = new SearchEngine();
+				engine.search(
+						SearchPattern.createPattern("GraphRow", IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, SearchPattern.R_FULL_MATCH), // pattern
+						new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, 
+						SearchEngine.createWorkspaceScope(), //scope, 
+						requestor, // searchRequestor
+						null // progress monitor
+				);
+				
+				for (SearchMatch match : matches){
+					
+					System.out.println(match.toString());
+					if (match instanceof TypeDeclarationMatch){
+						Bundle bundle = FrameworkUtil.getBundle(match.getElement().getClass());
+
+						
+						try {
+							Class<?> missingClazz = bundle.loadClass(missing);
+							System.out.println(missingClazz.getName());
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+						
+					}
+				}
+
+
+
+				
 				break;
+//			case IProblem.IsClassPathCorrect:
+//				String type = location.getProblemArguments()[0];
+//				try {
+//					CodeSource src = Class.forName(type).getProtectionDomain().getCodeSource();
+//					if (src != null){
+//						proposals.add(new AddCodeSourceCompletion(context.getCompilationUnit().getJavaProject(), src));
+//					}
+//				} catch (ClassNotFoundException e) {
+//					System.err.println(e);
+//					// NO OP
+//				}
+//				break;
 			default:
 				// NO OP
 			}

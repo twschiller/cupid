@@ -6,6 +6,11 @@
 
     <persistence-unit name="transactions-optional">
         <provider>org.datanucleus.api.jpa.PersistenceProviderImpl</provider>
+        <class>edu.washington.cs.cupid.usage.server.data.CupidEvent</class>
+        <class>edu.washington.cs.cupid.usage.server.data.CupidSession</class>
+        <class>edu.washington.cs.cupid.usage.server.data.CupidUser</class>
+        <class>edu.washington.cs.cupid.usage.server.data.SystemData</class>
+        
         <properties>
             <property name="datanucleus.NontransactionalRead" value="true"/>
             <property name="datanucleus.NontransactionalWrite" value="true"/>

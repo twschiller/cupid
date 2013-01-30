@@ -55,6 +55,9 @@ import edu.washington.cs.cupid.usage.preferences.PreferenceConstants;
  */
 public final class CupidDataCollector {
 
+	private static final String CUPID_UPLOAD_URL = "https://cupidplugin.appspot.com/CupidUsageData";
+	//private static final String CUPID_UPLOAD_URL = "http://localhost:8888/CupidUsageData";
+
 	private Gson gson; 
 	
 	private static final Charset CHARSET = Charset.forName("UTF-8");
@@ -167,7 +170,7 @@ public final class CupidDataCollector {
 					monitor.worked(1);
 					
 					monitor.subTask("Uploading Cupid Session Log");
-					HttpPost post = new HttpPost("http://cupidplugin.appspot.com/CupidUsageData"); 
+					HttpPost post = new HttpPost(CupidDataCollector.CUPID_UPLOAD_URL);
 				    post.setEntity(new StringEntity(content));
 					
 				    HttpResponse response = client.execute(post);

@@ -18,16 +18,27 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeDeclarationMatch;
+import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import com.google.common.collect.Lists;
 
@@ -51,6 +62,7 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 			if (resource.getProject() == Activator.getDefault().getCupidProject()) {
 				return problemId == IProblem.UndefinedType
 						|| problemId == IProblem.UndefinedType
+						|| problemId == IProblem.IsClassPathCorrect
 						|| problemId == IProblem.MissingTypeInMethod;
 			} else {
 				return false;
@@ -82,6 +94,7 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 				Name name = ((QualifiedName) dec.getName());
 				Bundle bundle = null;
 				
+				// TODO use ClasspathUtil.bundleForClass here?
 				do {
 					bundle = Platform.getBundle(name.getFullyQualifiedName());
 					name = ((QualifiedName) name).getQualifier();
@@ -93,6 +106,47 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 			}
 		}
 		
+		return proposals;
+	}
+	
+	private List<IJavaCompletionProposal> buildMissingBundleProposals(final IInvocationContext context, final IProblemLocation location) {
+		final List<IJavaCompletionProposal> proposals = Lists.newArrayList();
+		
+		String className = location.getProblemArguments()[0];
+		
+		SearchRequestor requestor = new SearchRequestor(){
+			@Override
+			public void acceptSearchMatch(SearchMatch match) throws CoreException {
+				if (match instanceof TypeDeclarationMatch){
+					if (match.getElement() instanceof IType){
+						IType type = (IType) match.getElement();
+						Bundle bundle = null;
+						try {
+							bundle = ClasspathUtil.bundleForClass(type.getFullyQualifiedName());
+						} catch (ClassNotFoundException e) {
+							throw new RuntimeException("Internal error finding bundle for class ", e);
+						}
+						proposals.add(new AddBundleCompletion(context.getCompilationUnit().getJavaProject(), bundle));
+					} else {
+						throw new RuntimeException("Unexpected match of type " + match.getElement().getClass());
+					}			
+				}
+			}
+		};
+		
+		SearchEngine engine = new SearchEngine();
+		try {
+			engine.search(
+					SearchPattern.createPattern(className, IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, SearchPattern.R_FULL_MATCH), // pattern
+					new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, 
+					SearchEngine.createWorkspaceScope(), //scope, 
+					requestor, // searchRequestor
+					null // progress monitor
+			);
+		} catch (CoreException ex) {
+			// NO OP
+		}
+
 		return proposals;
 	}
 	
@@ -150,6 +204,9 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 				break;
 			case IProblem.MissingTypeInMethod:
 				proposals.addAll(buildMissingTypeProposals(context, location));
+				break;
+			case IProblem.UndefinedType:
+				proposals.addAll(buildMissingBundleProposals(context, location));
 				break;
 			default:
 				// NO OP

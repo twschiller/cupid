@@ -63,6 +63,7 @@ public final class AddBundleCompletion implements IJavaCompletionProposal {
 			}
 			
 			project.setRawClasspath(cp.toArray(new IClasspathEntry[]{}), null);
+			
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}

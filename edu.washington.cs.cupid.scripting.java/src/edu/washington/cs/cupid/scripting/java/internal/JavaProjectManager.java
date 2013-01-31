@@ -10,9 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.internal;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.security.CodeSource;
 import java.util.List;
 
@@ -25,7 +23,6 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -114,52 +111,21 @@ public final class JavaProjectManager implements IResourceChangeListener {
 				throw new RuntimeException("Cannot locate bundle " + symbolicName);
 			}
 			
-			classpath.add(JavaCore.newLibraryEntry(bundlePath(bundle), null, null));
+			classpath.add(JavaCore.newLibraryEntry(ClasspathUtil.bundlePath(bundle), null, null));
 		}
 		
 		// Add Google Guava
 		CodeSource guavaSrc = Lists.class.getProtectionDomain().getCodeSource();
-		classpath.add(JavaCore.newLibraryEntry(urlToPath(guavaSrc.getLocation()), null, null));
+		classpath.add(JavaCore.newLibraryEntry(ClasspathUtil.urlToPath(guavaSrc.getLocation()), null, null));
 			
 		Bundle cupid = Platform.getBundle("edu.washington.cs.cupid");
-		
-		classpath.add(JavaCore.newLibraryEntry(bundlePath(cupid), null, null));
+		classpath.add(JavaCore.newLibraryEntry(ClasspathUtil.bundlePath(cupid), null, null));
 		
 		javaProject.setRawClasspath(classpath.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
 			
 		monitor.done();
 	}
 	
-	public static Path urlToPath(final URL url) {
-		String path = url.getPath();
-		
-		if (path.startsWith("file:")) {
-			path = path.substring("file:".length());
-		}
-		
-		if (path.endsWith("!/")) {
-			path = path.substring(0, path.length() - 2);
-		}
-		
-		File file = new File(path);
-		
-		if (file.isDirectory()) {
-			file = new File(file, "bin");
-		}
-		
-		String absolute = file.getAbsolutePath();
-		
-		return new Path(absolute);
-	}
-	
-	public static IPath bundlePath(final Bundle bundle) throws IOException {
-		if (bundle == null) {
-			throw new NullPointerException("Bundle cannot be null");
-		}
-		
-		URL url = FileLocator.resolve(bundle.getEntry("/"));
-		return urlToPath(url);
-	}
 	
 	@Override
 	public void resourceChanged(final IResourceChangeEvent event) {

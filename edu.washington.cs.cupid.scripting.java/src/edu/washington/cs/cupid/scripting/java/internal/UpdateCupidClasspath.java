@@ -19,7 +19,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -69,7 +68,7 @@ public final class UpdateCupidClasspath extends UIJob implements ISchedulingRule
 					if (parts.length == 2) {
 						Bundle bundle = Platform.getBundle(parts[0]);
 						if (bundle != null) {
-							replacement = JavaProjectManager.bundlePath(bundle);
+							replacement = ClasspathUtil.bundlePath(bundle);
 							any = true;
 						}
 					}

@@ -46,20 +46,17 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 		try {
 			IJavaProject project = Activator.getDefault().getCupidJavaProject();
 			
-			int work = project.getRawClasspath().length;
+			int classpathSize = project.getRawClasspath().length;
 			boolean any = false;
 			
-			monitor.beginTask("Update Cupid Classpath", work + 2);
+			monitor.beginTask("Update Cupid Classpath", classpathSize + 2);
 			
-			List<IClasspathEntry> updated = Lists.newArrayList(project.getRawClasspath());
+			List<IClasspathEntry> updated = Lists.newArrayList();
 			
 			for (IClasspathEntry entry : project.getRawClasspath()) {
 				IClasspathEntry resolved = JavaCore.getResolvedClasspathEntry(entry);
 				
-				IPath replacement = null;
-				
-				if (resolved == null && entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-					
+				if (resolved == null && entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY){
 					// try to find bundle with same name
 					IPath path = entry.getPath();
 					String filename = path.segment(path.segmentCount() - 1);
@@ -68,28 +65,29 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 					if (parts.length == 2) {
 						Bundle bundle = Platform.getBundle(parts[0]);
 						if (bundle != null) {
-							replacement = ClasspathUtil.bundlePath(bundle);
+							IPath replacement = ClasspathUtil.bundlePath(bundle);
+							updated.add(JavaCore.newLibraryEntry(replacement, null, null));
 							any = true;
 						}
+					} else {
+						// we don't know how to find the name
+						updated.add(entry);
 					}
-				}
-				
-				updated.add(replacement == null ? entry : JavaCore.newLibraryEntry(replacement, null, null));
-			
+				} else {
+					// don't change entries we can resolve
+					updated.add(entry);
+				}	
 				monitor.worked(1);
 			}
 			
 			if (any) {
-				// clear old path
-				project.setRawClasspath(null, new SubProgressMonitor(monitor, 1));
-				
 				// perform update
 				project.setRawClasspath(updated.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
 			}
 			
 			return Status.OK_STATUS;
 		} catch (Exception ex) {
-			return new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Error updating Cupid scripting classpath", ex);
+			return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error updating Cupid scripting classpath", ex);
 		} finally {
 			monitor.done();
 		}

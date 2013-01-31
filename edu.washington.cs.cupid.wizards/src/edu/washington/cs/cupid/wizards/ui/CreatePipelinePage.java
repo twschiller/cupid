@@ -11,9 +11,6 @@
 package edu.washington.cs.cupid.wizards.ui;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,7 +44,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
@@ -142,24 +138,7 @@ public class CreatePipelinePage extends WizardPage{
 		
 		setControl(composite);
 	}
-	
-	private static String friendlyTypeString(Type type){
-		if (type instanceof Class){
-			return ((Class<?>) type).getSimpleName();
-		}else if (type instanceof TypeVariable){
-			return ((TypeVariable<?>) type).getName();
-		}else if (type instanceof ParameterizedType){
-			ParameterizedType params = (ParameterizedType) type;
-			List<String> sub = Lists.newArrayList();
-			for (Type param : params.getActualTypeArguments()){
-				sub.add(friendlyTypeString(param));
-			}
-			return friendlyTypeString(params.getRawType()) + "<" + Joiner.on(",").join(sub) + ">";
-		}else{
-			throw new IllegalArgumentException("Unsupported type " + type.toString());
-		}
-	}
-	
+
 	private class DeleteListener implements KeyListener{
 		@Override
 		public void keyPressed(KeyEvent e) {
@@ -264,9 +243,9 @@ public class CreatePipelinePage extends WizardPage{
 			case 0:
 				return capability.getName();
 			case 1:
-				return friendlyTypeString(capability.getParameterType().getType());
+				return TypeManager.simpleTypeName(capability.getParameterType().getType());
 			case 2:
-				return friendlyTypeString(capability.getReturnType().getType());
+				return TypeManager.simpleTypeName(capability.getReturnType().getType());
 			default:
 				return null;
 			}

@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.core"
       label="Cupid for Eclipse"
-      version="1.0.6"
+      version="1.0.7"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"

@@ -66,7 +66,6 @@ import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
-import edu.washington.cs.cupid.usage.events.CupidEvent;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 /**

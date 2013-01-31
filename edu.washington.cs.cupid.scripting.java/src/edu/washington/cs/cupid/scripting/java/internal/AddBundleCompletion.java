@@ -55,7 +55,7 @@ public final class AddBundleCompletion implements IJavaCompletionProposal {
 		try {
 			List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
 			
-			IPath path = JavaProjectManager.bundlePath(bundle);
+			IPath path = ClasspathUtil.bundlePath(bundle);
 			if (path != null) {
 				cp.add(JavaCore.newLibraryEntry(path, null, null));	
 			}

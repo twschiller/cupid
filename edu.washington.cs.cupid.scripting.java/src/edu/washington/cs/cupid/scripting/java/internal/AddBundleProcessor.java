@@ -10,9 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.security.CodeSource;
+import java.util.Enumeration;
 import java.util.List;
 
 import org.eclipse.core.resources.IResource;
@@ -83,6 +85,16 @@ public class AddBundleProcessor implements IQuickFixProcessor{
 		return null;
 	}
 	
+	private String innerClassName(String qualifiedName){
+		int i = qualifiedName.lastIndexOf('.');
+		
+		if (i > 0){
+			return qualifiedName.substring(0, i) + "$" + qualifiedName.substring(i + 1);
+		} else {
+			throw new IllegalArgumentException("Name " + qualifiedName + " is not qualified");
+		}
+	}
+	
 	@Override
 	public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
 		List<IJavaCompletionProposal> proposals = Lists.newArrayList();
@@ -115,63 +127,38 @@ public class AddBundleProcessor implements IQuickFixProcessor{
 				
 				String className = args[0];
 				String missing = args[args.length-1];
+			
+				Bundle bundle = null;
 				
-				Class<?> test  = null;
-				Bundle testBundle = null;
-				Class<?> missingTest = null;
-				URL loc  = null;
 				try {
-					test = Class.forName("com.vectrace.MercurialEclipse.history.GraphLayout$GraphRow", false, CupidPlatform.class.getClassLoader());
-					testBundle = FrameworkUtil.getBundle(test);
-					missingTest = testBundle.loadClass(missing);
-					CodeSource src = missingTest.getProtectionDomain().getCodeSource();
-					loc = src.getLocation();
-					loc = FileLocator.resolve(loc);
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					bundle = ClasspathUtil.bundleForClass(className);
+				} catch (ClassNotFoundException e) {
+					className = innerClassName(className);
+					try {
+						bundle = ClasspathUtil.bundleForClass(className);
+					} catch (ClassNotFoundException e1) {
+						break;
+					}
 				}
 				
-				final List<SearchMatch> matches = Lists.newArrayList();
-				
-				SearchRequestor requestor = new SearchRequestor(){
-					@Override
-					public void acceptSearchMatch(SearchMatch match) throws CoreException {
-						matches.add(match);
-					}
-				};
-				
-				SearchEngine engine = new SearchEngine();
-				engine.search(
-						SearchPattern.createPattern("GraphRow", IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, SearchPattern.R_FULL_MATCH), // pattern
-						new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, 
-						SearchEngine.createWorkspaceScope(), //scope, 
-						requestor, // searchRequestor
-						null // progress monitor
-				);
-				
-				for (SearchMatch match : matches){
-					
-					System.out.println(match.toString());
-					if (match instanceof TypeDeclarationMatch){
-						Bundle bundle = FrameworkUtil.getBundle(match.getElement().getClass());
-
+				if (bundle != null){
+					try {
+						File jar = ClasspathUtil.jarForClass(bundle, missing);
+						URL url = ClasspathUtil.urlForJar(bundle, jar.getName());
 						
-						try {
-							Class<?> missingClazz = bundle.loadClass(missing);
-							System.out.println(missingClazz.getName());
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
+						if (url.getPath().contains("!/")){
+							// url is internal to bundle jar
+							proposals.add(new ExtractBundleJarCompletion(context.getCompilationUnit().getJavaProject(), bundle, jar.getName()));
+							
+						} else {
+							throw new RuntimeException("Expected internal jar");
 						}
 						
+					} catch (Exception ex) {
+						
+						
 					}
 				}
-
-
-
 				
 				break;
 //			case IProblem.IsClassPathCorrect:

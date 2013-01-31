@@ -101,7 +101,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 						
 						cupidProject.open(new SubProgressMonitor(monitor, 90));
 						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
-						new UpdateCupidClasspath().schedule();
+						new UpdateClasspathJob().schedule();
 						return Status.OK_STATUS;
 						
 					} catch (CoreException ex) {

@@ -8,7 +8,7 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.scripting.java.internal;
+package edu.washington.cs.cupid.scripting.java.quickfix;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +31,8 @@ import org.eclipse.swt.graphics.Point;
 import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Lists;
+
+import edu.washington.cs.cupid.scripting.java.internal.ClasspathUtil;
 
 /**
  * Quick Fix completion to extract a JAR file from a bundle JAR and add it to the classpath.

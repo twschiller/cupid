@@ -41,8 +41,8 @@
    <extension
          point="org.eclipse.jdt.ui.quickFixProcessors">
       <quickFixProcessor
-            class="edu.washington.cs.cupid.scripting.java.internal.AddBundleProcessor"
-            id="edu.washington.cs.cupid.scripting.java.addBundle"
+            class="edu.washington.cs.cupid.scripting.java.quickfix.ClasspathProcessor"
+            id="edu.washington.cs.cupid.scripting.java.classpath"
             name="Fix Cupid Project Classpath">
       </quickFixProcessor>
    </extension>

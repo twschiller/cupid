@@ -67,7 +67,7 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		// http://www.pushing-pixels.org/2008/11/18/extending-eclipse-creating-a-java-project-without-displaying-a-wizard.html
 		// http://www.stateofflow.com/journal/66/creating-java-projects-programmatically
 	
-		final int totalWork = 5;
+		final int totalWork = 6;
 		
 		monitor.beginTask("Populate Cupid Project", totalWork);
 		
@@ -81,6 +81,9 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		IFolder binFolder = project.getFolder(binPath);
 		binFolder.create(IResource.FORCE | IResource.DERIVED, true, new SubProgressMonitor(monitor, 1));
 		binFolder.setDerived(true, new SubProgressMonitor(monitor, 1));
+		
+		IFolder libFolder = project.getFolder(new Path("lib"));
+		libFolder.create(IResource.FORCE, true, new SubProgressMonitor(monitor, 1));
 		
 		// refresh directories
 		project.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 1));
@@ -117,7 +120,7 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		// Add Google Guava
 		CodeSource guavaSrc = Lists.class.getProtectionDomain().getCodeSource();
 		classpath.add(JavaCore.newLibraryEntry(ClasspathUtil.urlToPath(guavaSrc.getLocation()), null, null));
-			
+		
 		Bundle cupid = Platform.getBundle("edu.washington.cs.cupid");
 		classpath.add(JavaCore.newLibraryEntry(ClasspathUtil.bundlePath(cupid), null, null));
 		

@@ -32,12 +32,12 @@ import com.google.common.collect.Lists;
  * updating a plug-in changes the filename. Uses the scheduling rule of the Cupid Java project.
  * @author Todd Schiller
  */
-public final class UpdateCupidClasspath extends UIJob implements ISchedulingRule {
+public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 
 	/**
 	 * Create a job that updates the Cupid classpath.
 	 */
-	public UpdateCupidClasspath() {
+	public UpdateClasspathJob() {
 		super("Update Cupid Classpath");
 	}
 	

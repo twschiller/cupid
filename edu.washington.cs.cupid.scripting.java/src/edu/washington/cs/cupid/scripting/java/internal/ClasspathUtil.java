@@ -42,8 +42,6 @@ public final class ClasspathUtil {
 	 * @throws ClassNotFoundException if the class is not found
 	 */
 	public static Bundle bundleForClass(final String qualifiedName) throws ClassNotFoundException {
-		//"com.vectrace.MercurialEclipse.history.GraphLayout$GraphRow"
-		
 		// Use CupidPlatform because of its buddy-policy
 		Class<?> clazz = Class.forName(qualifiedName, false, CupidPlatform.class.getClassLoader());
 		return FrameworkUtil.getBundle(clazz);

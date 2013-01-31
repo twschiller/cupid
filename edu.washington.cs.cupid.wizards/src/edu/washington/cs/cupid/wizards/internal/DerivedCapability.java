@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 
@@ -80,7 +81,11 @@ public class DerivedCapability{
 		
 		for (Method method : clazz.getMethods()){
 			if (isGetter(method)){
-				Getter getter = new Getter(method.getName(), TypeToken.of(clazz), TypeToken.of(method.getReturnType()));
+				Getter getter = new Getter(
+						method.getName(), 
+						TypeToken.of(clazz), 
+						TypeManager.boxType(TypeToken.of(method.getReturnType())));
+				
 				result.add(new DerivedCapability(capability, getter));
 			}
 		}
@@ -103,7 +108,11 @@ public class DerivedCapability{
 				Class eltClazz = (Class) type.getActualTypeArguments()[0];
 				for (Method method : eltClazz.getMethods()){
 					if (isGetter(method)){
-						ListGetter getter = new ListGetter(method.getName(), TypeToken.of(eltClazz), TypeToken.of(method.getReturnType()));
+						ListGetter getter = new ListGetter(
+								method.getName(), 
+								TypeToken.of(eltClazz), 
+								TypeManager.boxType(TypeToken.of(method.getReturnType())));
+						
 						result.add(new DerivedCapability(capability, getter));
 					}
 				}
@@ -116,7 +125,10 @@ public class DerivedCapability{
 				Class eltClazz = (Class) type.getActualTypeArguments()[0];
 				for (Method method : eltClazz.getMethods()){
 					if (isGetter(method)){
-						SetGetter getter = new SetGetter(method.getName(), TypeToken.of(eltClazz), TypeToken.of(method.getReturnType()));
+						SetGetter getter = new SetGetter(
+								method.getName(), 
+								TypeToken.of(eltClazz), 
+								TypeManager.boxType(TypeToken.of(method.getReturnType())));
 						result.add(new DerivedCapability(capability, getter));
 					}
 				}

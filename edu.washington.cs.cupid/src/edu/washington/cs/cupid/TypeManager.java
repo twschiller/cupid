@@ -15,11 +15,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability;
@@ -35,15 +35,29 @@ public final class TypeManager {
 	
 	private static final ITypeAdapterRegistry ADAPTER_REGISTRY = new TypeAdapterRegistry();
 	
-	private static final Set<Primitive> PRIMITIVE_TYPES = Sets.newHashSet(
-			Primitive.make(int.class, Integer.class),
-			Primitive.make(double.class, Double.class),
-			Primitive.make(float.class, Float.class),
-			Primitive.make(boolean.class, Boolean.class));
-	
 	private TypeManager() {
-		
+		// NO OP
 	}
+	
+	private static final Map<Class<?>, Class<?>> BOXED_TYPES = ImmutableMap.<Class<?>, Class<?>>builder()
+			.put(boolean.class, Boolean.class)
+			.put(byte.class, Byte.class)
+		    .put(char.class, Character.class) 
+		    .put(short.class, Short.class)
+		    .put(int.class, Integer.class)
+		    .put(long.class, Long.class)
+		    .put(float.class, Float.class)
+		    .put(double.class, Double.class)
+		    .put(void.class, Void.class)
+		    .put(boolean[].class, Boolean[].class)
+			.put(byte[].class, Byte[].class)
+		    .put(char[].class, Character[].class) 
+		    .put(short[].class, Short[].class)
+		    .put(int[].class, Integer[].class)
+		    .put(long[].class, Long[].class)
+		    .put(float[].class, Float[].class)
+		    .put(double[].class, Double[].class)
+		    .build();
 	
 	/**
 	 * Returns the Cupid type adapter registry.
@@ -53,25 +67,34 @@ public final class TypeManager {
 		return ADAPTER_REGISTRY;
 	}
 	
+	private static boolean isPrimitive(Type type){
+		return type instanceof Class && ((Class<?>) type).isPrimitive();
+	}
+		
 	/**
-	 * Returns <code>true</code> iff <code>lhs</code> can be assigned to <code>rhs</code> modulo
-	 * Java's standard typing rules and boxing.
+	 * Return the associated boxed or boxed array type for <code>type</code>. Returns <code>type</code>, if <code>type</code> is
+	 * not a primitive or primitive array type.
+	 * @param type the type token
+	 * @return the associated boxed or boxed array type
+	 */
+	public static TypeToken<?> boxType(TypeToken<?> type){
+		if (isPrimitive(type.getType())){
+			return TypeToken.of(BOXED_TYPES.get((Class<?>) type.getType()));
+		} else {
+			return type;
+		}
+	}
+	
+	/**
+	 * Returns <code>true</code> iff <code>lhs</code> can be assigned to <code>rhs</code> according to
+	 * Java's standard typing rules. Uses {@link TypeToken#isAssignableFrom(TypeToken)}.
 	 * @param lhs the left-hand side 
 	 * @param rhs the right-hand side
 	 * @return <code>true</code> iff <code>lhs</code> can be assigned to <code>rhs</code> modulo
-	 * Java's standard typing rules and boxing
+	 * Java's standard typing.
 	 */
 	public static boolean isJavaCompatible(final TypeToken<?> lhs, final TypeToken<?> rhs) {
-		return lhs.isAssignableFrom(rhs) || isPrimitiveCompatible(lhs, rhs);
-	}
-	
-	private static boolean isPrimitiveCompatible(final TypeToken<?> lhs, final TypeToken<?> rhs) {
-		for (Primitive rule : PRIMITIVE_TYPES) {
-			if (lhs.getRawType().equals(rule.primitive) && rhs.getRawType().equals(rule.boxed)) {
-					return true;
-			}
-		}
-		return false;
+		return lhs.isAssignableFrom(rhs);
 	}
 	
 	/**
@@ -185,21 +208,4 @@ public final class TypeManager {
 			}	
 		}	
 	}
-
-	@SuppressWarnings("rawtypes")
-	private static final class Primitive {
-		private Class primitive;
-		private Class boxed;
-		
-		private Primitive(final Class primitive, final Class boxed) {
-			super();
-			this.primitive = primitive;
-			this.boxed = boxed;
-		}
-		
-		private static Primitive make(final Class primitive, final Class boxed) {
-			return new Primitive(primitive, boxed);
-		}
-	}
-	
 }

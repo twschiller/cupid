@@ -36,6 +36,7 @@ import org.eclipse.ui.dialogs.SelectionDialog;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 import edu.washington.cs.cupid.wizards.internal.Getter;
@@ -172,6 +173,6 @@ public class ExtractFieldPage extends WizardPage {
 	@SuppressWarnings({ "rawtypes", "unchecked" }) // type is determined dynamically by text
 	public Getter<?,?> getGetter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
 		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
-		return new Getter(method, TypeToken.of(clazz), TypeToken.of(clazz.getMethod(method).getReturnType()));
+		return new Getter(method, TypeToken.of(clazz), TypeManager.boxType(TypeToken.of(clazz.getMethod(method).getReturnType())));
 	}
 }

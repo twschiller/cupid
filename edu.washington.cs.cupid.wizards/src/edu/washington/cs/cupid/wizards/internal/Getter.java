@@ -21,7 +21,7 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public final class Getter<I,V> implements IExtractCapability<I,V>{
+public final class Getter<I,V> implements IExtractCapability<I,V> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -32,7 +32,6 @@ public final class Getter<I,V> implements IExtractCapability<I,V>{
 	private final TypeToken<V> result;
 	
 	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		super();
 		this.field = field;
 		this.type = type;
 		this.result = result;

@@ -166,8 +166,19 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		onChange(publisher);
 	}
 
+
+	private static boolean isPrimitive(TypeToken<?> type){
+		return type.getType() instanceof Class && ((Class<?>) type.getType()).isPrimitive();
+	}
+	
 	@Override
 	public void registerStaticCapability(final ICapability<?, ?> capability) {
+		if (isPrimitive(capability.getReturnType())){
+			throw new IllegalArgumentException("A capability cannot have a primitive return type");
+		} else if (isPrimitive(capability.getParameterType())){
+			throw new IllegalArgumentException("A capability cannot have a primitive parameter type");
+		}
+		
 		capabilities.add(capability);
 		notifier.onChange(this);
 	}
@@ -194,4 +205,5 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		}
 		return null;
 	}
+	
 }

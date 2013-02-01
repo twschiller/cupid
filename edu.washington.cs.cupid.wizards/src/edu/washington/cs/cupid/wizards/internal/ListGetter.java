@@ -35,7 +35,6 @@ public final class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>
 	private final TypeToken<V> result;
 	
 	public ListGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		super();
 		this.field = field;
 		this.type = type;
 		this.result = result;
@@ -59,12 +58,12 @@ public final class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>
 	@SuppressWarnings("serial") // not serializable since it contains a type variable
 	@Override
 	public TypeToken<List<I>> getParameterType() {
-		return new TypeToken<List<I>>() {}.where(new TypeParameter<I>(){}, type);
+		return new TypeToken<List<I>>(getClass()) {}.where(new TypeParameter<I>(){}, type);
 	}
 
 	@SuppressWarnings("serial") // not serializable since it contains a type variable
 	public TypeToken<List<V>> getReturnType() {
-		return new TypeToken<List<V>>() {}.where(new TypeParameter<V>(){}, result);
+		return new TypeToken<List<V>>(getClass()) {}.where(new TypeParameter<V>(){}, result);
 	}
 
 	@Override

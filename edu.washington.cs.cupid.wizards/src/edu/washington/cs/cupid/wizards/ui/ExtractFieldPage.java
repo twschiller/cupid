@@ -28,14 +28,17 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.wizards.TypeComboListener;
+import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 import edu.washington.cs.cupid.wizards.internal.Getter;
@@ -50,7 +53,7 @@ public class ExtractFieldPage extends WizardPage {
 	}
 	
 	private List methodList;
-	private Text type;
+	private Combo type;
 	private String method;
 
 	@Override
@@ -70,10 +73,11 @@ public class ExtractFieldPage extends WizardPage {
 		layout.marginHeight = 10;
 		composite.setLayout(layout);
 		
-		type = new Text(composite, SWT.LEFT | SWT.BORDER);
-		type.setText(startClazz);
+		type = new Combo(composite, SWT.LEFT | SWT.BORDER);
 		data = new GridData(GridData.FILL_HORIZONTAL);
 		type.setLayoutData(data);
+		type.addModifyListener(new TypeComboListener(type));
+		type.setText(startClazz);
 		
 		Button search = new Button(composite, SWT.PUSH);
 		search.setText("Select");
@@ -81,9 +85,13 @@ public class ExtractFieldPage extends WizardPage {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object[] types = showTypeDialog();
-				if (types != null && types.length > 0){
-					type.setText(((IType)types[0]).getFullyQualifiedName());
+				try {
+					IType selected = TypeUtil.showTypeDialog(getShell());
+					if (selected != null){
+						type.setText(selected.getFullyQualifiedName());
+					}
+				} catch (Exception ex) {
+					throw new RuntimeException("Error opening type search dialog", ex);
 				}
 			}
 
@@ -91,7 +99,6 @@ public class ExtractFieldPage extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// NO OP
 			}
-			
 		});
 		
 		type.addModifyListener(new ModifyListener(){
@@ -124,25 +131,6 @@ public class ExtractFieldPage extends WizardPage {
 		setControl(composite);
 	}
 	
-	private Object[] showTypeDialog(){
-		SelectionDialog dialog;
-		try {
-			dialog = JavaUI.createTypeDialog(this.getShell(), 
-					null,
-					SearchEngine.createWorkspaceScope(),
-					IJavaElementSearchConstants.CONSIDER_CLASSES_AND_INTERFACES,
-					false);
-		} catch (JavaModelException e) {
-			return null;
-			// NO OP
-		}
-		dialog.open();
-
-		return dialog.getResult();
-	}
-
-	
-
 	private void updateMethodList(){
 		methodList.removeAll();
 		
@@ -172,6 +160,6 @@ public class ExtractFieldPage extends WizardPage {
 	@SuppressWarnings({ "rawtypes", "unchecked" }) // type is determined dynamically by text
 	public Getter<?,?> getGetter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
 		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
-		return new Getter(method, TypeToken.of(clazz), TypeToken.of(clazz.getMethod(method).getReturnType()));
+		return new Getter(method, TypeToken.of(clazz), TypeManager.boxType(TypeToken.of(clazz.getMethod(method).getReturnType())));
 	}
 }

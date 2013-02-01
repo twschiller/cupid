@@ -23,7 +23,7 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 
-public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
+public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>> {
 	private static final long serialVersionUID = 1L;
 
 	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.set.getter";
@@ -33,7 +33,6 @@ public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
 	private final TypeToken<V> result;
 	
 	public SetGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		super();
 		this.field = field;
 		this.type = type;
 		this.result = result;
@@ -56,20 +55,20 @@ public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>>{
 
 	@Override
 	public TypeToken<Set<I>> getParameterType() {
-		return new TypeToken<Set<I>>(){}.where(new TypeParameter<I>(){}, type);
+		return new TypeToken<Set<I>>(getClass()){}.where(new TypeParameter<I>(){}, type);
 	}
 
 	@Override
 	public TypeToken<Set<V>> getReturnType() {
-		return new TypeToken<Set<V>>(){}.where(new TypeParameter<V>(){}, result);
+		return new TypeToken<Set<V>>(getClass()){}.where(new TypeParameter<V>(){}, result);
 	}
 
 	@Override
 	public CapabilityJob<Set<I>, Set<V>> getJob(final Set<I> input) {
-		return new CapabilityJob<Set<I>, Set<V>>(this, input){
+		return new CapabilityJob<Set<I>, Set<V>>(this, input) {
 			@Override
 			protected CapabilityStatus<Set<V>> run(final IProgressMonitor monitor) {
-				try{
+				try {
 					monitor.beginTask(getName(), input.size());
 					
 					Set<V> result = Sets.newHashSet();

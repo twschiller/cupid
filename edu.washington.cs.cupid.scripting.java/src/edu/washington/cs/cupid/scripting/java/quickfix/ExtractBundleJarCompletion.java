@@ -8,10 +8,17 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.scripting.java.internal;
+package edu.washington.cs.cupid.scripting.java.quickfix;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -25,24 +32,29 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.scripting.java.internal.ClasspathUtil;
+
 /**
- * Quick Fix completion that adds a bundle to a Java project classpath.
+ * Quick Fix completion to extract a JAR file from a bundle JAR and add it to the classpath.
  * @author Todd Schiller
  */
-public final class AddBundleCompletion implements IJavaCompletionProposal {
+public final class ExtractBundleJarCompletion implements IJavaCompletionProposal {
 
 	private static final int RELEVANCE = 100;
 	private IJavaProject project;
 	private Bundle bundle;
+	private String jar;
 	
 	/**
-	 * Construct a Quick Fix completion that adds a bundle to the Java project classpath.
+	 * Construct a Quick Fix completion that extracts a JAR file from a bundle JAR and add it to the classpath.
 	 * @param project the Java project
-	 * @param bundle the bundle to add to the classpath
+	 * @param bundle the bundle containing the jar
+	 * @param the jar file
 	 */
-	public AddBundleCompletion(final IJavaProject project, final Bundle bundle) {
+	public ExtractBundleJarCompletion(final IJavaProject project, final Bundle bundle, String jar) {
 		this.project = project;
 		this.bundle = bundle;
+		this.jar = jar;
 	}
 	
 	@Override
@@ -53,12 +65,22 @@ public final class AddBundleCompletion implements IJavaCompletionProposal {
 	@Override
 	public void apply(final IDocument document) {
 		try {
-			List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
-			
-			IPath path = JavaProjectManager.bundlePath(bundle);
-			if (path != null) {
-				cp.add(JavaCore.newLibraryEntry(path, null, null));	
+			IPath path = ClasspathUtil.bundlePath(bundle);
+			JarFile bundleJar = new JarFile(path.toFile());
+
+			JarEntry entry = bundleJar.getJarEntry(jar);			
+			if (entry == null){
+				throw new RuntimeException("Could not find " + jar + " in JAR for bundle " + bundle.getSymbolicName());
 			}
+			
+			// create the file
+			IFolder folder = project.getProject().getFolder("lib");
+			IFile file = folder.getFile(jar);
+			file.create(bundleJar.getInputStream(entry), true, null);
+			
+			// update the classpath
+			List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
+			cp.add(JavaCore.newLibraryEntry(file.getFullPath(), null, null));	
 			
 			project.setRawClasspath(cp.toArray(new IClasspathEntry[]{}), null);
 		} catch (Exception ex) {
@@ -78,7 +100,7 @@ public final class AddBundleCompletion implements IJavaCompletionProposal {
 
 	@Override
 	public String getDisplayString() {
-		return "Add " + this.bundle.getSymbolicName() + " to the Cupid project classpath";
+		return "Extract " + jar + " from " + this.bundle.getSymbolicName() + " and add to the Cupid project classpath";
 	}
 
 	@Override
@@ -90,6 +112,16 @@ public final class AddBundleCompletion implements IJavaCompletionProposal {
 	@Override
 	public IContextInformation getContextInformation() {
 		return null;
+	}
+	
+	private static void extractFile(InputStream inStream, OutputStream outStream) throws IOException {
+		byte[] buf = new byte[1024];
+		int l;
+		while ((l = inStream.read(buf)) >= 0) {
+			outStream.write(buf, 0, l);
+		}
+		inStream.close();
+		outStream.close();
 	}
 
 }

@@ -31,15 +31,11 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.core.search.TypeDeclarationMatch;
-import org.eclipse.jdt.internal.core.BinaryType;
-import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-
 import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.scripting.java.internal.Activator;

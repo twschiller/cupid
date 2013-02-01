@@ -15,6 +15,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableColorProvider;
@@ -52,6 +54,8 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.wizards.TypeComboListener;
+import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
@@ -71,7 +75,7 @@ public class MappingPage extends WizardPage {
 	private Text nameEntry;
 	private Text descriptionEntry;
 	
-	private Text objectType;
+	private Combo objectType;
 	private TreeViewer keyTree;
 	private Combo keyLinkCombo;
 
@@ -282,9 +286,10 @@ public class MappingPage extends WizardPage {
 		Label objectLabel = new Label(typeGroup, SWT.LEFT);
 		objectLabel.setText("Object Type:");
 		
-		objectType = new Text(typeGroup, SWT.LEFT | SWT.BORDER);
+		objectType = new Combo(typeGroup, SWT.LEFT | SWT.BORDER);
 		objectType.setText(keyType != null ? keyType.toString() : DEFAULT_KEY_TYPE);
 		objectType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		objectType.addModifyListener(new TypeComboListener(objectType));
 		
 		objectType.addModifyListener(new ModifyListener(){
 			@Override
@@ -294,7 +299,25 @@ public class MappingPage extends WizardPage {
 		});
 		
 	    objectSelect = new Button(typeGroup, SWT.PUSH);
-		objectSelect.setText("Select");
+		objectSelect.setText("Search");
+		objectSelect.addSelectionListener(new SelectionListener(){
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					IType selected = TypeUtil.showTypeDialog(getShell());
+					if (selected != null){
+						objectSelect.setText(selected.getFullyQualifiedName());
+					}
+				} catch (JavaModelException ex) {
+					throw new RuntimeException("Error opening type search dialog", ex);
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// NO OP
+			}
+		});
 		
 	}
 	

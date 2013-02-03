@@ -50,7 +50,7 @@ public final class HgHeadsCapability extends GenericAbstractCapability<IResource
 	@SuppressWarnings("serial")
 	@Override
 	public TypeToken<List<ChangeSet>> getReturnType() {
-		return new TypeToken<List<ChangeSet>>(getClass()) {};
+		return new TypeToken<List<ChangeSet>>(getClass()){};
 	}
 
 	@Override

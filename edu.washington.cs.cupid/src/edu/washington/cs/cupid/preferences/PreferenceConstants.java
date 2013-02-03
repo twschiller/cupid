@@ -54,4 +54,9 @@ public final class PreferenceConstants {
 	 */
 	public static final String P_TYPE_VIEWS = "typeViewsPreference";
 
+	/**
+	 * Global capability options.
+	 */
+	public static final String P_CAPABILITY_OPTIONS = "capabilityOptionPreference";
+	
 }

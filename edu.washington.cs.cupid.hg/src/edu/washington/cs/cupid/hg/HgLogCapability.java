@@ -11,10 +11,12 @@
 package edu.washington.cs.cupid.hg;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.vectrace.MercurialEclipse.commands.HgLogClient;
 import com.vectrace.MercurialEclipse.model.HgRoot;
@@ -24,14 +26,30 @@ import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.options.IConfigurableCapability;
+import edu.washington.cs.cupid.capability.options.Option;
+import edu.washington.cs.cupid.capability.options.OptionManager;
 
 /**
  * A capability that returns the Hg log for a resource.
  * @author Todd Schiller
  */
-public final class HgLogCapability extends GenericAbstractCapability<IResource, List<JHgChangeSet>> {
+public final class HgLogCapability extends GenericAbstractCapability<IResource, List<JHgChangeSet>> implements IConfigurableCapability<IResource, List<JHgChangeSet>> {
 
-	public static final int RESOURCE_LOG_LIMIT = 100;
+	public static final String RESOURCE_LOG_LIMIT_KEY = "Entry Limit";
+	public static final int RESOURCE_LOG_LIMIT_DEFAULT = 100;
+	
+	public static final String START_REVISION_KEY = "Start Revision";
+	public static final int START_REVISION_DEFAULT = 0;
+	
+	
+	public static final OptionManager optionManager;
+	static {
+		optionManager = new OptionManager(new Option<?>[] {
+				new Option<Integer>(START_REVISION_KEY, Integer.class, Integer.valueOf(START_REVISION_DEFAULT)),
+				new Option<Integer>(RESOURCE_LOG_LIMIT_KEY, Integer.class, Integer.valueOf(RESOURCE_LOG_LIMIT_DEFAULT)),
+		});
+	}
 	
 	/**
 	 * Construct a capability that returns the Hg log for a resource.
@@ -55,6 +73,11 @@ public final class HgLogCapability extends GenericAbstractCapability<IResource, 
 
 	@Override
 	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input) {
+		return getJob(input, Maps.<String, Object>newHashMap());
+	}
+
+	@Override
+	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input, final Map<String, Object> options) {
 		return new CapabilityJob<IResource, List<JHgChangeSet>>(this, input){
 			@Override
 			protected CapabilityStatus<List<JHgChangeSet>> run(final IProgressMonitor monitor) {
@@ -66,7 +89,10 @@ public final class HgLogCapability extends GenericAbstractCapability<IResource, 
 						return CapabilityStatus.makeError(new ResourceNotHgVersionedException(input));
 					}
 					
-					List<JHgChangeSet> result = HgLogClient.getResourceLog(root, input, RESOURCE_LOG_LIMIT, 0);
+					List<JHgChangeSet> result = HgLogClient.getResourceLog(
+							root, input, 
+							(Integer) optionManager.getValue(RESOURCE_LOG_LIMIT_KEY, options), 
+							(Integer) optionManager.getValue(START_REVISION_KEY, options));
 					return CapabilityStatus.makeOk(result);
 				}catch(Exception ex){
 					return CapabilityStatus.makeError(ex);
@@ -76,4 +102,15 @@ public final class HgLogCapability extends GenericAbstractCapability<IResource, 
 			}
 		};
 	}
+	
+	@Override
+	public List<Option<?>> getOptions() {
+		return optionManager.getOptions();
+	}
+
+	@Override
+	public Option<?> getOption(String name) throws IllegalArgumentException {
+		return optionManager.getOption(name);
+	}
+
 }

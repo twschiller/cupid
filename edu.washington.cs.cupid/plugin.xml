@@ -63,6 +63,12 @@
       </page>
       <page
             category="edu.washington.cs.cupid.preferences"
+            class="edu.washington.cs.cupid.preferences.CapabilityOptionsPage"
+            id="edu.washington.cs.cupid.preferences.capabilities"
+            name="Capability Options">
+      </page>
+      <page
+            category="edu.washington.cs.cupid.preferences"
             class="edu.washington.cs.cupid.preferences.AdvancedPreferencePage"
             id="edu.washington.cs.cupid.preferences.advanced"
             name="Advanced Options">

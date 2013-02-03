@@ -36,6 +36,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.ICupidSchedulingRule;
+import edu.washington.cs.cupid.preferences.CapabilityPreferenceStore;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.standard.Count;
 import edu.washington.cs.cupid.standard.Empty;
@@ -69,6 +70,8 @@ public final class CupidActivator extends AbstractUIPlugin {
 	
 	private CupidSelectionService selectionManager;
 	
+	private CapabilityPreferenceStore capabilityOptions;
+	
 	private ILog pluginLog;
 	
 	/**
@@ -83,7 +86,8 @@ public final class CupidActivator extends AbstractUIPlugin {
 		super.start(context);
 		plugin = this;
 		pluginLog = Platform.getLog(context.getBundle());
-	
+		capabilityOptions = new CapabilityPreferenceStore();
+		
 		registerCapabilityExtensions();
 		registerPublisherExtensions();
 		registerTypeAdapterExtensions();
@@ -150,6 +154,10 @@ public final class CupidActivator extends AbstractUIPlugin {
 //		}
 	}
 
+	public CapabilityPreferenceStore getCapabilityOptions(){
+		return capabilityOptions;
+	}
+	
 	private void registerSchedulingRuleExtensions() {
 		IConfigurationElement[] extensions = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(CupidActivator.SCHEDULING_RULE_ID);

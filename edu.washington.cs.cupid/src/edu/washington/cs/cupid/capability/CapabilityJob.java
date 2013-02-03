@@ -25,7 +25,7 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * {@link Job#run()} method must set the output value for successful completions.</p>
  * 
  * <p>The starts out in three job families: Cupid's family, it's input's family, and
- * it's capability's family. More familiy associations can be made using the {@link #addFamily(Object)}
+ * it's capability's family. More family associations can be made using the {@link #addFamily(Object)}
  * method.</p>
  * 
  * @author Todd Schiller (tws@cs.washington.edu)

@@ -41,6 +41,8 @@ import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.MalformedCapabilityException;
 import edu.washington.cs.cupid.capability.TypeException;
+import edu.washington.cs.cupid.capability.options.ConfigurableCapabilityJob;
+import edu.washington.cs.cupid.capability.options.Options;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
 import edu.washington.cs.cupid.internal.SchedulingRuleRegistry;
@@ -76,15 +78,15 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private boolean logCacheStatus;
 	
 	/**
-	 * Cupid result caches: Input -> { Capability -> Result }.
+	 * Cupid result caches: Input -> { Run Configuration -> Result }.
 	 */
-	private final Cache<Object, Cache<Object, CacheEntry>> resultCaches;
+	private final Cache<Object, Cache<RunConfiguration, CacheEntry>> resultCaches;
 	
 	/**
-	 * Running jobs: Input -> { Capability -> Result }.
+	 * Running jobs: Input -> { Run Configuration -> Capability Job }.
 	 */
 	@SuppressWarnings("rawtypes")
-	private final Table<Object, ICapability, CapabilityJob> running;
+	private final Table<Object, RunConfiguration, CapabilityJob> running;
 	
 	/**
 	 * Jobs that have been canceled <i>by this executor</i>.
@@ -165,9 +167,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * Initializes the default capability result cache for an input.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private static class CapabilityCacheFactory implements Callable<Cache<Object, CacheEntry>> {
+	private static class CapabilityCacheFactory implements Callable<Cache<RunConfiguration, CacheEntry>> {
 		@Override
-		public Cache<Object, CacheEntry> call() throws Exception {
+		public Cache<RunConfiguration, CacheEntry> call() throws Exception {
 			return CacheBuilder
 					.newBuilder()
 					.build();
@@ -183,10 +185,10 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
 	@SuppressWarnings("unchecked")
-	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input) {
+	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input, final Options options) {
 		synchronized (resultCaches) {
 			try {
-				Cache<Object, CacheEntry> cCache = resultCaches.get(input, CACHE_FACTORY);
+				Cache<RunConfiguration, CacheEntry> cCache = resultCaches.get(input, CACHE_FACTORY);
 				
 				CacheEntry cached = cCache.getIfPresent(capability);
 				
@@ -204,9 +206,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 	
-	
 	/**
-	 * Asynchronously execute a capability.
+	 * Asynchronously execute a capability with default options.
 	 * @param capability the capability
 	 * @param input the input
 	 * @param <I> input type
@@ -215,15 +216,29 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param callback the job listener
 	 */
 	public static <I, T> void asyncExec(final ICapability<I, T> capability, final I input, final Object family, final IJobChangeListener callback) {
+		asyncExec(capability, input, Options.DEFAULT, family, callback);
+	}
+	
+	/**
+	 * Asynchronously execute a capability.
+	 * @param capability the capability
+	 * @param input the input
+	 * @param options value overrides for options
+	 * @param <I> input type
+	 * @param <T> output type
+	 * @param family the job family (used for job cancellation)
+	 * @param callback the job listener
+	 */
+	public static <I, T> void asyncExec(final ICapability<I, T> capability, final I input, final Options options, final Object family, final IJobChangeListener callback) {
 		CapabilityExecutor executor = getInstance();
 		
-		T cached = executor.getIfPresent(capability, input);
+		T cached = executor.getIfPresent(capability, input, options);
 		
 		CapabilityJob<I, T> job;
 		
 		synchronized (executor.running) {
 			synchronized (executor.canceling) {
-				CapabilityJob<I, T> existing = executor.running.get(input, capability);
+				CapabilityJob<I, T> existing = executor.running.get(input, new RunConfiguration(capability, options));
 
 				if (cached != null) { // CACHED
 					if (executor.logCacheStatus) {
@@ -366,10 +381,13 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					try {
 						if (job.getInput() != null) {
 							ICapability<?, ?> capability = job.getCapability();
+							Options options = (job instanceof ConfigurableCapabilityJob)
+									? ((ConfigurableCapabilityJob<?, ?>) job).getOptions()
+									: Options.DEFAULT;
 							
 							resultCaches
 								.get(job.getInput(), CACHE_FACTORY)
-								.put(capability, new CacheEntry(capability.getReturnType(), value));
+								.put(new RunConfiguration(capability, options), new CacheEntry(capability.getReturnType(), value));
 						}
 					} catch (Exception e) {
 						CupidActivator.getDefault().logError("Error adding cache result", e);
@@ -447,6 +465,48 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	public static void addCacheListener(final IInvalidationListener listener) {
 		synchronized (getInstance().cacheListeners) {
 			getInstance().cacheListeners.add(listener);
+		}
+	}
+	
+	private final static class RunConfiguration {
+		private final ICapability<?, ?> capability;
+		private final Options options;
+		
+		public RunConfiguration(ICapability<?, ?> capability, Options options) {
+			this.capability = capability;
+			this.options = options;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + capability.hashCode();
+			result = prime * result + options.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof RunConfiguration)) {
+				return false;
+			}
+			RunConfiguration other = (RunConfiguration) obj;
+			
+			if (!capability.equals(other.capability)){
+				return false;
+			}
+			
+			if (!options.equals(other.options)) {
+				return false;
+			}
+			return true;
 		}
 	}
 	

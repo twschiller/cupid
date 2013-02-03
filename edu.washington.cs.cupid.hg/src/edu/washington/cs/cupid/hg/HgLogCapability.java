@@ -11,24 +11,23 @@
 package edu.washington.cs.cupid.hg;
 
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.vectrace.MercurialEclipse.commands.HgLogClient;
 import com.vectrace.MercurialEclipse.model.HgRoot;
 import com.vectrace.MercurialEclipse.model.JHgChangeSet;
 import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.options.ConfigurableCapabilityJob;
 import edu.washington.cs.cupid.capability.options.IConfigurableCapability;
 import edu.washington.cs.cupid.capability.options.Option;
 import edu.washington.cs.cupid.capability.options.OptionManager;
+import edu.washington.cs.cupid.capability.options.Options;
 
 /**
  * A capability that returns the Hg log for a resource.
@@ -72,13 +71,13 @@ public final class HgLogCapability extends GenericAbstractCapability<IResource, 
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input) {
-		return getJob(input, Maps.<String, Object>newHashMap());
+	public ConfigurableCapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input) {
+		return getJob(input, Options.DEFAULT);
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input, final Map<String, Object> options) {
-		return new CapabilityJob<IResource, List<JHgChangeSet>>(this, input){
+	public ConfigurableCapabilityJob<IResource, List<JHgChangeSet>> getJob(final IResource input, final Options options) {
+		return new ConfigurableCapabilityJob<IResource, List<JHgChangeSet>>(this, input, options){
 			@Override
 			protected CapabilityStatus<List<JHgChangeSet>> run(final IProgressMonitor monitor) {
 				try{

@@ -68,8 +68,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 
 	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?, ?>[] {
+	public ICapability[] publish() {
+		return new ICapability[] {
 			new GitHistoryCapability(),
 			new GitProjectRepositoriesCapability(),
 		};

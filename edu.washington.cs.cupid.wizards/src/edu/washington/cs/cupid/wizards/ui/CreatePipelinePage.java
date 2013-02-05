@@ -346,7 +346,7 @@ public class CreatePipelinePage extends WizardPage{
 			List<ICapability<?,?>> xs = Lists.newArrayList((Collection<ICapability<?,?>>) inputElement);
 			Collections.sort(xs, new Comparator<ICapability<?,?>>(){
 				@Override
-				public int compare(ICapability<?, ?> lhs, ICapability<?, ?> rhs) {
+				public int compare(ICapability lhs, ICapability rhs) {
 					return lhs.getName().compareTo(rhs.getName());
 				}
 				

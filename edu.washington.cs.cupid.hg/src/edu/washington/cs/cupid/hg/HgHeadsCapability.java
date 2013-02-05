@@ -24,13 +24,13 @@ import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.AbstractCapability;
 
 /**
  * A capability that returns the Hg heads for a resource.
  * @author Todd Schiller
  */
-public final class HgHeadsCapability extends GenericAbstractCapability<IResource, List<ChangeSet>> {
+public final class HgHeadsCapability extends AbstractCapability<IResource, List<ChangeSet>> {
 
 	/**
 	 * Construct a capability that returns the Hg heads for a resource.
@@ -43,13 +43,13 @@ public final class HgHeadsCapability extends GenericAbstractCapability<IResource
 	}
 	
 	@Override
-	public TypeToken<IResource> getParameterType() {
+	public TypeToken<IResource> getInputType() {
 		return TypeToken.of(IResource.class);
 	}
 
 	@SuppressWarnings("serial")
 	@Override
-	public TypeToken<List<ChangeSet>> getReturnType() {
+	public TypeToken<List<ChangeSet>> getOutputType() {
 		return new TypeToken<List<ChangeSet>>(getClass()) {};
 	}
 

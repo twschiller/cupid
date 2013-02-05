@@ -20,17 +20,16 @@ import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns all Mylyn tasks.
  * @author Todd Schiller
  */
 @SuppressWarnings("restriction")
-public final class MylynTaskCapability extends AbstractCapability<Void, List<AbstractTask>> {
+public final class MylynTaskCapability extends AbstractLinearCapability<Void, List<AbstractTask>> {
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view
 	
@@ -46,17 +45,17 @@ public final class MylynTaskCapability extends AbstractCapability<Void, List<Abs
 	}
 
 	@Override
-	public CapabilityJob<Void, List<AbstractTask>> getJob(final Void input) {
-		return new CapabilityJob<Void, List<AbstractTask>>(this, input) {
+	public LinearJob getJob(final Void input) {
+		return new LinearJob(this, input) {
 			@Override
-			protected CapabilityStatus<List<AbstractTask>> run(final IProgressMonitor monitor) {
+			protected LinearStatus run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					TaskList taskList = TasksUiPlugin.getTaskList();
 					List<AbstractTask> tasks = new ArrayList<AbstractTask>(taskList.getAllTasks());
-					return CapabilityStatus.makeOk(tasks);
+					return LinearStatus.makeOk(tasks);
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.makeError(ex);
 				} finally {
 					monitor.done();
 				}

@@ -56,7 +56,7 @@ public class HydrationService {
 		return (ICapability<?,?> ) fileIn.readObject();
 	}
 	
-	public <I extends ICapability<?, ?> & Serializable> void store(I capability) throws IOException{
+	public <I extends ICapability & Serializable> void store(I capability) throws IOException{
 		File file = new File(CupidPlatform.getPipelineDirectory(), cleanName(capability) + ".arrow");
 		ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(file));
 		writer.writeObject(capability);

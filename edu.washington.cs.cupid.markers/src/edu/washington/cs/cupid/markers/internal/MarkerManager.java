@@ -110,7 +110,7 @@ public final class MarkerManager {
 			for (IResource resource : visitor.getMatches()) {
 				deleteMarkers(resource);
 				
-				for (ICapability<?, ?> capability : registry.getCapabilities(TypeToken.of(resource.getClass()), IMarkerBuilder.MARKER_RESULT)) {
+				for (ICapability capability : registry.getCapabilities(TypeToken.of(resource.getClass()), IMarkerBuilder.MARKER_RESULT)) {
 					Object argument = TypeManager.getCompatible(capability, resource);
 					asyncAddMarkers(capability, resource, argument);
 				}

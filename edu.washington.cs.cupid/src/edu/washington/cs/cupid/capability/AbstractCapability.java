@@ -10,7 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
-import com.google.common.reflect.TypeToken;
+import java.util.Arrays;
+import java.util.EnumSet;
 
 /**
  * An Eclipse capability (i.e., service).
@@ -18,56 +19,54 @@ import com.google.common.reflect.TypeToken;
  * @param <I> the input type
  * @param <V> the output type
  */
-public abstract class AbstractCapability<I, V> extends GenericAbstractCapability<I, V> {
+public abstract class AbstractCapability implements ICapability {
 
-	private final TypeToken<I> inputType;
-	private final TypeToken<V> outputType;
+	private final String name;
+	private final String uniqueId;
+	private final String description;
+	private final EnumSet<Flag> flags;
 	
 	/**
 	 * A standard capability.
 	 * @param name capability name
 	 * @param uniqueId capability unique id
 	 * @param description capability description
-	 * @param inputType capability input type
-	 * @param outputType capability output type
 	 * @param flags capability property flags
 	 */
 	public AbstractCapability(
 			final String name, final String uniqueId, final String description,
-			final TypeToken<I> inputType, final TypeToken<V> outputType, 
 			final Flag... flags) {
 		
-		super(name, uniqueId, description, flags);
-		
-		this.inputType = inputType;
-		this.outputType = outputType;
-	}
+		this.name = name;
+		this.uniqueId = uniqueId;
+		this.description = description;
 	
-	/**
-	 * A standard capability.
-	 * @param name capability name
-	 * @param uniqueId capability unique id
-	 * @param description capability description
-	 * @param inputType capability input type
-	 * @param outputType capability output type
-	 * @param flags capability property flags
-	 */
-	public AbstractCapability(
-			final String name, final String uniqueId, final String description,
-			final Class<I> inputType, final Class<V> outputType, 
-			final Flag... flags) {
-		
-		this(name, uniqueId, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
-	}
-
-	
-	@Override
-	public final TypeToken<I> getParameterType() {
-		return inputType;
+		this.flags = EnumSet.noneOf(Flag.class);
+		this.flags.addAll(Arrays.asList(flags));
 	}
 
 	@Override
-	public final TypeToken<V> getReturnType() {
-		return outputType;
+	public final String getUniqueId() {
+		return uniqueId;
 	}
+
+	@Override
+	public final String getName() {
+		return name;
+	}
+	
+	public EnumSet<Flag> getFlags() {
+		return flags;
+	}
+
+	@Override
+	public final String getDescription() {
+		return description;
+	}
+
+	@Override
+	public final String toString() {
+		return getUniqueId();
+	}
+
 }

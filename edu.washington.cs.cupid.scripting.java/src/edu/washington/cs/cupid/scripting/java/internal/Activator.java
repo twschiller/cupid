@@ -55,7 +55,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	
 	private IProject cupidProject = null;
 	
-	private static List<ICapability<?, ?>> dynamic = Lists.newArrayList();
+	private static List<ICapability> dynamic = Lists.newArrayList();
 	private static ChangeNotifier notifier;
 	
 	private JavaProjectManager projectManager = new JavaProjectManager();
@@ -204,8 +204,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		return clazz.getElementName().substring(0, clazz.getElementName().lastIndexOf('.'));
 	}
 	
-	private ICapability<?, ?> find(final String uniqueId) {
-		for (ICapability<?, ?> capability : dynamic) {
+	private ICapability find(final String uniqueId) {
+		for (ICapability capability : dynamic) {
 			if (capability.getUniqueId().equals(uniqueId)) {
 				return capability;
 			}
@@ -214,7 +214,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 	
 	private void removeCapability(final String uniqueId) {
-		ICapability<?, ?> capability = find(uniqueId);
+		ICapability capability = find(uniqueId);
 		if (capability != null) {
 			dynamic.remove(capability);
 		}
@@ -233,7 +233,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		CupidCapabilityLoader loader = new CupidCapabilityLoader(Activator.class.getClassLoader());
 
 		Class<?> definition = loader.loadClass(simpleName(element));
-		ICapability<?, ?> capability = (ICapability<?, ?>) definition.newInstance();
+		ICapability capability = (ICapability) definition.newInstance();
 
 		removeCapability(capability.getUniqueId());
 		
@@ -262,8 +262,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 
 	@Override
-	public synchronized ICapability<?, ?>[] publish() {
-		return dynamic.toArray(new ICapability<?, ?>[] {});
+	public synchronized ICapability[] publish() {
+		return dynamic.toArray(new ICapability[] {});
 	}
 
 	@Override

@@ -14,8 +14,8 @@ import java.util.Collection;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 /**
@@ -23,7 +23,7 @@ import edu.washington.cs.cupid.jobs.ImmediateJob;
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class NonEmpty<V> extends GenericAbstractCapability<Collection<V>, Boolean> {
+public final class NonEmpty<V> extends GenericAbstractLinearCapability<Collection<V>, Boolean> {
 
 	/**
 	 * A capability that computes whether or not a collection has elements.
@@ -37,19 +37,19 @@ public final class NonEmpty<V> extends GenericAbstractCapability<Collection<V>, 
 	}
 
 	@Override
-	public CapabilityJob<Collection<V>, Boolean> getJob(final Collection<V> input) {
+	public LinearJob getJob(final Collection<V> input) {
 		return new ImmediateJob<Collection<V>, Boolean>(this, input, !input.isEmpty());
 	}
 
 	@Override
-	public TypeToken<Collection<V>> getParameterType() {
+	public TypeToken<Collection<V>> getInputType() {
 		return new TypeToken<Collection<V>>(getClass()) {
 			private static final long serialVersionUID = 1L;
 		};
 	}
 
 	@Override
-	public TypeToken<Boolean> getReturnType() {
+	public TypeToken<Boolean> getOutputType() {
 		return TypeToken.of(Boolean.class);
 	}
 

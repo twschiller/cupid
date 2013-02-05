@@ -99,7 +99,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 	
 	@Override
-	public ICapability<?, ?>[] publish() {
+	public ICapability[] publish() {
 		
 		File dir = CupidPlatform.getPipelineDirectory();
 		
@@ -110,7 +110,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 			}
 		};
 		
-		List<ICapability<?, ?>> result = Lists.newArrayList();
+		List<ICapability> result = Lists.newArrayList();
 		
 		if (dir.isDirectory()) {
 			for (File file : dir.listFiles(filter)) {

@@ -63,7 +63,9 @@ import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapabilityInput;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -352,7 +354,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	}
 	
 	private final class CapabilityRow implements Row {
-		private final ICapability<?, ?> capability;
+		private final ICapability capability;
 		
 		private String status = "Updating (submitted)...";
 		private boolean interrupted = false;
@@ -378,7 +380,9 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 
 			try {
-				CapabilityExecutor.asyncExec(capability, input, family, new IJobChangeListener() {
+				ICapabilityInput args = CapabilityUtil.singleton(capability, input);
+				
+				CapabilityExecutor.asyncExec(capability, args, family, new IJobChangeListener() {
 
 					@Override
 					public synchronized void aboutToRun(final IJobChangeEvent event) {
@@ -413,7 +417,8 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 						updateStatus("Updating (sleeping)...");
 					}
 				});
-			} catch (Exception ex) {
+				
+				} catch (Exception ex) {
 				updateStatus("Error running capability: " + ex.getLocalizedMessage());
 			}
 		}
@@ -595,12 +600,17 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 
 			List<Object> rows = Lists.newArrayList();
 			
-			SortedSet<ICapability<?, ?>> capabilities = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()));
+			SortedSet<ICapability> capabilities = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()));
 
-			for (ICapability<?, ?> capability : capabilities) {
+			for (ICapability capability : capabilities) {
 				if (!hidden.contains(capability.getUniqueId())) {
-					Object adapted = TypeManager.getCompatible(capability, argument);	
-					rows.add(new CapabilityRow(capability, adapted));
+					
+					if (CapabilityUtil.hasSingleRequiredParameter(capability)
+						&& TypeManager.isCompatible(CapabilityUtil.requiredParameter(capability), argument)){
+						
+						Object adapted = TypeManager.getCompatible(CapabilityUtil.requiredParameter(capability), argument);	
+						rows.add(new CapabilityRow(capability, adapted));
+					}
 				}
 			}
 

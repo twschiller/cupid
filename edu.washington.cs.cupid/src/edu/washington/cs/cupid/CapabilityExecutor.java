@@ -21,6 +21,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
@@ -34,18 +35,18 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.MalformedCapabilityException;
-import edu.washington.cs.cupid.capability.TypeException;
+import edu.washington.cs.cupid.capability.ICapability.Flag;
+import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.ICapabilityOutput;
+import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
 import edu.washington.cs.cupid.internal.SchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
-import edu.washington.cs.cupid.jobs.ImmediateJob;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
 
@@ -78,18 +79,16 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Cupid result caches: Input -> { Capability -> Result }.
 	 */
-	private final Cache<Object, Cache<Object, CacheEntry>> resultCaches;
+	private final Cache<ICapabilityInput, Cache<ICapability, ICapabilityOutput>> resultCaches;
 	
 	/**
-	 * Running jobs: Input -> { Capability -> Result }.
+	 * Running jobs: Input -> { Capability -> Job }.
 	 */
-	@SuppressWarnings("rawtypes")
-	private final Table<Object, ICapability, CapabilityJob> running;
+	private final Table<ICapabilityInput, ICapability, CapabilityJob> running;
 	
 	/**
 	 * Jobs that have been canceled <i>by this executor</i>.
 	 */
-	@SuppressWarnings("rawtypes")
 	private final Set<CapabilityJob> canceling;
 	
 	private final Set<IInvalidationListener> cacheListeners = Sets.newIdentityHashSet();
@@ -165,9 +164,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * Initializes the default capability result cache for an input.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private static class CapabilityCacheFactory implements Callable<Cache<Object, CacheEntry>> {
+	private static class CapabilityCacheFactory implements Callable<Cache<ICapability, ICapabilityOutput>> {
 		@Override
-		public Cache<Object, CacheEntry> call() throws Exception {
+		public Cache<ICapability, ICapabilityOutput> call() throws Exception {
 			return CacheBuilder
 					.newBuilder()
 					.build();
@@ -182,21 +181,18 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param <T> output type
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
-	@SuppressWarnings("unchecked")
-	private <I, T> T getIfPresent(final ICapability<I, T> capability, final I input) {
+	private ICapabilityOutput getIfPresent(final ICapability capability, final ICapabilityInput input) {
 		synchronized (resultCaches) {
 			try {
-				Cache<Object, CacheEntry> cCache = resultCaches.get(input, CACHE_FACTORY);
+				Cache<ICapability, ICapabilityOutput> cCache = resultCaches.get(input, CACHE_FACTORY);
 				
-				CacheEntry cached = cCache.getIfPresent(capability);
+				ICapabilityOutput cached = cCache.getIfPresent(capability);
 				
 				if (cached == null) {
 					return null;
-				} else if (TypeManager.isJavaCompatible(capability.getReturnType(), cached.type)) {
-					return (T) cached.value;
 				} else {
-					throw new TypeException(capability.getReturnType(), cached.type);
-				}
+					return cached;
+				} 
 			} catch (ExecutionException e) {
 				CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.WARNING, "error creating capability cache"));
 				return null;
@@ -214,28 +210,33 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param family the job family (used for job cancellation)
 	 * @param callback the job listener
 	 */
-	public static <I, T> void asyncExec(final ICapability<I, T> capability, final I input, final Object family, final IJobChangeListener callback) {
+	public static void asyncExec(final ICapability capability, final ICapabilityInput input, final Object family, final IJobChangeListener callback) {
 		CapabilityExecutor executor = getInstance();
 		
-		T cached = executor.getIfPresent(capability, input);
+		final ICapabilityOutput cached = executor.getIfPresent(capability, input);
 		
-		CapabilityJob<I, T> job;
+		CapabilityJob job;
 		
 		synchronized (executor.running) {
 			synchronized (executor.canceling) {
-				CapabilityJob<I, T> existing = executor.running.get(input, capability);
+				CapabilityJob existing = executor.running.get(input, capability);
 
 				if (cached != null) { // CACHED
 					if (executor.logCacheStatus) {
-						
-						if (capability.getParameterType().equals(TypeToken.of(Void.class))) {
-							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(null), Status.INFO, "cache hit"));
-						} else {
-							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
-						}
+						CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
 					}
-					job = new ImmediateJob<I, T>(capability, input, cached);		
-
+					job = new CapabilityJob(capability, input){
+						@Override
+						protected CapabilityStatus run(final IProgressMonitor monitor) {
+							try{
+								monitor.beginTask("Retrieve Cached Value", 1);
+								return CapabilityStatus.makeOk(cached);
+							} finally {
+								monitor.done();
+							}			
+						}
+					};
+							
 				} else if (existing != null && !executor.canceling.contains(existing)) { // ALREADY RUNNING
 					// FIXME this allows jobs to be spuriously killed by other requesters
 					// TODO the job might finish before we get a change to add the callback?
@@ -247,15 +248,25 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 
 				} else { // SPAWN NEW JOB	
 					
-					job = capability.getParameterType().equals(TypeToken.of(Void.class))
-							? capability.getJob(null)
-							: capability.getJob(input);
+					job = capability.getJob(input);
+					
+					
 					
 					if (job == null) {
-						job = new ImmediateJob(capability, input, new MalformedCapabilityException(capability, "Capability returned null job"));
+						job = new CapabilityJob(capability, input){
+							@Override
+							protected CapabilityStatus run(final IProgressMonitor monitor) {
+								try{
+									monitor.beginTask("Retrieve Cached Value", 1);
+									return CapabilityStatus.makeError(new MalformedCapabilityException(capability, "Capability returned null job"));
+								} finally {
+									monitor.done();
+								}			
+							}
+						};
 					}
 					
-					if (!capability.isTransient()) {
+					if (!capability.getFlags().contains(Flag.TRANSIENT)) {
 						job.addJobChangeListener(executor.cacher);
 					}
 					job.addJobChangeListener(executor.logger);
@@ -304,9 +315,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					// cancel obsolete jobs
-					for (Object input : running.rowKeySet()) {
+					for (ICapabilityInput input : running.rowKeySet()) {
 						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
-							for (CapabilityJob<?, ?> job : running.row(input).values()) {
+							for (CapabilityJob job : running.row(input).values()) {
 								job.cancel();
 							}
 						}
@@ -354,9 +365,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private class JobResultCacher extends NullJobListener {
 		@Override
 		public void done(final IJobChangeEvent event) {
-			CapabilityJob<?, ?> job = (CapabilityJob<?, ?>) event.getJob();
+			CapabilityJob job = (CapabilityJob) event.getJob();
 			synchronized (resultCaches) {
-				Object value = ((CapabilityStatus<?>) job.getResult()).value();
+				ICapabilityOutput value = ((CapabilityStatus) job.getResult()).value();
 				
 				if (value != null) {
 					if (logCacheStatus) {
@@ -364,12 +375,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					try {
-						if (job.getInput() != null) {
-							ICapability<?, ?> capability = job.getCapability();
+						if (job.getInputs() != null) {
+							ICapability capability = job.getCapability();
 							
 							resultCaches
-								.get(job.getInput(), CACHE_FACTORY)
-								.put(capability, new CacheEntry(capability.getReturnType(), value));
+								.get(job.getInputs(), CACHE_FACTORY)
+								.put(capability, value);
 						}
 					} catch (Exception e) {
 						CupidActivator.getDefault().logError("Error adding cache result", e);
@@ -384,9 +395,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		public void done(final IJobChangeEvent event) {
 			synchronized (running) {
 				synchronized (canceling) {
-					CapabilityStatus<?> result = (CapabilityStatus<?>) event.getResult();
-					CapabilityJob<?, ?> job = (CapabilityJob<?, ?>) event.getJob();
-					running.remove(job.getInput(), result.value());
+					CapabilityStatus result = (CapabilityStatus) event.getResult();
+					CapabilityJob job = (CapabilityJob) event.getJob();
+					running.remove(job.getInputs(), result.value());
 					canceling.add(job);
 				}
 			}
@@ -449,14 +460,5 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			getInstance().cacheListeners.add(listener);
 		}
 	}
-	
-	private final static class CacheEntry {
-		private final TypeToken<?> type;
-		private final Object value;
-		
-		private CacheEntry(final TypeToken<?> type, final Object value) {
-			this.type = type;
-			this.value = value;
-		}
-	}
+
 }

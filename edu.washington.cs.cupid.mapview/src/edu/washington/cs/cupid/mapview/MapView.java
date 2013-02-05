@@ -183,7 +183,7 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 					
 					dropDownMenu.removeAll();
 					
-					for (final ICapability<?, ?> available : CupidPlatform.getCapabilityRegistry().getCapabilities()) {
+					for (final ICapability available : CupidPlatform.getCapabilityRegistry().getCapabilities()) {
 						if (TypeManager.isJavaCompatible(ACCEPTED_OUTPUT_TYPE, available.getReturnType())) {
 							dropDownMenu.add(new Action(available.getName()) {
 								@Override

@@ -59,7 +59,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;

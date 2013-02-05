@@ -98,7 +98,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 				new MostFrequent(),
 				new NonEmpty());
 		
-		for (ICapability<?, ?> capability : standard) {
+		for (ICapability capability : standard) {
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			
 		}
 				
@@ -191,7 +191,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error registering capabilities for extension " + extension.getName(), ex);
 			}

@@ -52,8 +52,8 @@ import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.MalformedCapabilityException;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.internal.Activator;
@@ -246,7 +246,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		if (available.isEmpty()) {
 			addAndSet(cCapability, "No predicates available");
 		} else {
-			ICapability<?, ?> forRule = null;
+			ICapability forRule = null;
 
 			if (rule.getCapabilityId() != null) {
 				try {

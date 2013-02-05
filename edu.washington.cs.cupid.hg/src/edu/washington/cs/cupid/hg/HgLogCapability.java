@@ -23,13 +23,13 @@ import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.AbstractCapability;
 
 /**
  * A capability that returns the Hg log for a resource.
  * @author Todd Schiller
  */
-public final class HgLogCapability extends GenericAbstractCapability<IResource, List<JHgChangeSet>> {
+public final class HgLogCapability extends AbstractCapability<IResource, List<JHgChangeSet>> {
 
 	public static final int RESOURCE_LOG_LIMIT = 100;
 	
@@ -44,12 +44,12 @@ public final class HgLogCapability extends GenericAbstractCapability<IResource, 
 	}
 
 	@Override
-	public TypeToken<IResource> getParameterType() {
+	public TypeToken<IResource> getInputType() {
 		return TypeToken.of(IResource.class);
 	}
 
 	@Override
-	public TypeToken<List<JHgChangeSet>> getReturnType() {
+	public TypeToken<List<JHgChangeSet>> getOutputType() {
 		return new TypeToken<List<JHgChangeSet>>(getClass()){};
 	}
 

@@ -54,13 +54,13 @@ public abstract class AbstractMapping<I,K,V> implements ISerializableCapability<
 	}
 	
 	@Override
-	public final TypeToken<I> getParameterType() {
+	public final TypeToken<I> getInputType() {
 		return inputType;
 	}
 
 	@SuppressWarnings("serial")
 	@Override
-	public final TypeToken<Map<K,Set<V>>> getReturnType() {
+	public final TypeToken<Map<K,Set<V>>> getOutputType() {
 		 return new TypeToken<Map<K,Set<V>>>(getClass()){}
 		 	.where(new TypeParameter<K>(){}, keyType)
 		 	.where(new TypeParameter<V>(){}, valueType);

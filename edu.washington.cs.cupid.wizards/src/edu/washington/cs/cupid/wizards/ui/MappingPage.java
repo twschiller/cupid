@@ -431,7 +431,7 @@ public class MappingPage extends WizardPage {
 
 	private boolean isValidValue(ICapability<?,?> generator){
 		if (keyAsType){
-			return generator.getParameterType().equals(ICapability.UNIT_TOKEN);
+			return generator.getParameterType().equals(TypeToken.of(Void.class));
 		}else if (keySet != null){
 			return TypeManager.isCompatible(generator, keySet.getParameterType());
 		}else{

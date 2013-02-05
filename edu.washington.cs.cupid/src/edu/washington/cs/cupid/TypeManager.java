@@ -157,7 +157,7 @@ public final class TypeManager {
 		
 		TypeToken<?> parameterType = capability.getParameterType();
 		
-		if (parameterType.equals(ICapability.UNIT_TOKEN)) {
+		if (parameterType.equals(TypeToken.of(Void.class))) {
 			// capability does not expect any input
 			return true;
 	
@@ -191,7 +191,7 @@ public final class TypeManager {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object getCompatible(final ICapability<?, ?> capability, final Object argument) {
-		if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
+		if (capability.getParameterType().equals(TypeToken.of(Void.class))) {
 			return argument;
 		} else if (isJavaCompatible(capability.getParameterType(), TypeToken.of(argument.getClass()))) {
 			return argument;

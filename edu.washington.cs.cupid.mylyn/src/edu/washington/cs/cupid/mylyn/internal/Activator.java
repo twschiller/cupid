@@ -66,8 +66,8 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	}
 
 	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?, ?>[]{
+	public ICapability[] publish() {
+		return new ICapability[]{
 			new MylynTaskCapability()	
 		};
 	}

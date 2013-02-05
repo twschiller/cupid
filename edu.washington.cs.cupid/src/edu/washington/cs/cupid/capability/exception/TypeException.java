@@ -8,7 +8,7 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.capability;
+package edu.washington.cs.cupid.capability.exception;
 
 import com.google.common.reflect.TypeToken;
 

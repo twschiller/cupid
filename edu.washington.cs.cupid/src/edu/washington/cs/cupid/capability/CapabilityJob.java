@@ -33,15 +33,16 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * @param <V> output type
  * @see {@link Job}
  */
-public abstract class CapabilityJob<I, V> extends Job {
+public abstract class CapabilityJob extends Job {
 	
 	/**
 	 * The input to the capability.
 	 */
 	// TODO make private and expose getter
-	protected final I input;
+	private final ICapabilityInput input;
 	
-	private final ICapability<I, V> capability;
+	private final ICapability capability;
+	
 	private final Set<Object> families;
 	
 	/**
@@ -49,7 +50,7 @@ public abstract class CapabilityJob<I, V> extends Job {
 	 * @param capability the source capability
 	 * @param input the input
 	 */
-	public CapabilityJob(final ICapability<I, V> capability, final I input) {
+	public CapabilityJob(final ICapability capability, final ICapabilityInput input) {
 		super(capability.getUniqueId());
 		this.input = input;
 		this.capability = capability;
@@ -59,14 +60,14 @@ public abstract class CapabilityJob<I, V> extends Job {
 	/**
 	 * @return the associated capability
 	 */
-	public final I getInput() {
+	public final ICapabilityInput getInputs() {
 		return input;
 	}
 	
 	/**
 	 * @return the associated capability
 	 */
-	public final ICapability<I, V> getCapability() {
+	public final ICapability getCapability() {
 		return capability;
 	}
 	
@@ -86,6 +87,6 @@ public abstract class CapabilityJob<I, V> extends Job {
 	}
 	
 	@Override 
-	protected abstract CapabilityStatus<V> run(IProgressMonitor monitor);
+	protected abstract CapabilityStatus run(IProgressMonitor monitor);
 	
 }

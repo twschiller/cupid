@@ -109,7 +109,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public ICapability<?, ?>[] publish() {
+	public ICapability[] publish() {
 		List<ICapability> capabilities = Lists.newArrayList();
 		
 		Set<String> current = Sets.newHashSet(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE).split(";"));

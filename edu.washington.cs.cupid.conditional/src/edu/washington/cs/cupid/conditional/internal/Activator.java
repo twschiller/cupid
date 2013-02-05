@@ -28,8 +28,8 @@ import com.google.gson.Gson;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.MalformedCapabilityException;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
@@ -149,7 +149,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		@SuppressWarnings("rawtypes")
 		ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 
-		if (!TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())) {
+		if (!TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getOutputType())) {
 			throw new MalformedCapabilityException(capability, "Formatting rule requires predicate capability");
 		}
 

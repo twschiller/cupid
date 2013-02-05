@@ -23,7 +23,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.TypeException;
+import edu.washington.cs.cupid.capability.exception.TypeException;
 
 public final class ListGetter<I,V> implements IExtractCapability<List<I>,List<V>>{
 	private static final long serialVersionUID = 1L;

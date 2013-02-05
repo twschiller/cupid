@@ -51,7 +51,7 @@ import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.views.ViewRule;
 
@@ -72,7 +72,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 	private Table table;
 	private Gson gson = new Gson();
 	
-	private Map<Combo, Map<String, ICapability<?, ?>>> comboData = Maps.newHashMap();
+	private Map<Combo, Map<String, ICapability>> comboData = Maps.newHashMap();
 	
 	private IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
 	
@@ -158,7 +158,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 		}
 	}
 	
-	private ICapability<?, ?> capability(final ViewRule rule) {
+	private ICapability capability(final ViewRule rule) {
 		if (rule.getCapability() != null) {
 			try {
 				return CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapability());
@@ -180,10 +180,10 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 		}			
 		
 		if (clazz != null) {
-			Set<ICapability<?, ?>> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
-			Map<String, ICapability<?, ?>> forType = Maps.newHashMap();
+			Set<ICapability> xs = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(clazz), TypeToken.of(String.class));
+			Map<String, ICapability> forType = Maps.newHashMap();
 			
-			for (ICapability<?, ?> capability : xs) {
+			for (ICapability capability : xs) {
 				combo.add(capability.getName());
 				forType.put(capability.getName(), capability);
 			}
@@ -195,7 +195,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 	private void addRule(final ViewRule rule) {
 		final TableItem item = new TableItem(table, SWT.NONE);
 		
-		ICapability<?, ?> capability = capability(rule);
+		ICapability capability = capability(rule);
 		item.setData(capability);
 		
 		item.setText(new String[]{
@@ -324,7 +324,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 			
 			rules.add(new ViewRule(
 					item.getText(1),
-					item.getData() == null ? null : ((ICapability<?, ?>) item.getData()).getUniqueId(),
+					item.getData() == null ? null : ((ICapability) item.getData()).getUniqueId(),
 					item.getChecked()));
 		}
 		

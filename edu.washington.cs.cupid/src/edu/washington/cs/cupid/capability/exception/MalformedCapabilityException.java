@@ -8,7 +8,9 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.capability;
+package edu.washington.cs.cupid.capability.exception;
+
+import edu.washington.cs.cupid.capability.ICapability;
 
 /**
  * Thrown to indicate that a capability is malformed (e.g., a job could not be created).
@@ -18,14 +20,14 @@ public class MalformedCapabilityException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 	
-	private final ICapability<?, ?> capability;
+	private final ICapability capability;
 	
 	/**
 	 * Construct an exception indicating that <code>capability</code> is malformed.
 	 * @param capability the capability
 	 * @param msg the detail message
 	 */
-	public MalformedCapabilityException(final ICapability<?, ?> capability, final String msg) {
+	public MalformedCapabilityException(final ICapability capability, final String msg) {
 		super(msg);
 		this.capability = capability;
 	}
@@ -35,7 +37,7 @@ public class MalformedCapabilityException extends Exception {
 	 * @param capability the capability
 	 * @param cause the cause
 	 */
-	public MalformedCapabilityException(final ICapability<?, ?> capability, final Throwable cause) {
+	public MalformedCapabilityException(final ICapability capability, final Throwable cause) {
 		super(cause);
 		this.capability = capability;
 	}
@@ -44,7 +46,7 @@ public class MalformedCapabilityException extends Exception {
 	 * Returns the capability that caused the exception.
 	 * @return the capability that caused the exception.
 	 */
-	public final ICapability<?, ?> getCapability() {
+	public final ICapability getCapability() {
 		return capability;
 	}
 }

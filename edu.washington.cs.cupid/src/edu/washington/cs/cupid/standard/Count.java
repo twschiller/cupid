@@ -14,8 +14,8 @@ import java.util.Collection;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 /**
@@ -23,7 +23,7 @@ import edu.washington.cs.cupid.jobs.ImmediateJob;
  * @author Todd Schiller
  * @param <V> element type
  */
-public final class Count<V> extends GenericAbstractCapability<Collection<V>, Integer> {
+public final class Count<V> extends GenericAbstractLinearCapability<Collection<V>, Integer> {
 
 	/**
 	 * A capability that returns the number of elements in a collection.
@@ -37,19 +37,20 @@ public final class Count<V> extends GenericAbstractCapability<Collection<V>, Int
 	}
 
 	@Override
-	public CapabilityJob<Collection<V>, Integer> getJob(final Collection<V> input) {
-		return new ImmediateJob<Collection<V>, Integer>(this, input, input.size());
-	}
-
-	@Override
-	public TypeToken<Collection<V>> getParameterType() {
+	public TypeToken<Collection<V>> getInputType() {
 		return new TypeToken<Collection<V>>(getClass()) {
 			private static final long serialVersionUID = 1L;
 		};
 	}
 
 	@Override
-	public TypeToken<Integer> getReturnType() {
+	public TypeToken<Integer> getOutputType() {
 		return TypeToken.of(Integer.class);
 	}
+
+	@Override
+	public LinearJob getJob(final Collection<V> input) {
+		return new ImmediateJob<Collection<V>, Integer>(this, input, Integer.valueOf(input.size()));
+	}
+
 }

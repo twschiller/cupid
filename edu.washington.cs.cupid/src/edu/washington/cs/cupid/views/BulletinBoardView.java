@@ -29,6 +29,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.capability.linear.ILinearCapability;
 import edu.washington.cs.cupid.utility.CapabilityUtil;
 
 /**
@@ -106,7 +107,7 @@ public final class BulletinBoardView extends ViewPart {
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				return ((ICapability<?, ?>) element).getName();
+				return ((ICapability) element).getName();
 			}
 		});
 		
@@ -114,7 +115,7 @@ public final class BulletinBoardView extends ViewPart {
 		descriptionColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				return ((ICapability<?, ?>) element).getDescription();
+				return ((ICapability) element).getDescription();
 			}
 		});
 		
@@ -122,7 +123,11 @@ public final class BulletinBoardView extends ViewPart {
 		inputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				return TypeManager.simpleTypeName(((ICapability<?, ?>) element).getParameterType().getType());
+				if (element instanceof ILinearCapability){
+					return TypeManager.simpleTypeName(((ILinearCapability<?,?>) element).getParameter().getType().getType());
+				} else {
+					return null;
+				}
 			}
 		});
 		
@@ -130,7 +135,11 @@ public final class BulletinBoardView extends ViewPart {
 		outputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				return TypeManager.simpleTypeName(((ICapability<?, ?>) element).getReturnType().getType());
+				if (element instanceof ILinearCapability){
+					return TypeManager.simpleTypeName(((ILinearCapability<?,?>) element).getOutput().getType().getType());
+				} else {
+					return null;
+				}
 			}
 		});
 		
@@ -149,7 +158,7 @@ public final class BulletinBoardView extends ViewPart {
 		viewer.setComparator(new ViewerComparator() {
 			@Override
 			public int compare(final Viewer context, final Object lhs, final Object rhs) {
-				return CapabilityUtil.COMPARE_NAME.compare((ICapability<?, ?>) lhs, (ICapability<?, ?>) rhs);
+				return CapabilityUtil.COMPARE_NAME.compare((ICapability) lhs, (ICapability) rhs);
 			}
 		});
 	}

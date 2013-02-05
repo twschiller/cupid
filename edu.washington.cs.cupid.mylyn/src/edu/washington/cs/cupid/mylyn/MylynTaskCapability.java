@@ -30,7 +30,7 @@ import edu.washington.cs.cupid.capability.ICapability;
  * @author Todd Schiller
  */
 @SuppressWarnings("restriction")
-public final class MylynTaskCapability extends AbstractCapability<ICapability.Unit, List<AbstractTask>> {
+public final class MylynTaskCapability extends AbstractCapability<Void, List<AbstractTask>> {
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view
 	
@@ -41,13 +41,13 @@ public final class MylynTaskCapability extends AbstractCapability<ICapability.Un
 		super("Mylyn Tasks",
 			  "edu.washington.cs.cupid.mylyn.tasks",
 			  "All Mylyn tasks",
-			  TypeToken.of(ICapability.Unit.class), new TypeToken<List<AbstractTask>>() {},
+			  TypeToken.of(Void.class), new TypeToken<List<AbstractTask>>() {},
 			  Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<ICapability.Unit, List<AbstractTask>> getJob(final ICapability.Unit input) {
-		return new CapabilityJob<ICapability.Unit, List<AbstractTask>>(this, input) {
+	public CapabilityJob<Void, List<AbstractTask>> getJob(final Void input) {
+		return new CapabilityJob<Void, List<AbstractTask>>(this, input) {
 			@Override
 			protected CapabilityStatus<List<AbstractTask>> run(final IProgressMonitor monitor) {
 				try {

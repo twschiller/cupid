@@ -228,7 +228,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 				if (cached != null) { // CACHED
 					if (executor.logCacheStatus) {
 						
-						if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
+						if (capability.getParameterType().equals(TypeToken.of(Void.class))) {
 							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(null), Status.INFO, "cache hit"));
 						} else {
 							CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
@@ -247,7 +247,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 
 				} else { // SPAWN NEW JOB	
 					
-					job = capability.getParameterType().equals(ICapability.UNIT_TOKEN)
+					job = capability.getParameterType().equals(TypeToken.of(Void.class))
 							? capability.getJob(null)
 							: capability.getJob(input);
 					

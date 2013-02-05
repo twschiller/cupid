@@ -23,19 +23,6 @@ import com.google.common.reflect.TypeToken;
 public interface ICapability<I, T> {
 	
 	/**
-	 * A void type; used as an input type for capabilities that do not take an input.
-	 * @author Todd Schiller
-	 */
-	interface Unit { };
-	
-	/**
-	 * A void type; used as an input type for capabilities that do not take an input.
-	 */
-	TypeToken<Unit> UNIT_TOKEN = new TypeToken<Unit>() {
-		private static final long serialVersionUID = 1L;
-	};
-	
-	/**
 	 * @return the capability's unique identifier
 	 */
 	String getUniqueId();

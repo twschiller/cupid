@@ -10,43 +10,28 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
-import java.util.Collections;
-import java.util.Map;
-
-import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
-public class Output implements ICapabilityOutputs {
+public class Output<I> implements IOutput<I> {
 
-	private final Map<IOutput<?>, Object> outputs;
-	private final Map<String, Object> named;
+	private String name;
+	private TypeToken<I> type;
 	
-	public Output(){
-		outputs = Maps.newHashMap();
-		named = Maps.newHashMap();
-	}
-	
-	public <T> void add(final IOutput<T> output, final T value){
-		outputs.put(output, value);
-		named.put(output.getName(), value);
-	}
-	
-	@Override
-	public Map<IOutput<?>, Object> getOutputs() {
-		return Collections.unmodifiableMap(outputs);
+	public Output(String name, TypeToken<I> type) {
+		this.name = name;
+		this.type = type;
 	}
 
 	@Override
-	public Object getOutput(final String name) {
-		return named.get(name);
+	public String getName() {
+		return name;
 	}
 
 	@Override
-	public <T> T getOutput(final IOutput<T> output) {
-		@SuppressWarnings("unchecked")
-		T result = (T) outputs.get(output); // checked when building output
-		return result;
+	public TypeToken<I> getType() {
+		return type;
 	}
 
 }

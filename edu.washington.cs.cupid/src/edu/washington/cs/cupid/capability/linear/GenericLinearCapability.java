@@ -19,7 +19,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
-import edu.washington.cs.cupid.capability.CapabilityOutputs;
+import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
 
 public abstract class GenericLinearCapability<I, V> extends AbstractCapability implements ILinearCapability<I, V> {
@@ -58,7 +58,7 @@ public abstract class GenericLinearCapability<I, V> extends AbstractCapability i
 	@Override
 	public final IOutput<V> getOutput() {
 		if (output == null){
-			output = new CapabilityOutputs<V>(null, getOutputType());
+			output = new Output<V>(null, getOutputType());
 		}
 		return output;
 	}

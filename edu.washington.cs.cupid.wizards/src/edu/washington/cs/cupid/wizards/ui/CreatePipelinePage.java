@@ -53,7 +53,7 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapability.Parameter;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 
@@ -268,7 +268,7 @@ public class CreatePipelinePage extends WizardPage{
 			
 			for (int i = 1; i < current.size(); i++){
 				ICapability next = current.get(i);
-				Parameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
+				IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
 				if (!TypeManager.isCompatible(nextParameter, last)){
 					result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
 				}

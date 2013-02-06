@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.IDynamicCapability;
 
 /**
@@ -109,8 +109,8 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 	}	
 	
 	@Override
-	public LinearJob<I, V> getJob(final ICapabilityInput input) {
-		return getJob(input.getArgument(getParameter()));
+	public LinearJob<I, V> getJob(final ICapabilityArguments input) {
+		return getJob(input.getValueArgument(getParameter()));
 	}
 	
 	@Override
@@ -140,23 +140,23 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 	}
 
 	@Override
-	public Parameter<I> getParameter() {	
-		return (Parameter<I>) capabilities.get(0).getParameter();
+	public IParameter<I> getParameter() {	
+		return (IParameter<I>) capabilities.get(0).getParameter();
 	}
 
 	@Override
-	public Output<V> getOutput() {
-		return (Output<V>) capabilities.get(capabilities.size()-1).getOutput();
+	public IOutput<V> getOutput() {
+		return (IOutput<V>) capabilities.get(capabilities.size()-1).getOutput();
 	}
 
 	@Override
-	public Set<Parameter<?>> getParameters() {
-		return Collections.<Parameter<?>>singleton(getParameter());
+	public Set<IParameter<?>> getParameters() {
+		return Collections.<IParameter<?>>singleton(getParameter());
 	}
 
 	@Override
-	public Set<Output<?>> getOutputs() {
-		return Collections.<Output<?>>singleton(getOutput());
+	public Set<IOutput<?>> getOutputs() {
+		return Collections.<IOutput<?>>singleton(getOutput());
 	}
 	
 }

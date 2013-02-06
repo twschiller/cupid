@@ -15,25 +15,25 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import edu.washington.cs.cupid.capability.ICapability.Output;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
-public class ReturnImpl implements ICapabilityOutput {
+public class Output implements ICapabilityOutputs {
 
-	private final Map<Output<?>, Object> outputs;
+	private final Map<IOutput<?>, Object> outputs;
 	private final Map<String, Object> named;
 	
-	public ReturnImpl(){
+	public Output(){
 		outputs = Maps.newHashMap();
 		named = Maps.newHashMap();
 	}
 	
-	public <T> void add(final Output<T> output, final T value){
+	public <T> void add(final IOutput<T> output, final T value){
 		outputs.put(output, value);
 		named.put(output.getName(), value);
 	}
 	
 	@Override
-	public Map<Output<?>, Object> getOutputs() {
+	public Map<IOutput<?>, Object> getOutputs() {
 		return Collections.unmodifiableMap(outputs);
 	}
 
@@ -43,7 +43,7 @@ public class ReturnImpl implements ICapabilityOutput {
 	}
 
 	@Override
-	public <T> T getOutput(final Output<T> output) {
+	public <T> T getOutput(final IOutput<T> output) {
 		@SuppressWarnings("unchecked")
 		T result = (T) outputs.get(output); // checked when building output
 		return result;

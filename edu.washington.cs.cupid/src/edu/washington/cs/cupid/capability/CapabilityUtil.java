@@ -16,8 +16,8 @@ import java.util.EnumSet;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability.Flag;
-import edu.washington.cs.cupid.capability.ICapability.Output;
-import edu.washington.cs.cupid.capability.ICapability.Parameter;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
 
 public class CapabilityUtil {
 	
@@ -29,7 +29,7 @@ public class CapabilityUtil {
 		}		
 	}
 	
-	public static Output<?> singleOutput(ICapability capability){
+	public static IOutput<?> singleOutput(ICapability capability){
 		if (capability.getOutputs().isEmpty()){
 			throw new IllegalArgumentException("Capability has no outputs");
 		} else if (capability.getOutputs().size() > 1) {
@@ -43,25 +43,25 @@ public class CapabilityUtil {
 		return capability.getOutputs().size() == 1;
 	}
 	
-	public static <T> ICapabilityOutput packSingleOutputValue(ICapability capability, T value){
-		return packSingleOutputValue((Output<T>)singleOutput(capability), value);
+	public static <T> ICapabilityOutputs packSingleOutputValue(ICapability capability, T value){
+		return packSingleOutputValue((IOutput<T>)singleOutput(capability), value);
 	}
 	
-	public static <T> ICapabilityOutput packSingleOutputValue(Output<T> output, T value){
-		ReturnImpl result = new ReturnImpl();
+	public static <T> ICapabilityOutputs packSingleOutputValue(IOutput<T> output, T value){
+		Output result = new Output();
 		result.add(output, value);
 		return result;
 	}
 	
-	public static <T> ICapabilityInput packUnaryInput(ICapability capability, T argument){
-		InputImpl input = new InputImpl();
-		Parameter<T> parameter = (Parameter<T>)unaryParameter(capability);
+	public static <T> ICapabilityArguments packUnaryInput(ICapability capability, T argument){
+		CapabilityArguments input = new CapabilityArguments();
+		IParameter<T> parameter = (IParameter<T>)unaryParameter(capability);
 		input.add(parameter, argument);
 		return input;
 	}
 	
-	public static Parameter<?> unaryParameter(ICapability capability){
-		for (Parameter<?> param : capability.getParameters()){
+	public static IParameter<?> unaryParameter(ICapability capability){
+		for (IParameter<?> param : capability.getParameters()){
 			if (!(param.hasDefault() || param.getType().equals(TypeToken.of(Void.class)))){
 				return param;
 			}
@@ -71,7 +71,7 @@ public class CapabilityUtil {
 	
 	public static int inputArrity(final ICapability capability){
 		int required = 0;
-		for (Parameter<?> param : capability.getParameters()){
+		for (IParameter<?> param : capability.getParameters()){
 			if (!(param.hasDefault() || param.getType().equals(TypeToken.of(Void.class)))){
 				required++;
 			}

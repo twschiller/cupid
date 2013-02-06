@@ -26,7 +26,7 @@ import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.IDynamicCapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
-import edu.washington.cs.cupid.capability.InputImpl;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -84,7 +84,7 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> implements IDynami
 					
 					Object key = link(getInput(), keyLink);
 
-					CapabilityJob<?> subtask = valueGenerator.getJob(new InputImpl());
+					CapabilityJob<?> subtask = valueGenerator.getJob(new CapabilityArguments());
 					monitor.subTask("Generating Values");
 					
 					subtask.schedule();

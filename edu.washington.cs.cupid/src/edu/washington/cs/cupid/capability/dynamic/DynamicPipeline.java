@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.capability.linear.ILinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
@@ -89,8 +89,8 @@ public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements 
 	}
 
 	@Override
-	public LinearJob<I, V> getJob(ICapabilityInput input) {
-		return getJob(input.getArgument(getParameter()));
+	public LinearJob<I, V> getJob(ICapabilityArguments input) {
+		return getJob(input.getValueArgument(getParameter()));
 	}
 
 	@Override
@@ -153,31 +153,31 @@ public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements 
 	}
 
 	@Override
-	public Parameter<I> getParameter() {
+	public IParameter<I> getParameter() {
 		try {
-			return (Parameter<I>) inorder().get(0).getParameter();
+			return (IParameter<I>) inorder().get(0).getParameter();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
 	}
 
 	@Override
-	public Set<Parameter<?>> getParameters() {
-		return Collections.<Parameter<?>>singleton(getParameter());
+	public Set<IParameter<?>> getParameters() {
+		return Collections.<IParameter<?>>singleton(getParameter());
 	}
 	
 	@Override
-	public Output<V> getOutput() {
+	public IOutput<V> getOutput() {
 		try {
 			List<ILinearCapability<?, ?>> ordered = inorder();
-			return (Output<V>) ordered.get(ordered.size()-1).getOutput();
+			return (IOutput<V>) ordered.get(ordered.size()-1).getOutput();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}	
 	}
 
 	@Override
-	public Set<Output<?>> getOutputs() {
-		return Collections.<Output<?>>singleton(getOutput());
+	public Set<IOutput<?>> getOutputs() {
+		return Collections.<IOutput<?>>singleton(getOutput());
 	}
 }

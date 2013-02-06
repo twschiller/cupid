@@ -34,7 +34,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.markers.IMarkerBuilder;
@@ -129,7 +129,7 @@ public final class MarkerManager {
 		}
 
 		private void asyncAddMarkers(final ICapability capability, final IResource resource, final Object input) {
-			ICapabilityInput packed = CapabilityUtil.packUnaryInput(capability, input);
+			ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, input);
 			
 			CapabilityExecutor.asyncExec(capability, packed, MarkerListener.this, new NullJobListener() {
 				@Override

@@ -84,7 +84,7 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	public synchronized SortedSet<ICapability> getCapabilities(final TypeToken<?> type) {
 		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		for (ICapability capability : capabilities) {
-			for (ICapability.Parameter<?> param :  capability.getParameters()){
+			for (ICapability.IParameter<?> param :  capability.getParameters()){
 				if (TypeManager.isCompatible(param, type)) {
 					result.add(capability);
 					break;
@@ -99,7 +99,7 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
 		for (ICapability capability : getCapabilities(inputType)) {
-			for (ICapability.Output<?> output : capability.getOutputs()){
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
 				if (TypeManager.isJavaCompatible(outputType, output.getType())) {
 					result.add(capability);
 					break;
@@ -114,7 +114,7 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
 		for (ICapability capability : capabilities) {
-			for (ICapability.Output<?> output : capability.getOutputs()){
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
 				if (TypeManager.isJavaCompatible(outputType, output.getType())) {
 					result.add(capability);
 					break;
@@ -142,8 +142,8 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
 		
 		for (ICapability capability : capabilities) {
-			Set<ICapability.Output<?>> bool = Sets.newHashSet();
-			for (ICapability.Output<?> output : capability.getOutputs()){
+			Set<ICapability.IOutput<?>> bool = Sets.newHashSet();
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
 				if (TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), output.getType())) {
 					bool.add(output);
 				}

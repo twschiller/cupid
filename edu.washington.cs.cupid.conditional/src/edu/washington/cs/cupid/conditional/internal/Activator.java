@@ -27,14 +27,13 @@ import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
-import edu.washington.cs.cupid.usage.events.CupidEvent;
-
 
 /**
  * Activator for the conditional formatting plug-in.
@@ -142,18 +141,18 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	 * @throws MalformedCapabilityException iff the corresponding available capability is not a predicate 
      * (i.e., does not have a boolean return value)
 	 */
-	@SuppressWarnings("unchecked")
-	public static ICapability<?, Boolean> findPredicate(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException {
+	public static ICapability findPredicate(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException {
 		Preconditions.checkNotNull(rule.getCapabilityId(), "Formatting rule must be associated with a capability");
 		
-		@SuppressWarnings("rawtypes")
 		ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 
-		if (!TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getOutputType())) {
-			throw new MalformedCapabilityException(capability, "Formatting rule requires predicate capability");
+		if (CapabilityUtil.isLinear(capability) 
+			&& TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), CapabilityUtil.singleOutput(capability).getType())){
+			
+			return capability;
+		} else {
+			throw new MalformedCapabilityException(capability, "Formatting rule requires linear predicate capability");
 		}
-
-		return capability;
 	}
 
 }

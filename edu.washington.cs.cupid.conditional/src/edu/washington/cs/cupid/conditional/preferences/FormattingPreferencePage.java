@@ -87,7 +87,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 	 * List of currently available predicates; currently updated each time the user 
 	 * selects a formatting rule.
 	 */
-    private List<ICapability<?, Boolean>> available;
+    private List<ICapability> available;
     
     /**
      * Construct the preference page for defining and editing conditional formatting rules.
@@ -264,7 +264,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 				containsSentinalEntry = true;
 			}
 
-			for (ICapability<?, Boolean> capability : available ) {
+			for (ICapability capability : available ) {
 				if (forRule == capability) {
 					addAndSet(cCapability, capability.getName());
 				} else {

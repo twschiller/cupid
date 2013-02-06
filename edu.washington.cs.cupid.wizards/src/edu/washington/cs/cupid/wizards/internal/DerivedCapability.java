@@ -25,7 +25,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.Output;
-import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 
 /**
  * Helper class for combination of Capability + Getter
@@ -43,12 +43,12 @@ public class DerivedCapability{
 		this.getter = getter;
 	}
 	
-	public SerializablePipeline toPipeline(){
+	public DynamicSerializablePipeline toPipeline(){
 		List<Object> pipeline = Lists.<Object>newArrayList(
 				capability.getUniqueId(),
 				getter);
 		
-		return new SerializablePipeline(
+		return new DynamicSerializablePipeline(
 				capability.getName() + " + " + getter.getName(), 
 				capability.getName() + " + " + getter.getName(), 
 				pipeline);

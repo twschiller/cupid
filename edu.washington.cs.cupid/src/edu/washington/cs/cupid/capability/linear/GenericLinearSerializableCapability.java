@@ -10,25 +10,33 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability.linear;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Set;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
+import edu.washington.cs.cupid.capability.AbstractSerializableCapability;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
 import edu.washington.cs.cupid.capability.OutputImpl;
 import edu.washington.cs.cupid.capability.ParameterImpl;
 
-public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapability implements ILinearCapability<I, V> {
+public abstract class GenericLinearSerializableCapability<I, V> extends AbstractSerializableCapability implements ILinearCapability<I, V> {
+
+	private static final long serialVersionUID = 1L;
 
 	private Parameter<I> input;
 	private Output<V> output;
+	private EnumSet<Flag> flags;
 	
-	public GenericAbstractLinearCapability(String name, String uniqueId,
+	public GenericLinearSerializableCapability(String name, String uniqueId,
 			String description, 
 			Flag... flags) {
-		super(name, uniqueId, description, flags);
+		super(name, uniqueId, description);
+		
+		this.flags = EnumSet.noneOf(Flag.class);
+		this.flags.addAll(Arrays.asList(flags));
 	}
 
 	@Override
@@ -62,6 +70,11 @@ public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapa
 		return getJob(input.getArgument(getParameter()));
 	}
 	
+	@Override
+	public EnumSet<Flag> getFlags() {
+		return flags;
+	}
+
 	public abstract TypeToken<I> getInputType();
 	
 	public abstract TypeToken<V> getOutputType();

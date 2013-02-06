@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 
-import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
@@ -37,7 +36,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @param <V> output type
  * @author Todd Schiller
  */
-public class TransientPipeline<I, V> extends AbstractTransientCapability implements ILinearCapability<I, V> {
+public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements ILinearCapability<I, V> {
 	// TODO handle concurrent modifications to capability bindings
 	
 	private final List<Object> capabilities;
@@ -48,7 +47,7 @@ public class TransientPipeline<I, V> extends AbstractTransientCapability impleme
 	 * @param description the capability description
 	 * @param capabilities the component capabilities. Each element is either a unique id, or an {@link ICapability}
 	 */
-	public TransientPipeline(final String name, final String description, final List<Object> capabilities) {
+	public DynamicPipeline(final String name, final String description, final List<Object> capabilities) {
 		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
@@ -103,7 +102,7 @@ public class TransientPipeline<I, V> extends AbstractTransientCapability impleme
 
 					Object result = getInput();
 
-					monitor.beginTask(this.getName(), TransientPipeline.this.capabilities.size());
+					monitor.beginTask(this.getName(), DynamicPipeline.this.capabilities.size());
 
 					List<ILinearCapability<?, ?>> resolved = inorder();
 

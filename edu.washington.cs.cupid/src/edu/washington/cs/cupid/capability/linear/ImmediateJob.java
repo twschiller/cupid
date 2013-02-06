@@ -8,13 +8,10 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.jobs;
+package edu.washington.cs.cupid.capability.linear;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.linear.ILinearCapability;
-import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability job that immediately returns.

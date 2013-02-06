@@ -54,7 +54,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.Parameter;
-import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 
 /**
@@ -424,7 +424,7 @@ public class CreatePipelinePage extends WizardPage{
 		return current.size();
 	}
 	
-	public SerializablePipeline createPipeline(){
+	public DynamicSerializablePipeline createPipeline(){
 		List<Object> descriptors = Lists.newArrayList();
 		for (Object x : current){
 			if (x instanceof Serializable){
@@ -434,7 +434,7 @@ public class CreatePipelinePage extends WizardPage{
 			}
 		}
 		
-		SerializablePipeline pipeline = new SerializablePipeline(
+		DynamicSerializablePipeline pipeline = new DynamicSerializablePipeline(
 				nameEntry.getText(),
 				descriptionEntry.getText(),
 				descriptors);

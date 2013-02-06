@@ -30,7 +30,10 @@ import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
@@ -40,11 +43,9 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
 
 public abstract class ChartViewPart extends ViewPart implements ISelectionListener {
 
-	@SuppressWarnings("rawtypes")
 	protected ICapability capability;
 	
-	@SuppressWarnings("rawtypes")
-	protected ConcurrentMap results;
+	protected ConcurrentMap<Object, Object> results;
 	
 	protected Frame frame;
 	
@@ -100,23 +101,27 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 					
 					dropDownMenu.removeAll();
 					
-					for (final ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
-						for (TypeToken<?> type : accepts()){
-							if (TypeManager.isJavaCompatible(type, capability.getReturnType())){
-								dropDownMenu.add(new Action(capability.getName()){
-									@Override
-									public void run() {
-										ChartViewPart.this.capability = capability;
-										ChartViewPart.this.setPartName(getName() + ": " + capability.getName());
-										ChartViewPart.this.setContentDescription(capability.getDescription());
-									
-										CupidDataCollector.record(
-												CupidEventBuilder.selectCapabilityEvent(ChartViewPart.this.getClass(), capability, Activator.getDefault())
-												.create());
-									}
-								});
-								break;
-							}
+					for (final ICapability capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
+						if (CapabilityUtil.isLinear(capability)){
+							TypeToken<?> returnType = CapabilityUtil.singleOutput(capability).getType();
+							
+							for (TypeToken<?> type : accepts()){
+								if (TypeManager.isJavaCompatible(type, returnType)){
+									dropDownMenu.add(new Action(capability.getName()){
+										@Override
+										public void run() {
+											ChartViewPart.this.capability = capability;
+											ChartViewPart.this.setPartName(getName() + ": " + capability.getName());
+											ChartViewPart.this.setContentDescription(capability.getDescription());
+										
+											CupidDataCollector.record(
+													CupidEventBuilder.selectCapabilityEvent(ChartViewPart.this.getClass(), capability, Activator.getDefault())
+													.create());
+										}
+									});
+									break;
+								}
+							}	
 						}
 					}
 					
@@ -127,7 +132,6 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 		});
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		
@@ -138,11 +142,13 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 		if (capability != null && selection instanceof StructuredSelection){
 			ChartViewPart.this.showBusy(true);
 			
+			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
+			
 			final StructuredSelection all = ((StructuredSelection) selection);
 			
-			final List compatible = Lists.newArrayList();
+			final List<Object> compatible = Lists.newArrayList();
 			for (Object x : all.toList()){
-				if (TypeManager.isCompatible(capability, x)){
+				if (TypeManager.isCompatible(parameter, x)){
 					compatible.add(x);
 				}
 			}
@@ -150,11 +156,18 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 			results = Maps.newConcurrentMap();
 			
 			for (final Object x : compatible){
-				CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, x), ChartViewPart.this, new NullJobListener(){
+				ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, TypeManager.getCompatible(parameter, x));
+				
+				CapabilityExecutor.asyncExec(capability, packed, ChartViewPart.this, new NullJobListener(){
 					@Override
 					public void done(IJobChangeEvent event) {
-						CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
-						results.put(x, status.value() != null ? status.value() : status.getException() );
+						CapabilityStatus status = (CapabilityStatus) event.getResult();
+						
+						Object result = status.value() != null 
+								? CapabilityUtil.singleOutputValue(capability, status) 
+								: status.getException();
+						
+						results.put(x, result);
 						
 						if (results.size() == compatible.size()){
 							buildChart();

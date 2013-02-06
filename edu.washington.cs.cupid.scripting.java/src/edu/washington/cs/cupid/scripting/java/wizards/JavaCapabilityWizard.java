@@ -187,7 +187,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		String separator = System.getProperty("line.separator");
 		
 		Bundle bundle = Activator.getDefault().getBundle();
-		URL fileURL = bundle.getEntry("templates/AbstractCapability.template");
+		URL fileURL = bundle.getEntry("templates/LinearCapability.template");
 		File file = new File(FileLocator.resolve(fileURL).toURI());
 		
 		String template = Joiner.on(separator).join(Files.readLines(file, Charset.defaultCharset()));

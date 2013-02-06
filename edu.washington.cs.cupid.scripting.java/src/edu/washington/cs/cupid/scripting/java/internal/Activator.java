@@ -15,6 +15,7 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
@@ -95,11 +96,10 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 				@Override
 				protected IStatus run(final IProgressMonitor monitor) {
-					
 					try {
 						monitor.beginTask("Open Cupid Project", 100);
 						
-						cupidProject.open(new SubProgressMonitor(monitor, 90));
+						cupidProject.open(new SubProgressMonitor(monitor, 40));
 						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
 						new UpdateClasspathJob().schedule();
 						return Status.OK_STATUS;

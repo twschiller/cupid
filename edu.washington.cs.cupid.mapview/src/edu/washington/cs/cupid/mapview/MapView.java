@@ -37,7 +37,10 @@ import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
@@ -62,7 +65,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	 */
 	public static final String ID = "edu.washington.cs.cupid.chart.views.HistogramView";
 
-	@SuppressWarnings("rawtypes")
 	private ICapability capability;
 
 	@SuppressWarnings("rawtypes")
@@ -143,7 +145,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	}
 	
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void showMapping(final Object input) {
 		MapView.this.showBusy(true);
 			
@@ -151,20 +152,23 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 			return;
 		}
 			
-		if (input != null && TypeManager.isCompatible(capability, input)) {
-			CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, input), MapView.this, new NullJobListener() {
+		IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
+		
+		if (input != null && TypeManager.isCompatible(parameter, input)) {
+			ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability,  TypeManager.getCompatible(parameter, input));
+			
+			CapabilityExecutor.asyncExec(capability, packed, MapView.this, new NullJobListener() {
 				@Override
 				public void done(final IJobChangeEvent event) {
-					CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
+					CapabilityStatus status = (CapabilityStatus) event.getResult();
 					
 					if (status.value() != null && status.isOK()) {
-						buildMap((Map) status.value());
+						buildMap((Map<?, ?>) CapabilityUtil.singleOutputValue(capability, status));
 					}
 				
 					MapView.this.showBusy(false);
 				}
 			});
-	
 		}
 	}
 	
@@ -184,7 +188,10 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 					dropDownMenu.removeAll();
 					
 					for (final ICapability available : CupidPlatform.getCapabilityRegistry().getCapabilities()) {
-						if (TypeManager.isJavaCompatible(ACCEPTED_OUTPUT_TYPE, available.getReturnType())) {
+						
+						if (CapabilityUtil.isLinear(available)
+							&& TypeManager.isJavaCompatible(ACCEPTED_OUTPUT_TYPE, CapabilityUtil.singleOutput(available).getType())) {
+							
 							dropDownMenu.add(new Action(available.getName()) {
 								@Override
 								public void run() {

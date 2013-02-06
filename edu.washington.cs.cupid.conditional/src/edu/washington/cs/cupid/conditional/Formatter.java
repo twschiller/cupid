@@ -58,7 +58,10 @@ import edu.washington.cs.cupid.IInvalidationListener;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
@@ -155,10 +158,10 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 					.addData("capabilityId", rule.getCapabilityId());
 		
 		try {
-			ICapability<?,?> capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
+			ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 			event.addData("capabilityName", capability.getName());
-			event.addData("capabilityId", capability.getParameterType().toString());
-			event.addData("parameterType", capability.getParameterType().toString());	
+			event.addData("capabilityId", capability.getUniqueId());
+			event.addData("parameterType", CapabilityUtil.unaryParameter(capability).getType().toString());
 		} catch (NoSuchCapabilityException e) {
 			// NO OP
 		}
@@ -282,23 +285,23 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	private void asyncFormat(final Item item, final FormattingRule rule, @SuppressWarnings("rawtypes") final ICapability capability, final Object input) {
+	private void asyncFormat(final Item item, final FormattingRule rule, final ICapability capability, final Object input) {
 		synchronized (activeObjects) {
 			activeObjects.put(input, item);
 			activeItems.put(item, input);
 			item.addDisposeListener(this);
 		}
+	
+		ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, input);
 		
-		CapabilityExecutor.asyncExec(capability, input, Formatter.this, new NullJobListener() {
-			@SuppressWarnings("rawtypes")
+		CapabilityExecutor.asyncExec(capability, packed, Formatter.this, new NullJobListener() {
 			@Override
 			public void done(final IJobChangeEvent event) {
-				CapabilityJob job = (CapabilityJob) event.getJob();
-				CapabilityStatus<Boolean> status = (CapabilityStatus<Boolean>) job.getResult();
+				CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
+				CapabilityStatus status = (CapabilityStatus) job.getResult();
 			
 				if (status.getCode() == Status.OK) {
-					if (status.value()) {
+					if ((Boolean) CapabilityUtil.singleOutputValue(capability, status)) {
 						// apply the formatting rule
 						Display.getDefault().asyncExec(new Runnable() {
 							@Override
@@ -335,7 +338,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		
 		for (final FormattingRule rule : activeRules) {
 			
-			@SuppressWarnings("rawtypes")
 			ICapability capability = null;
 
 			try {
@@ -345,8 +347,10 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 				// TODO error information needs to be aggregated and passed up the line
 			}
 
-			if (TypeManager.isCompatible(capability, input)) {
-				asyncFormat(item, rule, capability, TypeManager.getCompatible(capability, input));
+			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
+			
+			if (TypeManager.isCompatible(parameter, input)) {
+				asyncFormat(item, rule, capability, TypeManager.getCompatible(parameter, input));
 			}
 		}
 	}

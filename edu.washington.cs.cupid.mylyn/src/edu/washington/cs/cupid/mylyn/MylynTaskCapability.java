@@ -20,7 +20,7 @@ import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -29,7 +29,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @author Todd Schiller
  */
 @SuppressWarnings("restriction")
-public final class MylynTaskCapability extends AbstractLinearCapability<Void, List<AbstractTask>> {
+public final class MylynTaskCapability extends LinearCapability<Void, List<AbstractTask>> {
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view
 	

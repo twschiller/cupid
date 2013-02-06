@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -26,7 +26,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class Max<V extends Comparable<V>> extends GenericAbstractLinearCapability<Collection<V>, V> {
+public final class Max<V extends Comparable<V>> extends GenericLinearCapability<Collection<V>, V> {
 	
 	/**
 	 *  A capability that computes the maximum element in a collection.

@@ -18,11 +18,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public class LongList extends AbstractLinearCapability<IResource, List<Integer>>  {
+public class LongList extends LinearCapability<IResource, List<Integer>>  {
 
 	public LongList(){
 		super(

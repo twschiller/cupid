@@ -12,7 +12,7 @@ package edu.washington.cs.cupid.tests;
 
 import org.eclipse.core.resources.IResource;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 
@@ -21,7 +21,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
  * so that it can be chained to other capabilities.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class ExceptionCapability extends AbstractLinearCapability<IResource, IResource> {
+public class ExceptionCapability extends LinearCapability<IResource, IResource> {
 
 	public ExceptionCapability(){
 		super(
@@ -33,7 +33,7 @@ public class ExceptionCapability extends AbstractLinearCapability<IResource, IRe
 	}
 	
 	@Override
-	public LinearJob getJob(final IResource input) {
+	public LinearJob<IResource, IResource> getJob(final IResource input) {
 		return new ImmediateJob<IResource,IResource>(this, input, (Throwable) new RuntimeException("An (expected) exception"));
 	}
 }

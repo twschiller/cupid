@@ -13,7 +13,7 @@ package edu.washington.cs.cupid.tests;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -22,7 +22,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Updates the progress monitor every minute.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class LongRunningCapability extends AbstractLinearCapability<IResource, IResource>{
+public class LongRunningCapability extends LinearCapability<IResource, IResource>{
 	
 	public static final int RUNTIME_IN_SECONDS = 300;
 	

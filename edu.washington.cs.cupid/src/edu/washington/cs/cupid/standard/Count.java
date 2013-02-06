@@ -14,7 +14,7 @@ import java.util.Collection;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 
@@ -23,7 +23,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
  * @author Todd Schiller
  * @param <V> element type
  */
-public final class Count<V> extends GenericAbstractLinearCapability<Collection<V>, Integer> {
+public final class Count<V> extends GenericLinearCapability<Collection<V>, Integer> {
 
 	/**
 	 * A capability that returns the number of elements in a collection.

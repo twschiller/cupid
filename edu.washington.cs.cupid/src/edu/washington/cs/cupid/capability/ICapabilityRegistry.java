@@ -12,6 +12,7 @@ package edu.washington.cs.cupid.capability;
 
 import java.util.SortedSet;
 
+import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
@@ -28,7 +29,13 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * @return an unmodifiable view of the available capabilities
 	 */
 	SortedSet<ICapability> getCapabilities();
-
+	
+	/**
+	 * Returns an unmodifiable view of the available capabilities.
+	 * @return an unmodifiable view of the available capabilities
+	 */
+	SortedSet<ICapability> getCapabilities(Predicate<ICapability> filter);
+	
 	/**
 	 * Returns the available capabilities that are compatible with input of the given type.
 	 * @param type the query

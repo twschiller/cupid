@@ -97,6 +97,10 @@ public final class TypeManager {
 		return lhs.isAssignableFrom(rhs);
 	}
 	
+	public static String simpleTypeName(final TypeToken<?> type) {
+		return simpleTypeName(type.getType());
+	}
+	
 	/**
 	 * Returns a human-readable name for <code>type</code>.
 	 * @param type the type

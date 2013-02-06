@@ -14,11 +14,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class CompilationUnit extends AbstractLinearCapability<IJavaElement, ICompilationUnit> {
+public final class CompilationUnit extends LinearCapability<IJavaElement, ICompilationUnit> {
 
 	public CompilationUnit(){
 		super("Compilation Unit", 

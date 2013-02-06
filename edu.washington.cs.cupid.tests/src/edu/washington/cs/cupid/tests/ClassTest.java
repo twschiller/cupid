@@ -10,11 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.tests;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 
-public class ClassTest extends AbstractLinearCapability<Object, String>  {
+public class ClassTest extends LinearCapability<Object, String>  {
 
 	public ClassTest(){
 		super(

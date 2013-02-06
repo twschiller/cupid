@@ -19,7 +19,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -28,7 +28,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class MostFrequent<V> extends GenericAbstractLinearCapability<List<V>, V> {
+public final class MostFrequent<V> extends GenericLinearCapability<List<V>, V> {
 	
 	// TODO make efficient
 	

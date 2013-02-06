@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.SortedSet;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
@@ -123,6 +124,19 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 		return result;	
 	}
 	
+
+	@Override
+	public SortedSet<ICapability> getCapabilities(Predicate<ICapability> filter) {
+		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
+		for (ICapability capability : capabilities) {
+			if (filter.apply(capability)){
+				result.add(capability);
+			}
+		}
+		return result;
+	}
+	
+	
 	@Override
 	public synchronized SortedSet<ICapability> getPredicates() {
 		SortedSet<ICapability> result = Sets.newTreeSet(CapabilityUtil.COMPARE_NAME);
@@ -194,5 +208,5 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 //		}
 //		return null;
 	}
-	
+
 }

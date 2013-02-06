@@ -24,7 +24,7 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -32,7 +32,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Capability that returns the compiler messages for a compilation unit.
  * @author Todd Schiller
  */
-public final class CompilerMessagesCapability extends AbstractLinearCapability<ICompilationUnit, List<Message>> {
+public final class CompilerMessagesCapability extends LinearCapability<ICompilationUnit, List<Message>> {
 		
 	/**
 	 * Construct a capability that returns the compiler messages for a compilation unit.

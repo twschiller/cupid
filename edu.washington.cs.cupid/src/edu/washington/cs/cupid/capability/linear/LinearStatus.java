@@ -3,17 +3,21 @@ package edu.washington.cs.cupid.capability.linear;
 import org.eclipse.core.runtime.Status;
 
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityOutput;
 
 public class LinearStatus extends CapabilityStatus {
 	
+	private final Object value;
+	
 	public LinearStatus(ICapability capability, Object value) {
-		super(null);
+		super(CapabilityUtil.singletonOutput(capability, value));
+		this.value = value;
 	}
 	
 	public LinearStatus(Throwable error) {
 		super(error);
+		this.value = null;
 	}
 
 	/**
@@ -24,6 +28,7 @@ public class LinearStatus extends CapabilityStatus {
 	 */
 	public LinearStatus(final int severity, final String message, final Throwable exception) {
 		super(severity, message, exception);
+		this.value = null;
 	}
 	
 	/**
@@ -59,5 +64,7 @@ public class LinearStatus extends CapabilityStatus {
 		return new LinearStatus(exception);
 	}
 
-	
+	public Object getOutputValue() {
+		return value;
+	}
 }

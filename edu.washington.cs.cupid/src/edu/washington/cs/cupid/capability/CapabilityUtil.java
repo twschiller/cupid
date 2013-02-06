@@ -3,41 +3,63 @@ package edu.washington.cs.cupid.capability;
 import java.util.Collection;
 import java.util.EnumSet;
 
+import com.google.common.reflect.TypeToken;
+
 import edu.washington.cs.cupid.capability.ICapability.Flag;
 import edu.washington.cs.cupid.capability.ICapability.Output;
 import edu.washington.cs.cupid.capability.ICapability.Parameter;
 
 public class CapabilityUtil {
 	
+	public static Object singleOutput(ICapability capability, CapabilityStatus status){
+		return status.value().getOutputs().get(singleOutput(capability));
+	}
+	
 	public static <T> ICapabilityOutput singletonOutput(ICapability capability, T value){
 		ReturnImpl output = new ReturnImpl();
-		output.add((Output<T>)requiredParameter(capability), value);
+		output.add((Output<T>)singleOutput(capability), value);
 		return output;
 	}
 	
 	public static <T> ICapabilityInput singleton(ICapability capability, T argument){
 		InputImpl input = new InputImpl();
-		input.add((Parameter<T>)requiredParameter(capability), argument);
+		Parameter<T> parameter = (Parameter<T>)unaryParameter(capability);
+		input.add(parameter, argument);
 		return input;
 	}
 	
-	public static Parameter<?> requiredParameter(ICapability capability){
+	public static Output<?> singleOutput(ICapability capability){
+		for (Output<?> output : capability.getOutputs()){
+			return output;
+		}
+		throw new IllegalArgumentException("Capability has multiple output");
+	}
+	
+	public static Parameter<?> unaryParameter(ICapability capability){
 		for (Parameter<?> param : capability.getParameters()){
-			if (!param.hasDefault()){
+			if (!(param.hasDefault() || param.getType().equals(TypeToken.of(Void.class)))){
 				return param;
 			}
 		}
-		throw new IllegalArgumentException("Capability has multiple required parameter");
+		throw new IllegalArgumentException("Capability is a generator (takes no inputs)");
 	}
 	
-	public static boolean hasSingleRequiredParameter(ICapability capability){
-		int needed = 0;
+	public static int inputArrity(final ICapability capability){
+		int required = 0;
 		for (Parameter<?> param : capability.getParameters()){
-			if (!param.hasDefault()){
-				needed++;
+			if (!(param.hasDefault() || param.getType().equals(TypeToken.of(Void.class)))){
+				required++;
 			}
 		}
-		return needed > 1;
+		return required;	
+	}
+	
+	public static boolean isGenerator(final ICapability capability){
+		return inputArrity(capability) == 0;
+	}
+	
+	public static boolean isUnary(final ICapability capability){
+		return inputArrity(capability) == 1;
 	}
 	
 	public static EnumSet<Flag> union(Collection<? extends ICapability> capabilities){

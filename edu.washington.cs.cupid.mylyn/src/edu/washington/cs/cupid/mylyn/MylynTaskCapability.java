@@ -53,7 +53,7 @@ public final class MylynTaskCapability extends AbstractLinearCapability<Void, Li
 					monitor.beginTask(getName(), 100);
 					TaskList taskList = TasksUiPlugin.getTaskList();
 					List<AbstractTask> tasks = new ArrayList<AbstractTask>(taskList.getAllTasks());
-					return LinearStatus.makeOk(tasks);
+					return LinearStatus.makeOk(getCapability(), tasks);
 				} catch (Exception ex) {
 					return LinearStatus.makeError(ex);
 				} finally {

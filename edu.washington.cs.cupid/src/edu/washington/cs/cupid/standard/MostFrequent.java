@@ -54,7 +54,7 @@ public final class MostFrequent<V> extends GenericAbstractLinearCapability<List<
 					Multiset<V> set = HashMultiset.create();
 					set.addAll(input);
 					for (V val : Multisets.copyHighestCountFirst(set)) {
-						return LinearStatus.makeOk(val);
+						return LinearStatus.makeOk(getCapability(), val);
 					}
 					
 					return LinearStatus.makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));

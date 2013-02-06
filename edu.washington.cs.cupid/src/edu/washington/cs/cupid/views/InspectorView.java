@@ -66,6 +66,7 @@ import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.InputImpl;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -367,7 +368,6 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			update(CapabilityRow.this);
 		}
 		
-		@SuppressWarnings({ "unchecked", "rawtypes" })
 		private CapabilityRow(final ICapability capability, final Object input) {
 
 			this.capability = capability;
@@ -380,8 +380,10 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 
 			try {
-				ICapabilityInput args = CapabilityUtil.singleton(capability, input);
-				
+				ICapabilityInput args = CapabilityUtil.isGenerator(capability)
+						? new InputImpl()
+						: CapabilityUtil.singleton(capability, input);
+
 				CapabilityExecutor.asyncExec(capability, args, family, new IJobChangeListener() {
 
 					@Override
@@ -398,7 +400,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 					public synchronized void done(final IJobChangeEvent event) {
 						finished = true;
 						result = event.getResult();
-						value = ((CapabilityStatus) result).value();
+						value = CapabilityUtil.singleOutput(capability, (CapabilityStatus) result);
 						updateStatus("Done");
 					}
 
@@ -417,9 +419,9 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 						updateStatus("Updating (sleeping)...");
 					}
 				});
-				
-				} catch (Exception ex) {
-				updateStatus("Error running capability: " + ex.getLocalizedMessage());
+
+			} catch (Exception ex) {
+				updateStatus("Error running capability (" + ex.getClass().getSimpleName() + "): " + ex.getMessage());
 			}
 		}
 
@@ -605,10 +607,13 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			for (ICapability capability : capabilities) {
 				if (!hidden.contains(capability.getUniqueId())) {
 					
-					if (CapabilityUtil.hasSingleRequiredParameter(capability)
-						&& TypeManager.isCompatible(CapabilityUtil.requiredParameter(capability), argument)){
+					if (CapabilityUtil.isGenerator(capability)){
+						rows.add(new CapabilityRow(capability, null));
 						
-						Object adapted = TypeManager.getCompatible(CapabilityUtil.requiredParameter(capability), argument);	
+					} else if (CapabilityUtil.isUnary(capability)
+						&& TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), argument)){
+						
+						Object adapted = TypeManager.getCompatible(CapabilityUtil.unaryParameter(capability), argument);	
 						rows.add(new CapabilityRow(capability, adapted));
 					}
 				}

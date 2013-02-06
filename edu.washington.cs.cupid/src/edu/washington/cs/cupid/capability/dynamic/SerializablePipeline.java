@@ -129,16 +129,16 @@ public class SerializablePipeline extends AbstractSerializableCapability impleme
 						subtask.schedule();
 						subtask.join();
 
-						CapabilityStatus status = ((CapabilityStatus) subtask.getResult());
+						LinearStatus status = ((LinearStatus) subtask.getResult());
 
 						if (status.getCode() == Status.OK) {
-							result = status.value();
+							result = status.getOutputValue();
 							intermediateResults.add(result);
 						} else {
 							throw status.getException();
 						}
 					}
-					return LinearStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Throwable ex) {
 					return LinearStatus.makeError(ex);
 				} finally {

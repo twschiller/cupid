@@ -127,17 +127,16 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 						subtask.schedule();
 						subtask.join();
 
-						CapabilityStatus status = ((CapabilityStatus) subtask.getResult());
+						LinearStatus status = (LinearStatus) subtask.getResult();
 
 						if (status.getCode() == Status.OK) {
-							result = status.value();
-							monitor.worked(1);
+							result = status.getOutputValue();
 							intermediateResults.add(result);
 						} else {
 							throw status.getException();
 						}
 					}
-					return LinearStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Throwable ex) {
 					return LinearStatus.makeError(ex);
 				} finally {

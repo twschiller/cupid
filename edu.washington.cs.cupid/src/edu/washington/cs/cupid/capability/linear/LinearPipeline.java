@@ -93,12 +93,12 @@ public final class LinearPipeline implements ILinearCapability {
 						LinearStatus status = (LinearStatus) subtask.getResult();
 						
 						if (status.getCode() == Status.OK) {
-							result = status.value();
+							result = status.getOutputValue();
 						} else {
 							throw status.getException();
 						}		
 					}
-					return LinearStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Throwable ex) {
 					return LinearStatus.makeError(ex);
 				} finally {

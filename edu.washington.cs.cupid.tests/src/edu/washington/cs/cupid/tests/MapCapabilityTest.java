@@ -26,12 +26,15 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns a map from types to methods for a compilation unit
  * @author Todd Schiller
  */
-public class MapCapabilityTest extends AbstractCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
+public class MapCapabilityTest extends AbstractLinearCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
 
 	public MapCapabilityTest(){
 		super(
@@ -40,28 +43,28 @@ public class MapCapabilityTest extends AbstractCapability<ICompilationUnit, Map<
 				"Types and methods for a compilation unit",
 				new TypeToken<ICompilationUnit>(){},
 				new TypeToken<Map<IType,Set<IMethod>>>(){},
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<ICompilationUnit, Map<IType, Set<IMethod>>> getJob(ICompilationUnit input) {
-		return new CapabilityJob<ICompilationUnit, Map<IType, Set<IMethod>>>(this, input){
+	public LinearJob getJob(ICompilationUnit input) {
+		return new LinearJob(this, input){
 			@Override
-			protected CapabilityStatus<Map<IType, Set<IMethod>>> run(IProgressMonitor monitor) {
+			protected LinearStatus run(IProgressMonitor monitor) {
 				monitor.done();
 				
 				Map<IType, Set<IMethod>> result = Maps.newHashMap();
 
 				try{
-					for (IType type : input.getTypes()){
+					for (IType type : ((ICompilationUnit) getInput()).getTypes()){
 						Set<IMethod> methods = Sets.newHashSet(type.getMethods());
 						result.put(type, methods);
 					}
 				}catch(JavaModelException ex){
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.makeError(ex);
 				}
 
-				return CapabilityStatus.makeOk(result);
+				return LinearStatus.makeOk(getCapability(), result);
 			}
 		};
 	}

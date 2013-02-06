@@ -46,7 +46,7 @@ public final class Max<V extends Comparable<V>> extends GenericAbstractLinearCap
 			protected LinearStatus run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
-					return LinearStatus.makeOk(Collections.max(input));	
+					return LinearStatus.makeOk(getCapability(), Collections.max(input));	
 				} catch (Exception ex) {
 					return LinearStatus.makeError(ex);
 				} finally {

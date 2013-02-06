@@ -10,49 +10,56 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability.dynamic;
 
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.IDynamicCapability;
+import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 
 /**
- * A capability with possibly dynamic bindings.
- * @author Todd Schiller
+ * A serializable capability, possibly with dynamic bindings.
  * @param <I> input type
  * @param <V> output type
+ * @author Todd Schiller
  */
-public abstract class AbstractTransientCapability implements IDynamicCapability {
+public abstract class AbstractDynamicSerializableCapability implements ISerializableCapability, IDynamicCapability {
+	
+	private static final long serialVersionUID = 3L;
 
 	private final String name;
 	private final String description;
-	private final Set<Object> capabilities;
+	private final Set<Serializable> capabilities;
 	
 	/**
-	 * Construct a capability with possibly dynamic bindings.
+	 * Construct a new serializable capability.
 	 * @param name the capability name
 	 * @param description the capability description
-	 * @param capabilities the component capabilities. Each element is either a unique id, or an {@link ICapability}
+	 * @param capabilities component capabilities
 	 */
-	public AbstractTransientCapability(final String name, final String description, final Collection<Object> capabilities) {
+	public AbstractDynamicSerializableCapability(final String name, final String description, final Collection<Serializable> capabilities) {
 		this.name = name;
 		this.description = description;
 		this.capabilities = Sets.newHashSet(capabilities);
 	}
 	
 	@Override
-	public final String getName() {
+	public String getName() {
 		return name;
 	}
 
 	@Override
-	public final String getDescription() {
+	public String getDescription() {
 		return description;
 	}
 
@@ -71,8 +78,7 @@ public abstract class AbstractTransientCapability implements IDynamicCapability 
 			throw new IllegalArgumentException();
 		}
 	}
-
-
+	
 	/**
 	 * Returns a mapping from unique IDs to resolved capabilities for the component capabilities. 
 	 * @return a mapping from unique IDs to resolved capabilities for the component capabilities. 
@@ -92,18 +98,18 @@ public abstract class AbstractTransientCapability implements IDynamicCapability 
 		}
 		return result;
 	}
-	
+
 	@Override
-	public final Set<String> getDynamicDependencies() {
-		Set<String> dependencies = Sets.newHashSet();
-		
-		for (Object capability : capabilities) {
-			if (capability instanceof String) {
-				dependencies.add((String) capability);
-			}
+	public final EnumSet<Flag> getFlags() {
+		try {
+			return CapabilityUtil.union(current().values());
+		} catch (NoSuchCapabilityException e) {
+			throw new DynamicBindingException(e);
 		}
-	
-		return dependencies;	
 	}
 
+	@Override
+	public final Set<String> getDynamicDependencies() {
+		return Sets.newHashSet(Iterables.filter(capabilities, String.class));	
+	}
 }

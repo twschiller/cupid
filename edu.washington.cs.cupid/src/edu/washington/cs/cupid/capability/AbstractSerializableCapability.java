@@ -17,7 +17,9 @@ package edu.washington.cs.cupid.capability;
  * @param <I> the input type
  * @param <V> the output type
  */
-public abstract class AbstractCapability implements ICapability {
+public abstract class AbstractSerializableCapability implements ISerializableCapability {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	private final String uniqueId;
@@ -30,7 +32,7 @@ public abstract class AbstractCapability implements ICapability {
 	 * @param description capability description
 	 * @param flags capability property flags
 	 */
-	public AbstractCapability(final String name, final String uniqueId, final String description) {
+	public AbstractSerializableCapability(final String name, final String uniqueId, final String description) {
 		this.name = name;
 		this.uniqueId = uniqueId;
 		this.description = description;

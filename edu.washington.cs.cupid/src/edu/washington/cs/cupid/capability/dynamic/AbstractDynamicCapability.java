@@ -10,46 +10,43 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability.dynamic;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.IDynamicCapability;
-import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 
 /**
- * A serializable capability.
+ * A capability with possibly dynamic bindings.
+ * @author Todd Schiller
  * @param <I> input type
  * @param <V> output type
- * @author Todd Schiller
  */
-public abstract class AbstractSerializableCapability implements ISerializableCapability, IDynamicCapability {
-	
-	private static final long serialVersionUID = 3L;
+public abstract class AbstractDynamicCapability implements IDynamicCapability {
 
 	private final String name;
 	private final String description;
-	private final Set<Serializable> capabilities;
+	private final Set<Object> capabilities;
 	
 	/**
-	 * Construct a new serializable capability.
+	 * Construct a capability with possibly dynamic bindings.
 	 * @param name the capability name
 	 * @param description the capability description
-	 * @param capabilities component capabilities
+	 * @param capabilities the component capabilities. Each element is either a unique id, or an {@link ICapability}
 	 */
-	public AbstractSerializableCapability(final String name, final String description, final Collection<Serializable> capabilities) {
+	public AbstractDynamicCapability(final String name, final String description, final Collection<Object> capabilities) {
 		this.name = name;
 		this.description = description;
 		this.capabilities = Sets.newHashSet(capabilities);
 	}
-
+	
 	@Override
 	public final String getName() {
 		return name;
@@ -75,7 +72,8 @@ public abstract class AbstractSerializableCapability implements ISerializableCap
 			throw new IllegalArgumentException();
 		}
 	}
-	
+
+
 	/**
 	 * Returns a mapping from unique IDs to resolved capabilities for the component capabilities. 
 	 * @return a mapping from unique IDs to resolved capabilities for the component capabilities. 
@@ -95,18 +93,9 @@ public abstract class AbstractSerializableCapability implements ISerializableCap
 		}
 		return result;
 	}
-
-
+	
 	@Override
 	public final Set<String> getDynamicDependencies() {
-		Set<String> dependencies = Sets.newHashSet();
-		
-		for (Object capability : capabilities) {
-			if (capability instanceof String) {
-				dependencies.add((String) capability);
-			}
-		}
-	
-		return dependencies;	
+		return Sets.newHashSet(Iterables.filter(capabilities, String.class));
 	}
 }

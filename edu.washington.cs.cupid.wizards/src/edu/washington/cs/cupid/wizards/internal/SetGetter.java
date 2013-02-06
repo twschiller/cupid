@@ -11,8 +11,6 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -22,15 +20,12 @@ import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.ICapability.Flag;
-import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearSerializableCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class SetGetter<I,V> extends GenericLinearCapability<Set<I>,Set<V>> implements IExtractCapability<Set<I>,Set<V>> {
-	private static final long serialVersionUID = 1L;
+public final class SetGetter<I,V> extends GenericLinearSerializableCapability<Set<I>,Set<V>> implements IExtractCapability<Set<I>,Set<V>> {
+	private static final long serialVersionUID = 2L;
 
 	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.set.getter";
 	
@@ -39,8 +34,8 @@ public final class SetGetter<I,V> extends GenericLinearCapability<Set<I>,Set<V>>
 	private final TypeToken<V> result;
 	
 	public SetGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		super("{ " + field + " }", "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type.getType()),
-			  BASE_ID + "." + field,
+		super("{ " + field + " }", BASE_ID + "." + field,
+			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
 			  Flag.PURE);
 		
 		this.field = field;

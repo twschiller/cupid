@@ -12,12 +12,14 @@ package edu.washington.cs.cupid.capability.linear;
 
 import com.google.common.reflect.TypeToken;
 
-public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLinearCapability<I, V> implements ILinearCapability<I, V> {
+public abstract class LinearSerializableCapability<I, V> extends GenericLinearSerializableCapability<I, V> implements ILinearCapability<I, V> {
+	
+	private static final long serialVersionUID = 1L;
 	
 	private TypeToken<I> inputType;
 	private TypeToken<V> outputType;
 	
-	public AbstractLinearCapability(String name, String uniqueId,
+	public LinearSerializableCapability(String name, String uniqueId,
 			String description, 
 			TypeToken<I> inputType, TypeToken<V> outputType,
 			Flag... flags) {
@@ -27,7 +29,7 @@ public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLine
 		this.outputType = outputType;
 	}
 	
-	public AbstractLinearCapability(String name, String uniqueId,
+	public LinearSerializableCapability(String name, String uniqueId,
 			String description, 
 			Class<I> inputType, Class<V> outputType,
 			Flag... flags) {

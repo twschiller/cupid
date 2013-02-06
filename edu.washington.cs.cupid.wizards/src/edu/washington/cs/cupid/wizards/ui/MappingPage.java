@@ -14,6 +14,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.SortedSet;
 
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,7 +48,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
@@ -54,8 +58,7 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
-import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
-import edu.washington.cs.cupid.capability.linear.ILinearSerializableCapability;
+import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.wizards.TypeComboListener;
 import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
@@ -251,7 +254,7 @@ public class MappingPage extends WizardPage {
 		}else if (selected instanceof ISerializableCapability){
 			return (ISerializableCapability) selected;
 		}else if (selected instanceof ICapability){
-			return new SerializablePipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
+			return new DynamicSerializablePipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();
 		}else{
@@ -343,7 +346,7 @@ public class MappingPage extends WizardPage {
 		column.setText("Capability");
 		keyTree.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		keyTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilitiesForOutput(TypeToken.of(Collection.class)));
+		keyTree.setInput(validCapabilities());
 
 	}
 	
@@ -362,6 +365,19 @@ public class MappingPage extends WizardPage {
 		}
 		
 		return result;
+	}
+	
+	private LinkedHashSet<ICapability> validCapabilities(){
+		SortedSet<ICapability> consistent = CupidPlatform.getCapabilityRegistry().getCapabilitiesForOutput(TypeToken.of(Collection.class));
+		
+		SortedSet<ICapability> linear = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
+			@Override
+			public boolean apply(ICapability capability) {
+				return CapabilityUtil.isLinear(capability);
+			}
+		});
+		
+		return Sets.newLinkedHashSet(Sets.intersection(consistent, linear));
 	}
 	
 	private void createValueGroup(Composite composite){
@@ -385,7 +401,7 @@ public class MappingPage extends WizardPage {
 		column.setText("Capability");
 		valueTree.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
 	
-		valueTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilitiesForOutput(TypeToken.of(Collection.class)));
+		valueTree.setInput(validCapabilities());
 	}
 
 	private void createInjectionGroup(Composite composite){

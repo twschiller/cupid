@@ -16,13 +16,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearSerializableCapability;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class Getter<I, V> extends LinearCapability<I, V> implements IExtractCapability<I,V> {
+public final class Getter<I, V> extends LinearSerializableCapability<I, V> implements IExtractCapability<I,V> {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
 	
@@ -30,8 +31,8 @@ public final class Getter<I, V> extends LinearCapability<I, V> implements IExtra
 	
 	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
 		
-		super(field, "Get the '" + field + "' of type " + type.toString(),
-			  BASE_ID + ".[" + type.getRawType().getName() + "]." + field,
+		super(field, BASE_ID + ".[" + type.getRawType().getName() + "]." + field,
+			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
 			  type, result,
 			  Flag.PURE);
 					

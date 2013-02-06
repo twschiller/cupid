@@ -14,18 +14,12 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Status;
-
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.ISerializableCapability;
-import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
-import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.capability.linear.LinearStatus;
+import edu.washington.cs.cupid.capability.linear.GenericLinearSerializableCapability;
 
-public abstract class AbstractMapping<I, K, V> extends GenericLinearCapability<I, Map<K,Set<V>>> implements ISerializableCapability {
+public abstract class AbstractMapping<I, K, V> extends GenericLinearSerializableCapability<I, Map<K,Set<V>>>  {
 
 	private static final long serialVersionUID = 1L;
 
@@ -55,7 +49,4 @@ public abstract class AbstractMapping<I, K, V> extends GenericLinearCapability<I
 		 	.where(new TypeParameter<K>(){}, keyType)
 		 	.where(new TypeParameter<V>(){}, valueType);
 	}
-	
-	
-	
 }

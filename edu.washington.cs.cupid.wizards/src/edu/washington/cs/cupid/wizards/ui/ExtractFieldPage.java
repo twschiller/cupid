@@ -15,10 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.ui.IJavaElementSearchConstants;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -31,7 +27,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.ui.dialogs.SelectionDialog;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -158,7 +153,7 @@ public class ExtractFieldPage extends WizardPage {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" }) // type is determined dynamically by text
-	public Getter<?,?> getGetter() throws ClassNotFoundException, SecurityException, NoSuchMethodException{
+	public Getter<?,?> getGetter() throws Exception {
 		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
 		return new Getter(method, TypeToken.of(clazz), TypeManager.boxType(TypeToken.of(clazz.getMethod(method).getReturnType())));
 	}

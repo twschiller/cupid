@@ -12,7 +12,6 @@ package edu.washington.cs.cupid.capability.dynamic;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +22,6 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 
-import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
@@ -37,7 +35,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @param <V> output type
  * @author Todd Schiller
  */
-public class SerializablePipeline<I, V> extends AbstractSerializableCapability implements ILinearCapability<I, V> {
+public class DynamicSerializablePipeline<I, V> extends AbstractDynamicSerializableCapability implements ILinearCapability<I, V> {
 	// TODO handle concurrent modifications to capability bindings
 	
 	private static final long serialVersionUID = 1L;
@@ -50,7 +48,7 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability i
 	 * @param description the capability description
 	 * @param capabilities the pipeline of capabilities
 	 */
-	public SerializablePipeline(final String name, final String description, final List<Serializable> capabilities) {
+	public DynamicSerializablePipeline(final String name, final String description, final List<Serializable> capabilities) {
 		super(name, description, capabilities);
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
@@ -105,7 +103,7 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability i
 
 					Object result = getInput();
 
-					monitor.beginTask(this.getName(), SerializablePipeline.this.capabilities.size());
+					monitor.beginTask(this.getName(), DynamicSerializablePipeline.this.capabilities.size());
 
 					List<ILinearCapability<?, ?>> resolved = inorder();
 
@@ -144,15 +142,6 @@ public class SerializablePipeline<I, V> extends AbstractSerializableCapability i
 				}
 			}
 		};
-	}
-
-	@Override
-	public EnumSet<Flag> getFlags() {
-		try {
-			return CapabilityUtil.union(inorder());
-		} catch (NoSuchCapabilityException e) {
-			throw new DynamicBindingException(e);
-		}
 	}
 
 	@Override

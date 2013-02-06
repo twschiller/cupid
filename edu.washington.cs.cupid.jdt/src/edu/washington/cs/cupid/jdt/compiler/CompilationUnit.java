@@ -29,22 +29,22 @@ public final class CompilationUnit extends AbstractLinearCapability<IJavaElement
 	}
 	
 	@Override
-	public LinearJob getJob(final IJavaElement input) {
-		return new LinearJob(this, input) {
+	public LinearJob<IJavaElement, ICompilationUnit> getJob(final IJavaElement input) {
+		return new LinearJob<IJavaElement, ICompilationUnit>(this, input) {
 
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<ICompilationUnit> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 1);
 					IJavaElement cu = input.getAncestor(IJavaElement.COMPILATION_UNIT);
 					
 					if (cu != null) {
-						return LinearStatus.makeError(new RuntimeException("No associated compilation unit"));
+						return LinearStatus.<ICompilationUnit>makeError(new RuntimeException("No associated compilation unit"));
 					} else {
 						return LinearStatus.makeOk(getCapability(), (ICompilationUnit)  cu);
 					}
 				} catch (Exception ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<ICompilationUnit>makeError(ex);
 				} finally {
 					monitor.done();
 				}

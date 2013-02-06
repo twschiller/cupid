@@ -34,12 +34,12 @@ public class LongArray extends AbstractLinearCapability<IResource, Object[]>  {
 	}
 	
 	@Override
-	public LinearJob getJob(IResource input) {
+	public LinearJob<IResource, Object[]> getJob(IResource input) {
 		
-		return new LinearJob(this, input){
+		return new LinearJob<IResource, Object[]>(this, input){
 
 			@Override
-			protected LinearStatus run(IProgressMonitor monitor) {
+			protected LinearStatus<Object[]> run(IProgressMonitor monitor) {
 				int size = 1500;
 				monitor.beginTask("Create long array", size);
 				

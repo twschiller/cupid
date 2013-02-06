@@ -1,19 +1,18 @@
 package edu.washington.cs.cupid.capability.linear;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 
-public abstract class LinearJob extends CapabilityJob {
+public abstract class LinearJob<I, V> extends CapabilityJob<ILinearCapability<I, V>> {
 
-	private final Object input;
+	private final I input;
 	
-	public LinearJob(final ICapability capability, final Object input) {
-		super(capability, null);
+	public LinearJob(final ILinearCapability<I, V> capability, final I input) {
+		super(capability, CapabilityUtil.singleton(capability, input));
 		this.input = input;
 	}
 
-	public Object getInput(){
+	public I getInput(){
 		return input;
 	}
-	
 }

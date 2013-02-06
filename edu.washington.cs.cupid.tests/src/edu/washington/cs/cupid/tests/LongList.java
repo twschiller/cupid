@@ -34,12 +34,12 @@ public class LongList extends AbstractLinearCapability<IResource, List<Integer>>
 	}
 	
 	@Override
-	public LinearJob getJob(IResource input) {
+	public LinearJob<IResource, List<Integer>> getJob(IResource input) {
 		
-		return new LinearJob(this, input){
+		return new LinearJob<IResource, List<Integer>>(this, input){
 
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<Integer>> run(final IProgressMonitor monitor) {
 				int size = 1500;
 				monitor.beginTask("Create long list", size);
 				

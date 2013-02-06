@@ -16,9 +16,13 @@ public class CapabilityUtil {
 	}
 	
 	public static <T> ICapabilityOutput singletonOutput(ICapability capability, T value){
-		ReturnImpl output = new ReturnImpl();
-		output.add((Output<T>)singleOutput(capability), value);
-		return output;
+		return singletonOutput((Output<T>)singleOutput(capability), value);
+	}
+	
+	public static <T> ICapabilityOutput singletonOutput(Output<T> output, T value){
+		ReturnImpl result = new ReturnImpl();
+		result.add(output, value);
+		return result;
 	}
 	
 	public static <T> ICapabilityInput singleton(ICapability capability, T argument){

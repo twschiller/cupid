@@ -4,14 +4,13 @@ import org.eclipse.core.runtime.Status;
 
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
-import edu.washington.cs.cupid.capability.ICapability;
 
-public class LinearStatus extends CapabilityStatus {
+public class LinearStatus<V> extends CapabilityStatus {
 	
-	private final Object value;
+	private final V value;
 	
-	public LinearStatus(ICapability capability, Object value) {
-		super(CapabilityUtil.singletonOutput(capability, value));
+	public LinearStatus(ILinearCapability<?, V> capability, V value) {
+		super(CapabilityUtil.singletonOutput(capability.getOutput(), value));
 		this.value = value;
 	}
 	
@@ -35,8 +34,8 @@ public class LinearStatus extends CapabilityStatus {
 	 * A convenience method for constructing a cancelled job status.
 	 * @return a cancelled job status
 	 */
-	public static LinearStatus makeCancelled() {
-		return new LinearStatus(Status.CANCEL, null, (Throwable) null);
+	public static <V> LinearStatus<V> makeCancelled() {
+		return new LinearStatus<V>(Status.CANCEL, null, (Throwable) null);
 	}
 	
 	/**
@@ -44,11 +43,11 @@ public class LinearStatus extends CapabilityStatus {
 	 * @param value the result of the computation
 	 * @return a successful job status with result <code>value</code>
 	 */
-	public static LinearStatus makeOk(final ICapability capability, final Object value) {
+	public static <V> LinearStatus<V> makeOk(final ILinearCapability<?, V> capability, final V value) {
 		if (value == null) {
 			throw new IllegalArgumentException("Capability results may not be null");
 		}
-		return new LinearStatus(capability, value);
+		return new LinearStatus<V>(capability, value);
 	}
 	
 	/**
@@ -56,15 +55,15 @@ public class LinearStatus extends CapabilityStatus {
 	 * @param exception the exception
 	 * @return an exceptional job status with result <code>exception</code>
 	 */
-	public static LinearStatus makeError(final Throwable exception) {
+	public static <V> LinearStatus<V> makeError(final Throwable exception) {
 		if (exception == null) {
 			throw new IllegalArgumentException("Error capability results must have an associated exception");
 		}
 		
-		return new LinearStatus(exception);
+		return new LinearStatus<V>(exception);
 	}
 
-	public Object getOutputValue() {
+	public V getOutputValue() {
 		return value;
 	}
 }

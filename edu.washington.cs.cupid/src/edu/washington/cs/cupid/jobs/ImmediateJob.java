@@ -22,7 +22,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @param <I> input type
  * @param <V> output type
  */
-public final class ImmediateJob<I, V> extends LinearJob {
+public final class ImmediateJob<I, V> extends LinearJob<I, V> {
 	
 	private final V value;
 	private final Throwable exception;
@@ -63,12 +63,12 @@ public final class ImmediateJob<I, V> extends LinearJob {
 	
 	
 	@Override
-	protected LinearStatus run(final IProgressMonitor monitor) {
+	protected LinearStatus<V> run(final IProgressMonitor monitor) {
 		try {
 			monitor.beginTask(getName(), 1);
-			return value != null ? LinearStatus.makeOk(getCapability(), value) : LinearStatus.makeError(exception);
+			return value != null ? LinearStatus.makeOk(getCapability(), value) : LinearStatus.<V>makeError(exception);
 		} catch (Exception ex) {
-			return LinearStatus.makeError(ex);
+			return LinearStatus.<V>makeError(ex);
 		} finally {
 			monitor.done();
 		}

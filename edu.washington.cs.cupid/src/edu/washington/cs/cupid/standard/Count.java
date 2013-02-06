@@ -49,7 +49,7 @@ public final class Count<V> extends GenericAbstractLinearCapability<Collection<V
 	}
 
 	@Override
-	public LinearJob getJob(final Collection<V> input) {
+	public LinearJob<Collection<V>, Integer> getJob(final Collection<V> input) {
 		return new ImmediateJob<Collection<V>, Integer>(this, input, Integer.valueOf(input.size()));
 	}
 

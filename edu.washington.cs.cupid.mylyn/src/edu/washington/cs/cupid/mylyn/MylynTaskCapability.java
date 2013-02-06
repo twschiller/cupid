@@ -45,17 +45,17 @@ public final class MylynTaskCapability extends AbstractLinearCapability<Void, Li
 	}
 
 	@Override
-	public LinearJob getJob(final Void input) {
-		return new LinearJob(this, input) {
+	public LinearJob<Void, List<AbstractTask>> getJob(final Void input) {
+		return new LinearJob<Void, List<AbstractTask>>(this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<AbstractTask>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					TaskList taskList = TasksUiPlugin.getTaskList();
 					List<AbstractTask> tasks = new ArrayList<AbstractTask>(taskList.getAllTasks());
 					return LinearStatus.makeOk(getCapability(), tasks);
 				} catch (Exception ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<List<AbstractTask>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

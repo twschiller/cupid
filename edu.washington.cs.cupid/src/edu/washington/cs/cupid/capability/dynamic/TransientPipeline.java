@@ -37,8 +37,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @param <V> output type
  * @author Todd Schiller
  */
-@SuppressWarnings("rawtypes")
-public class TransientPipeline extends AbstractTransientCapability implements ILinearCapability {
+public class TransientPipeline<I, V> extends AbstractTransientCapability implements ILinearCapability<I, V> {
 	// TODO handle concurrent modifications to capability bindings
 	
 	private final List<Object> capabilities;
@@ -54,16 +53,16 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 		this.capabilities = Lists.newArrayList(capabilities);
 	}
 
-	private List<ILinearCapability> inorder() throws NoSuchCapabilityException {
+	private List<ILinearCapability<?, ?>> inorder() throws NoSuchCapabilityException {
 		Map<String, ICapability> map = super.current();
 		
-		List<ILinearCapability> result = Lists.newArrayList();
+		List<ILinearCapability<?, ?>> result = Lists.newArrayList();
 	
 		for (Object capability : capabilities) {
 			if (capability instanceof ILinearCapability) {
-				result.add((ILinearCapability) capability);
+				result.add((ILinearCapability<?, ?>) capability);
 			} else if (capability instanceof String) {
-				result.add((ILinearCapability) map.get((String) capability));
+				result.add((ILinearCapability<?, ?>) map.get((String) capability));
 			} else {
 				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
 			}
@@ -91,33 +90,32 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 	}
 
 	@Override
-	public LinearJob getJob(ICapabilityInput input) {
-		return getJob(input.getArguments().get(getParameter()));
+	public LinearJob<I, V> getJob(ICapabilityInput input) {
+		return getJob(input.getArgument(getParameter()));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public final LinearJob getJob(final Object input) {
-		return new LinearJob(this, input) {
+	public final LinearJob<I, V> getJob(final I input) {
+		return new LinearJob<I, V>(this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
 
 					Object result = getInput();
 
 					monitor.beginTask(this.getName(), TransientPipeline.this.capabilities.size());
 
-					List<ILinearCapability> resolved = inorder();
+					List<ILinearCapability<?, ?>> resolved = inorder();
 
 					List<Object> intermediateResults = Lists.newArrayList();
 					intermediateResults.add(result);
 
 					for (ILinearCapability capability : resolved) {
 						if (monitor.isCanceled()) {
-							return LinearStatus.makeCancelled();
+							return LinearStatus.<V>makeCancelled();
 						}
 
-						LinearJob subtask = capability.getJob(result);
+						LinearJob<?, ?> subtask = (LinearJob<?, ?>) capability.getJob(result);
 
 						if (subtask == null) {
 							throw new RuntimeException("Capability " + capability.getName() + " produced null job");
@@ -127,7 +125,7 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 						subtask.schedule();
 						subtask.join();
 
-						LinearStatus status = (LinearStatus) subtask.getResult();
+						LinearStatus<?> status = (LinearStatus<?>) subtask.getResult();
 
 						if (status.getCode() == Status.OK) {
 							result = status.getOutputValue();
@@ -136,9 +134,9 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 							throw status.getException();
 						}
 					}
-					return LinearStatus.makeOk(getCapability(), result);
+					return LinearStatus.<V>makeOk(getCapability(), (V) result);
 				} catch (Throwable ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -156,9 +154,9 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 	}
 
 	@Override
-	public Parameter<?> getParameter() {
+	public Parameter<I> getParameter() {
 		try {
-			return inorder().get(0).getParameter();
+			return (Parameter<I>) inorder().get(0).getParameter();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -170,19 +168,17 @@ public class TransientPipeline extends AbstractTransientCapability implements IL
 	}
 	
 	@Override
-	public Output<?> getOutput() {
+	public Output<V> getOutput() {
 		try {
-			List<ILinearCapability> ordered = inorder();
-			return ordered.get(ordered.size()-1).getOutput();
+			List<ILinearCapability<?, ?>> ordered = inorder();
+			return (Output<V>) ordered.get(ordered.size()-1).getOutput();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}	
 	}
 
-
 	@Override
 	public Set<Output<?>> getOutputs() {
 		return Collections.<Output<?>>singleton(getOutput());
 	}
-
 }

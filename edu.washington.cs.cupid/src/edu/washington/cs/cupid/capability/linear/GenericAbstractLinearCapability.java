@@ -52,7 +52,7 @@ public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapa
 	public abstract TypeToken<V> getOutputType();
 	
 	@Override
-	public final LinearJob getJob(final ICapabilityInput input) {
+	public final LinearJob<I, V> getJob(final ICapabilityInput input) {
 		Parameter<?> unary = getParameter();
 		I arg = (I) input.getArguments().get(unary);
 		return getJob(arg);

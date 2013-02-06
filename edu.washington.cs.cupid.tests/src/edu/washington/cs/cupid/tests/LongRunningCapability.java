@@ -37,16 +37,16 @@ public class LongRunningCapability extends AbstractLinearCapability<IResource, I
 	}
 	
 	@Override
-	public LinearJob getJob(IResource input) {
-		return new LinearJob(this, input){
+	public LinearJob<IResource, IResource> getJob(IResource input) {
+		return new LinearJob<IResource, IResource>(this, input){
 			@Override
-			protected LinearStatus run(IProgressMonitor monitor) {
+			protected LinearStatus<IResource> run(IProgressMonitor monitor) {
 				monitor.beginTask("Long Job", RUNTIME_IN_SECONDS);
 				
 				for (int i = 0; i < RUNTIME_IN_SECONDS; i++){
 					if (monitor.isCanceled()){
 						monitor.done();
-						return LinearStatus.makeCancelled();
+						return LinearStatus.<IResource>makeCancelled();
 					}
 					
 					try {

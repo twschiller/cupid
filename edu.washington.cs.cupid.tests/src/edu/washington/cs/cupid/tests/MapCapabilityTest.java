@@ -23,9 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
@@ -47,10 +44,10 @@ public class MapCapabilityTest extends AbstractLinearCapability<ICompilationUnit
 	}
 
 	@Override
-	public LinearJob getJob(ICompilationUnit input) {
-		return new LinearJob(this, input){
+	public LinearJob<ICompilationUnit, Map<IType, Set<IMethod>>> getJob(ICompilationUnit input) {
+		return new LinearJob<ICompilationUnit, Map<IType, Set<IMethod>>>(this, input){
 			@Override
-			protected LinearStatus run(IProgressMonitor monitor) {
+			protected LinearStatus<Map<IType, Set<IMethod>>> run(IProgressMonitor monitor) {
 				monitor.done();
 				
 				Map<IType, Set<IMethod>> result = Maps.newHashMap();
@@ -61,7 +58,7 @@ public class MapCapabilityTest extends AbstractLinearCapability<ICompilationUnit
 						result.put(type, methods);
 					}
 				}catch(JavaModelException ex){
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<Map<IType, Set<IMethod>>>makeError(ex);
 				}
 
 				return LinearStatus.makeOk(getCapability(), result);

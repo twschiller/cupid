@@ -22,6 +22,11 @@ public class InputImpl implements ICapabilityInput{
 	}
 	
 	@Override
+	public <T> T getArgument(Parameter<T> parameter){
+		return (T) arguments.get(parameter);
+	}
+	
+	@Override
 	public Map<Parameter<?>, Object> getArguments() {
 		return arguments;
 	}

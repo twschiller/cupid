@@ -46,16 +46,16 @@ public final class CompilerMessagesCapability extends AbstractLinearCapability<I
 	}
 	
 	@Override
-	public LinearJob getJob(final ICompilationUnit input) {
-		return new LinearJob(this, input) {
+	public LinearJob<ICompilationUnit, List<Message>> getJob(final ICompilationUnit input) {
+		return new LinearJob<ICompilationUnit, List<Message>>(this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<Message>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					CompilationUnit unit = ParseUtil.parse(input, new SubProgressMonitor(monitor, 100));	
 					return LinearStatus.makeOk(getCapability(), Arrays.asList(unit.getMessages()));
 				} catch (Exception ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<List<Message>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

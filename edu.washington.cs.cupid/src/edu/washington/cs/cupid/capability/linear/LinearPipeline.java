@@ -30,14 +30,13 @@ import edu.washington.cs.cupid.capability.IDynamicCapability;
  * @param <I> input type
  * @param <T> output type
  */
-@SuppressWarnings("rawtypes")
-public final class LinearPipeline implements ILinearCapability {
+public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 
 	// TODO support caching for intermediary values
 	
 	private final String name;
 	private final String description;
-	private final List<ILinearCapability> capabilities;
+	private final List<ILinearCapability<?, ?>> capabilities;
 	private final EnumSet<Flag> flags;
 	
 	/**
@@ -46,14 +45,14 @@ public final class LinearPipeline implements ILinearCapability {
 	 * @param description the capability description
 	 * @param capabilities the capabilities in the pipeline
 	 */
-	public LinearPipeline(final String name, final String description, final ILinearCapability... capabilities) {
+	public LinearPipeline(final String name, final String description, final ILinearCapability<?, ?>... capabilities) {
 		this.name = name;
 		this.description = description;
 		this.capabilities = Lists.newArrayList(capabilities);
 		
 		flags = EnumSet.of(Flag.PURE);
 		
-		for (ILinearCapability capability : capabilities) {
+		for (ILinearCapability<?, ?> capability : capabilities) {
 			if (capability instanceof IDynamicCapability) {
 				throw new IllegalArgumentException("Static pipelines cannot have dynamic dependencies: " + capability.getUniqueId());
 			}
@@ -70,10 +69,10 @@ public final class LinearPipeline implements ILinearCapability {
 	}
 
 	@Override
-	public LinearJob getJob(Object input) {
-		return new LinearJob(this, input) {
+	public LinearJob<I, V> getJob(I input) {
+		return new LinearJob<I, V>(this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
 					Object result = getInput();
 					
@@ -81,16 +80,16 @@ public final class LinearPipeline implements ILinearCapability {
 
 					for (ILinearCapability capability : capabilities) {
 						if (monitor.isCanceled()) {
-							return LinearStatus.makeCancelled();
+							return LinearStatus.<V>makeCancelled();
 						}
 						
-						LinearJob subtask = capability.getJob(result);
+						LinearJob<?,?> subtask = capability.getJob(result);
 						
 						subtask.setProgressGroup(new SubProgressMonitor(monitor, 1), 1);
 						subtask.schedule();
 						subtask.join();
 						
-						LinearStatus status = (LinearStatus) subtask.getResult();
+						LinearStatus<?> status = (LinearStatus<?>) subtask.getResult();
 						
 						if (status.getCode() == Status.OK) {
 							result = status.getOutputValue();
@@ -98,9 +97,9 @@ public final class LinearPipeline implements ILinearCapability {
 							throw status.getException();
 						}		
 					}
-					return LinearStatus.makeOk(getCapability(), result);
+					return LinearStatus.makeOk(getCapability(), (V) result);
 				} catch (Throwable ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -109,8 +108,8 @@ public final class LinearPipeline implements ILinearCapability {
 	}	
 	
 	@Override
-	public LinearJob getJob(final ICapabilityInput input) {
-		return getJob(input.getArguments().get(this.capabilities.get(0).getParameters()));
+	public LinearJob<I, V> getJob(final ICapabilityInput input) {
+		return getJob(input.getArgument(getParameter()));
 	}
 	
 	@Override
@@ -140,13 +139,13 @@ public final class LinearPipeline implements ILinearCapability {
 	}
 
 	@Override
-	public Parameter<?> getParameter() {
-		return capabilities.get(0).getParameter();
+	public Parameter<I> getParameter() {
+		return (Parameter<I>) capabilities.get(0).getParameter();
 	}
 
 	@Override
-	public Output<?> getOutput() {
-		return capabilities.get(capabilities.size()-1).getOutput();
+	public Output<V> getOutput() {
+		return (Output<V>) capabilities.get(capabilities.size()-1).getOutput();
 	}
 
 	@Override

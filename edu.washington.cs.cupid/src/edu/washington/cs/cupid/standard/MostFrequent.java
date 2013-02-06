@@ -44,10 +44,10 @@ public final class MostFrequent<V> extends GenericAbstractLinearCapability<List<
 	}
 	
 	@Override
-	public LinearJob getJob(final List<V> input) {
-		return new LinearJob(this, input) {
+	public LinearJob<List<V>, V> getJob(final List<V> input) {
+		return new LinearJob<List<V>, V> (this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					
@@ -57,9 +57,9 @@ public final class MostFrequent<V> extends GenericAbstractLinearCapability<List<
 						return LinearStatus.makeOk(getCapability(), val);
 					}
 					
-					return LinearStatus.makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
+					return LinearStatus.<V>makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
 				} catch (Exception ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -69,16 +69,12 @@ public final class MostFrequent<V> extends GenericAbstractLinearCapability<List<
 
 	@Override
 	public TypeToken<List<V>> getInputType() {
-		return new TypeToken<List<V>>(getClass()) {
-			private static final long serialVersionUID = 1L;
-		};
+		return new TypeToken<List<V>>(getClass()) {};
 	}
 
 	@Override
 	public TypeToken<V> getOutputType() {
-		return new TypeToken<V>(getClass()) {
-			private static final long serialVersionUID = 1L;
-		};
+		return new TypeToken<V>(getClass()) {};
 	}
 
 }

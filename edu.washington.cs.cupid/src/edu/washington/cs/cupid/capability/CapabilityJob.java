@@ -29,11 +29,10 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * method.</p>
  * 
  * @author Todd Schiller (tws@cs.washington.edu)
- * @param <I> input type
- * @param <V> output type
+ * @param <T> the type of capability that produced the job
  * @see {@link Job}
  */
-public abstract class CapabilityJob extends Job {
+public abstract class CapabilityJob<T extends ICapability> extends Job {
 	
 	/**
 	 * The input to the capability.
@@ -41,7 +40,7 @@ public abstract class CapabilityJob extends Job {
 	// TODO make private and expose getter
 	private final ICapabilityInput input;
 	
-	private final ICapability capability;
+	private final T capability;
 	
 	private final Set<Object> families;
 	
@@ -50,7 +49,7 @@ public abstract class CapabilityJob extends Job {
 	 * @param capability the source capability
 	 * @param input the input
 	 */
-	public CapabilityJob(final ICapability capability, final ICapabilityInput input) {
+	public CapabilityJob(final T capability, final ICapabilityInput input) {
 		super(capability.getUniqueId());
 		this.input = input;
 		this.capability = capability;
@@ -67,7 +66,7 @@ public abstract class CapabilityJob extends Job {
 	/**
 	 * @return the associated capability
 	 */
-	public final ICapability getCapability() {
+	public final T getCapability() {
 		return capability;
 	}
 	

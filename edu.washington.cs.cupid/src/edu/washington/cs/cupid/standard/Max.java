@@ -40,15 +40,15 @@ public final class Max<V extends Comparable<V>> extends GenericAbstractLinearCap
 	}
 	
 	@Override
-	public LinearJob getJob(final Collection<V> input) {
-		return new LinearJob(this, input) {
+	public LinearJob<Collection<V>, V> getJob(final Collection<V> input) {
+		return new LinearJob<Collection<V>, V>(this, input) {
 			@Override
-			protected LinearStatus run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					return LinearStatus.makeOk(getCapability(), Collections.max(input));	
 				} catch (Exception ex) {
-					return LinearStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -69,5 +69,4 @@ public final class Max<V extends Comparable<V>> extends GenericAbstractLinearCap
 			private static final long serialVersionUID = 1L;
 		};
 	}
-
 }

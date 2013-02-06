@@ -4,12 +4,11 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
 
 public interface ILinearCapability<I, V> extends ICapability {
-
 	Parameter<I> getParameter();
 	
 	Output<V> getOutput();
 
-	LinearJob getJob(I input);
+	LinearJob<I, V> getJob(final I input);
 	
-	LinearJob getJob(ICapabilityInput input);
+	LinearJob<I, V> getJob(final ICapabilityInput input);
 }

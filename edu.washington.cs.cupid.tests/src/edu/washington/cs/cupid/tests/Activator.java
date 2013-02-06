@@ -38,8 +38,8 @@ public class Activator implements BundleActivator, ICapabilityPublisher {
 	@Override
 	public ICapability[] publish() {
 		return new ICapability [] { 
-				//new ExceptionCapability(), 
-//				new LongRunningCapability(), 
+				new ExceptionCapability(), 
+				new LongRunningCapability(), 
 //				new MethodCapabilityTest(),
 				new LongList(),
 				new LongArray(),

@@ -19,7 +19,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.AbstractSerializableCapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
-import edu.washington.cs.cupid.capability.CapabilityOutputs;
+import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
 
 public abstract class GenericLinearSerializableCapability<I, V> extends AbstractSerializableCapability implements ILinearCapability<I, V> {
@@ -60,7 +60,7 @@ public abstract class GenericLinearSerializableCapability<I, V> extends Abstract
 	@Override
 	public final IOutput<V> getOutput() {
 		if (output == null){
-			output = new CapabilityOutputs<V>(null, getOutputType());
+			output = new Output<V>(null, getOutputType());
 		}
 		return output;
 	}

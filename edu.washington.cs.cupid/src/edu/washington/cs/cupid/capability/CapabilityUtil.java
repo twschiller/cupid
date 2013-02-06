@@ -48,7 +48,7 @@ public class CapabilityUtil {
 	}
 	
 	public static <T> ICapabilityOutputs packSingleOutputValue(IOutput<T> output, T value){
-		Output result = new Output();
+		CapabilityOutputs result = new CapabilityOutputs();
 		result.add(output, value);
 		return result;
 	}

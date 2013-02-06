@@ -38,7 +38,7 @@ public abstract class CapabilityJob<T extends ICapability> extends Job {
 	 * The input to the capability.
 	 */
 	// TODO make private and expose getter
-	private final ICapabilityInput input;
+	private final ICapabilityArguments input;
 	
 	private final T capability;
 	
@@ -49,7 +49,7 @@ public abstract class CapabilityJob<T extends ICapability> extends Job {
 	 * @param capability the source capability
 	 * @param input the input
 	 */
-	public CapabilityJob(final T capability, final ICapabilityInput input) {
+	public CapabilityJob(final T capability, final ICapabilityArguments input) {
 		super(capability.getUniqueId());
 		this.input = input;
 		this.capability = capability;
@@ -59,7 +59,7 @@ public abstract class CapabilityJob<T extends ICapability> extends Job {
 	/**
 	 * @return the associated capability
 	 */
-	public final ICapabilityInput getInputs() {
+	public final ICapabilityArguments getInputs() {
 		return input;
 	}
 	

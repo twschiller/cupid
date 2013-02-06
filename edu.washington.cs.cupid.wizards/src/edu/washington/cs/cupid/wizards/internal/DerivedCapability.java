@@ -24,7 +24,7 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapability.Output;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 
 /**
@@ -80,7 +80,7 @@ public class DerivedCapability{
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
 		if (capability.getOutputs().size() == 1){
-			Output<?> output = CapabilityUtil.singleOutput(capability);
+			IOutput<?> output = CapabilityUtil.singleOutput(capability);
 			Class<?> clazz = output.getType().getRawType();
 			
 			for (Method method : clazz.getMethods()){
@@ -104,7 +104,7 @@ public class DerivedCapability{
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
 		if (capability.getOutputs().size() == 1){
-			Output<?> output = CapabilityUtil.singleOutput(capability);
+			IOutput<?> output = CapabilityUtil.singleOutput(capability);
 			Class<?> clazz = output.getType().getRawType();
 		
 			// TODO refactor

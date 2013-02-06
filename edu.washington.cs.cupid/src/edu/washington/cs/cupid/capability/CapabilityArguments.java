@@ -15,32 +15,36 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import edu.washington.cs.cupid.capability.ICapability.Parameter;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
 
-public class InputImpl implements ICapabilityInput {
+public class CapabilityArguments implements ICapabilityArguments {
 
-	private Map<Parameter<?>, Object> arguments;
+	private Map<IParameter<?>, Object> arguments;
 	private Map<String, Object> named;
 	
-	public InputImpl(){
+	public CapabilityArguments(){
 		arguments = Maps.newHashMap();
 		named = Maps.newHashMap();
 	}
 	
-	public <T> void add(Parameter<T> parameter, T argument){
+	public <T> void add(IParameter<T> parameter, T argument){
 		arguments.put(parameter, argument);
 		named.put(parameter.getName(), argument);
 	}
 	
 	@Override
-	public <T> T getArgument(Parameter<T> parameter){
-		@SuppressWarnings("unchecked") // checked in the add(...) method
-		T result = (T) arguments.get(parameter);
-		return result ;
+	public <T> T getValueArgument(IParameter<T> parameter){
+		Object result = arguments.get(parameter);
+		
+		if (result instanceof ICapability){
+			throw new IllegalArgumentException("Parameter has capability argument");
+		} else {
+			return (T) result;
+		}
 	}
 	
 	@Override
-	public Map<Parameter<?>, Object> getArguments() {
+	public Map<IParameter<?>, Object> getArguments() {
 		return Collections.unmodifiableMap(arguments);
 	}
 

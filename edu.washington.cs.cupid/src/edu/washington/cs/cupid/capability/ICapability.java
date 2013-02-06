@@ -40,7 +40,7 @@ public interface ICapability {
 		TRANSIENT
 	}
 	
-	interface Parameter<T> {
+	interface IParameter<T> {
 		/**
 		 * Returns the name of the input.
 		 * @return the name of the input
@@ -66,7 +66,7 @@ public interface ICapability {
 		boolean hasDefault();
 	}
 	
-	interface Output<T> {
+	interface IOutput<T> {
 		/**
 		 * Returns the name of the output.
 		 * @return the name of the output
@@ -98,19 +98,19 @@ public interface ICapability {
 	/**
 	 * @return the capability's parameter types
 	 */
-	Set<? extends Parameter<?>> getParameters();
+	Set<? extends IParameter<?>> getParameters();
 	
 	/**
 	 * @return the capability's return types
 	 */
-	Set<? extends Output<?>> getOutputs();
+	Set<? extends IOutput<?>> getOutputs();
 	
 	/**
 	 * @param input the execution's input
 	 * @see CapabilityJob
 	 * @return a job that calculates a result for <code>input</code> when executed
 	 */
-	CapabilityJob<? extends ICapability> getJob(ICapabilityInput input);
+	CapabilityJob<? extends ICapability> getJob(ICapabilityArguments input);
 	
 	/**
 	 * @return the flags for the capability.

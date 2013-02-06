@@ -138,7 +138,7 @@ public final class TypeManager {
 	 * @return <code>true</code> iff argument <code>argument</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability.Parameter<?> parameter, final Object argument) {
+	public static boolean isCompatible(final ICapability.IParameter<?> parameter, final Object argument) {
 		return isCompatible(parameter, TypeToken.of(argument.getClass()));
 	}
 	
@@ -152,7 +152,7 @@ public final class TypeManager {
 	 * @return <code>true</code> iff an argument of type <code>argumentType</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability.Parameter<?> parameter, final TypeToken<?> argumentType) {
+	public static boolean isCompatible(final ICapability.IParameter<?> parameter, final TypeToken<?> argumentType) {
 		
 		TypeToken<?> parameterType = parameter.getType();
 		
@@ -188,7 +188,7 @@ public final class TypeManager {
 	 * a corresponding compatible argument, otherwise
 	 * @see {@link TypeManager#isCompatible(ICapability, Object)}
 	 */
-	public static Object getCompatible(final ICapability.Parameter<?> parameter, final Object argument) {
+	public static Object getCompatible(final ICapability.IParameter<?> parameter, final Object argument) {
 		if (parameter.getType().equals(TypeToken.of(Void.class))) {
 			return argument;
 		} else if (isJavaCompatible(parameter.getType(), TypeToken.of(argument.getClass()))) {

@@ -18,16 +18,16 @@ import java.util.Set;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.AbstractSerializableCapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
-import edu.washington.cs.cupid.capability.OutputImpl;
-import edu.washington.cs.cupid.capability.ParameterImpl;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.CapabilityOutputs;
+import edu.washington.cs.cupid.capability.Parameter;
 
 public abstract class GenericLinearSerializableCapability<I, V> extends AbstractSerializableCapability implements ILinearCapability<I, V> {
 
 	private static final long serialVersionUID = 1L;
 
-	private Parameter<I> input;
-	private Output<V> output;
+	private IParameter<I> input;
+	private IOutput<V> output;
 	private EnumSet<Flag> flags;
 	
 	public GenericLinearSerializableCapability(String name, String uniqueId,
@@ -40,34 +40,34 @@ public abstract class GenericLinearSerializableCapability<I, V> extends Abstract
 	}
 
 	@Override
-	public final Set<Parameter<?>> getParameters() {
-		return Collections.<Parameter<?>>singleton(getParameter());
+	public final Set<IParameter<?>> getParameters() {
+		return Collections.<IParameter<?>>singleton(getParameter());
 	}
 
 	@Override
-	public final Set<Output<?>> getOutputs() {
-		return Collections.<Output<?>>singleton(getOutput());
+	public final Set<IOutput<?>> getOutputs() {
+		return Collections.<IOutput<?>>singleton(getOutput());
 	}
 
 	@Override
-	public final Parameter<I> getParameter() {
+	public final IParameter<I> getParameter() {
 		if (input == null){
-			input = new ParameterImpl<I>(null, getInputType());
+			input = new Parameter<I>(null, getInputType());
 		}
 		return input;
 	}
 
 	@Override
-	public final Output<V> getOutput() {
+	public final IOutput<V> getOutput() {
 		if (output == null){
-			output = new OutputImpl<V>(null, getOutputType());
+			output = new CapabilityOutputs<V>(null, getOutputType());
 		}
 		return output;
 	}
 
 	@Override
-	public final LinearJob<I, V> getJob(final ICapabilityInput input) {
-		return getJob(input.getArgument(getParameter()));
+	public final LinearJob<I, V> getJob(final ICapabilityArguments input) {
+		return getJob(input.getValueArgument(getParameter()));
 	}
 	
 	@Override

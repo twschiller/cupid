@@ -28,7 +28,7 @@ public class CapabilityStatus extends Status {
 	/**
 	 * The result of the capability.
 	 */
-	private final ICapabilityOutput value;
+	private final ICapabilityOutputs value;
 	
 	/**
 	 * Simplified constructor of a new status object; assumes that code is <code>OK</code>.
@@ -47,7 +47,7 @@ public class CapabilityStatus extends Status {
 	 * @param message a human-readable message, localized to the current locale
 	 * @param value the capability output
 	 */
-	public CapabilityStatus(final int severity, final String message, final ICapabilityOutput value) {
+	public CapabilityStatus(final int severity, final String message, final ICapabilityOutputs value) {
 		super(severity, CupidActivator.PLUGIN_ID, message, null);
 		this.value = value;
 	}
@@ -57,7 +57,7 @@ public class CapabilityStatus extends Status {
 		this.value = null;
 	}
 	
-	public CapabilityStatus(final ICapabilityOutput value) {
+	public CapabilityStatus(final ICapabilityOutputs value) {
 		super(Status.OK, CupidActivator.PLUGIN_ID, null);
 		this.value = value;
 	}
@@ -68,7 +68,7 @@ public class CapabilityStatus extends Status {
 	 * @return the result of the capability, or <code>null</code> if the job
 	 * was cancelled or threw an error.
 	 */
-	public final ICapabilityOutput value() {
+	public final ICapabilityOutputs value() {
 		return this.value;
 	}
 	
@@ -85,7 +85,7 @@ public class CapabilityStatus extends Status {
 	 * @param value the result of the computation
 	 * @return a successful job status with result <code>value</code>
 	 */
-	public static CapabilityStatus makeOk(final ICapabilityOutput value) {
+	public static CapabilityStatus makeOk(final ICapabilityOutputs value) {
 		if (value == null) {
 			throw new IllegalArgumentException("Capability results may not be null");
 		}

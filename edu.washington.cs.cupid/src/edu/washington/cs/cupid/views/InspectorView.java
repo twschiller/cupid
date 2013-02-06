@@ -65,8 +65,8 @@ import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
-import edu.washington.cs.cupid.capability.InputImpl;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -380,8 +380,8 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 
 			try {
-				ICapabilityInput args = CapabilityUtil.isGenerator(capability)
-						? new InputImpl()
+				ICapabilityArguments args = CapabilityUtil.isGenerator(capability)
+						? new CapabilityArguments()
 						: CapabilityUtil.packUnaryInput(capability, input);
 
 				CapabilityExecutor.asyncExec(capability, args, family, new IJobChangeListener() {

@@ -11,14 +11,14 @@
 package edu.washington.cs.cupid.capability.linear;
 
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 
 public interface ILinearCapability<I, V> extends ICapability {
-	Parameter<I> getParameter();
+	IParameter<I> getParameter();
 	
-	Output<V> getOutput();
+	IOutput<V> getOutput();
 
 	LinearJob<I, V> getJob(final I input);
 	
-	LinearJob<I, V> getJob(final ICapabilityInput input);
+	LinearJob<I, V> getJob(final ICapabilityArguments input);
 }

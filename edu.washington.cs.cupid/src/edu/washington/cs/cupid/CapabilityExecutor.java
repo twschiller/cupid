@@ -40,8 +40,8 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.Flag;
-import edu.washington.cs.cupid.capability.ICapabilityInput;
-import edu.washington.cs.cupid.capability.ICapabilityOutput;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.ICapabilityOutputs;
 import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
@@ -79,12 +79,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Cupid result caches: Input -> { Capability -> Result }.
 	 */
-	private final Cache<ICapabilityInput, Cache<ICapability, ICapabilityOutput>> resultCaches;
+	private final Cache<ICapabilityArguments, Cache<ICapability, ICapabilityOutputs>> resultCaches;
 	
 	/**
 	 * Running jobs: Input -> { Capability -> Job }.
 	 */
-	private final Table<ICapabilityInput, ICapability, CapabilityJob<?>> running;
+	private final Table<ICapabilityArguments, ICapability, CapabilityJob<?>> running;
 	
 	/**
 	 * Jobs that have been canceled <i>by this executor</i>.
@@ -164,9 +164,9 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * Initializes the default capability result cache for an input.
 	 * @author Todd Schiller (tws@cs.washington.edu)
 	 */
-	private static class CapabilityCacheFactory implements Callable<Cache<ICapability, ICapabilityOutput>> {
+	private static class CapabilityCacheFactory implements Callable<Cache<ICapability, ICapabilityOutputs>> {
 		@Override
-		public Cache<ICapability, ICapabilityOutput> call() throws Exception {
+		public Cache<ICapability, ICapabilityOutputs> call() throws Exception {
 			return CacheBuilder
 					.newBuilder()
 					.build();
@@ -181,12 +181,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param <T> output type
 	 * @return the cached result, or <code>null</code> if the result is not cached
 	 */
-	private ICapabilityOutput getIfPresent(final ICapability capability, final ICapabilityInput input) {
+	private ICapabilityOutputs getIfPresent(final ICapability capability, final ICapabilityArguments input) {
 		synchronized (resultCaches) {
 			try {
-				Cache<ICapability, ICapabilityOutput> cCache = resultCaches.get(input, CACHE_FACTORY);
+				Cache<ICapability, ICapabilityOutputs> cCache = resultCaches.get(input, CACHE_FACTORY);
 				
-				ICapabilityOutput cached = cCache.getIfPresent(capability);
+				ICapabilityOutputs cached = cCache.getIfPresent(capability);
 				
 				if (cached == null) {
 					return null;
@@ -210,10 +210,10 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	 * @param family the job family (used for job cancellation)
 	 * @param callback the job listener
 	 */
-	public static void asyncExec(final ICapability capability, final ICapabilityInput input, final Object family, final IJobChangeListener callback) {
+	public static void asyncExec(final ICapability capability, final ICapabilityArguments input, final Object family, final IJobChangeListener callback) {
 		CapabilityExecutor executor = getInstance();
 		
-		final ICapabilityOutput cached = executor.getIfPresent(capability, input);
+		final ICapabilityOutputs cached = executor.getIfPresent(capability, input);
 		
 		CapabilityJob<?> job;
 		
@@ -315,7 +315,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					}
 					
 					// cancel obsolete jobs
-					for (ICapabilityInput input : running.rowKeySet()) {
+					for (ICapabilityArguments input : running.rowKeySet()) {
 						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
 							for (CapabilityJob<?> job : running.row(input).values()) {
 								job.cancel();
@@ -367,7 +367,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		public void done(final IJobChangeEvent event) {
 			CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
 			synchronized (resultCaches) {
-				ICapabilityOutput value = ((CapabilityStatus) job.getResult()).value();
+				ICapabilityOutputs value = ((CapabilityStatus) job.getResult()).value();
 				
 				if (value != null) {
 					if (logCacheStatus) {

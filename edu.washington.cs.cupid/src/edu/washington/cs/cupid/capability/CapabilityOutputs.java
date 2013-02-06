@@ -10,12 +10,28 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
-import java.util.Map;
+import com.google.common.reflect.TypeToken;
 
-public interface ICapabilityOutput {
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
-	Map<ICapability.Output<?>, Object> getOutputs();
-	<T> T getOutput(ICapability.Output<T> output);
-	Object getOutput(String name);
+public class CapabilityOutputs<I> implements IOutput<I> {
+
+	private String name;
+	private TypeToken<I> type;
 	
+	public CapabilityOutputs(String name, TypeToken<I> type) {
+		this.name = name;
+		this.type = type;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public TypeToken<I> getType() {
+		return type;
+	}
+
 }

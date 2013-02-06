@@ -13,8 +13,8 @@ package edu.washington.cs.cupid.tests;
 import org.eclipse.jdt.core.IMethod;
 
 import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 public class MethodCapabilityTest extends AbstractLinearCapability<IMethod, Boolean> {
 

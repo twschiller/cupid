@@ -20,7 +20,7 @@ public class LinearStatus<V> extends CapabilityStatus {
 	private final V value;
 	
 	public LinearStatus(ILinearCapability<?, V> capability, V value) {
-		super(CapabilityUtil.singletonOutput(capability.getOutput(), value));
+		super(CapabilityUtil.packSingleOutputValue(capability.getOutput(), value));
 		this.value = value;
 	}
 	

@@ -18,7 +18,7 @@ public abstract class LinearJob<I, V> extends CapabilityJob<ILinearCapability<I,
 	private final I input;
 	
 	public LinearJob(final ILinearCapability<I, V> capability, final I input) {
-		super(capability, CapabilityUtil.singleton(capability, input));
+		super(capability, CapabilityUtil.packUnaryInput(capability, input));
 		this.input = input;
 	}
 

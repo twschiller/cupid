@@ -10,18 +10,12 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability.linear;
 
-import java.util.Collections;
-import java.util.Set;
-
 import com.google.common.reflect.TypeToken;
-
-import edu.washington.cs.cupid.capability.OutputImpl;
-import edu.washington.cs.cupid.capability.ParameterImpl;
 
 public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLinearCapability<I, V> implements ILinearCapability<I, V> {
 	
-	private Parameter<I> input;
-	private Output<V> output;
+	private TypeToken<I> inputType;
+	private TypeToken<V> outputType;
 	
 	public AbstractLinearCapability(String name, String uniqueId,
 			String description, 
@@ -29,8 +23,8 @@ public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLine
 			Flag... flags) {
 		super(name, uniqueId, description, flags);
 		
-		input = new ParameterImpl<I>(null, inputType);
-		output = new OutputImpl<V>(null, outputType);
+		this.inputType = inputType;
+		this.outputType = outputType;
 	}
 	
 	public AbstractLinearCapability(String name, String uniqueId,
@@ -42,32 +36,13 @@ public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLine
 	}
 
 	@Override
-	public Set<Parameter<?>> getParameters() {
-		return Collections.<Parameter<?>>singleton(input);
+	public final TypeToken<I> getInputType() {
+		return inputType;
 	}
 
 	@Override
-	public Set<Output<?>> getOutputs() {
-		return Collections.<Output<?>>singleton(output);
+	public final TypeToken<V> getOutputType() {
+		return outputType;
 	}
 
-	@Override
-	public TypeToken<I> getInputType() {
-		return getParameter().getType();
-	}
-
-	@Override
-	public TypeToken<V> getOutputType() {
-		return getOutput().getType();
-	}
-
-	@Override
-	public Parameter<I> getParameter() {
-		return input;
-	}
-
-	@Override
-	public Output<V> getOutput() {
-		return output;
-	}
 }

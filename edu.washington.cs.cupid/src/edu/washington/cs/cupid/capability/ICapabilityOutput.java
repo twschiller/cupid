@@ -15,6 +15,7 @@ import java.util.Map;
 public interface ICapabilityOutput {
 
 	Map<ICapability.Output<?>, Object> getOutputs();
+	<T> T getOutput(ICapability.Output<T> output);
 	Object getOutput(String name);
 	
 }

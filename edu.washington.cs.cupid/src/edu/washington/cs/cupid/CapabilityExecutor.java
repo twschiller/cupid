@@ -84,12 +84,12 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	/**
 	 * Running jobs: Input -> { Capability -> Job }.
 	 */
-	private final Table<ICapabilityInput, ICapability, CapabilityJob> running;
+	private final Table<ICapabilityInput, ICapability, CapabilityJob<?>> running;
 	
 	/**
 	 * Jobs that have been canceled <i>by this executor</i>.
 	 */
-	private final Set<CapabilityJob> canceling;
+	private final Set<CapabilityJob<?>> canceling;
 	
 	private final Set<IInvalidationListener> cacheListeners = Sets.newIdentityHashSet();
 	
@@ -215,17 +215,17 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		
 		final ICapabilityOutput cached = executor.getIfPresent(capability, input);
 		
-		CapabilityJob job;
+		CapabilityJob<?> job;
 		
 		synchronized (executor.running) {
 			synchronized (executor.canceling) {
-				CapabilityJob existing = executor.running.get(input, capability);
+				CapabilityJob<?> existing = executor.running.get(input, capability);
 
 				if (cached != null) { // CACHED
 					if (executor.logCacheStatus) {
 						CupidActivator.getDefault().log(new CupidJobStatus(capability.getJob(input), Status.INFO, "cache hit"));
 					}
-					job = new CapabilityJob(capability, input){
+					job = new CapabilityJob<ICapability>(capability, input){
 						@Override
 						protected CapabilityStatus run(final IProgressMonitor monitor) {
 							try{
@@ -253,7 +253,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					
 					
 					if (job == null) {
-						job = new CapabilityJob(capability, input){
+						job = new CapabilityJob<ICapability>(capability, input){
 							@Override
 							protected CapabilityStatus run(final IProgressMonitor monitor) {
 								try{
@@ -317,7 +317,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					// cancel obsolete jobs
 					for (ICapabilityInput input : running.rowKeySet()) {
 						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
-							for (CapabilityJob job : running.row(input).values()) {
+							for (CapabilityJob<?> job : running.row(input).values()) {
 								job.cancel();
 							}
 						}
@@ -365,7 +365,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private class JobResultCacher extends NullJobListener {
 		@Override
 		public void done(final IJobChangeEvent event) {
-			CapabilityJob job = (CapabilityJob) event.getJob();
+			CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
 			synchronized (resultCaches) {
 				ICapabilityOutput value = ((CapabilityStatus) job.getResult()).value();
 				
@@ -396,7 +396,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 			synchronized (running) {
 				synchronized (canceling) {
 					CapabilityStatus result = (CapabilityStatus) event.getResult();
-					CapabilityJob job = (CapabilityJob) event.getJob();
+					CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
 					running.remove(job.getInputs(), result.value());
 					canceling.add(job);
 				}

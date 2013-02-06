@@ -32,17 +32,17 @@ public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapa
 	}
 
 	@Override
-	public Set<Parameter<?>> getParameters() {
+	public final Set<Parameter<?>> getParameters() {
 		return Collections.<Parameter<?>>singleton(getParameter());
 	}
 
 	@Override
-	public Set<Output<?>> getOutputs() {
+	public final Set<Output<?>> getOutputs() {
 		return Collections.<Output<?>>singleton(getOutput());
 	}
 
 	@Override
-	public Parameter<I> getParameter() {
+	public final Parameter<I> getParameter() {
 		if (input == null){
 			input = new ParameterImpl<I>(null, getInputType());
 		}
@@ -50,22 +50,19 @@ public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapa
 	}
 
 	@Override
-	public Output<V> getOutput() {
+	public final Output<V> getOutput() {
 		if (output == null){
 			output = new OutputImpl<V>(null, getOutputType());
 		}
 		return output;
 	}
 
+	@Override
+	public final LinearJob<I, V> getJob(final ICapabilityInput input) {
+		return getJob(input.getArgument(getParameter()));
+	}
+	
 	public abstract TypeToken<I> getInputType();
 	
 	public abstract TypeToken<V> getOutputType();
-	
-	@Override
-	public final LinearJob<I, V> getJob(final ICapabilityInput input) {
-		Parameter<?> unary = getParameter();
-		I arg = (I) input.getArguments().get(unary);
-		return getJob(arg);
-	}
-
 }

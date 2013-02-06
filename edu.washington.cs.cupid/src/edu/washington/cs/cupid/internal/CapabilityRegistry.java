@@ -11,16 +11,12 @@
 package edu.washington.cs.cupid.internal;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
-
-import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.ChangeNotifier;
@@ -29,9 +25,7 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
-import edu.washington.cs.cupid.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.utility.CapabilityUtil;
-import edu.washington.cs.cupid.views.ViewRule;
 
 /**
  * A thread-safe registry of the available Cupid capabilities.
@@ -53,12 +47,6 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	 * Set of change listeners.
 	 */
 	private final ChangeNotifier notifier = new ChangeNotifier();
-	
-	/**
-	 * Cupid plugin preference store.
-	 */
-	private final IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
-	
 	
 	@Override
 	public synchronized void onChange(final ICapabilityPublisher publisher) {

@@ -23,7 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -31,7 +31,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Capability that returns a map from types to methods for a compilation unit
  * @author Todd Schiller
  */
-public class MapCapabilityTest extends AbstractLinearCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
+public class MapCapabilityTest extends LinearCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
 
 	public MapCapabilityTest(){
 		super(

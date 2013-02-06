@@ -28,6 +28,9 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 import edu.washington.cs.cupid.markers.IMarkerBuilder;
 import edu.washington.cs.cupid.markers.MarkerBuilder;
 
@@ -38,7 +41,7 @@ import edu.washington.cs.cupid.markers.MarkerBuilder;
  * @author Todd Schiller
  */
 @SuppressWarnings("restriction")
-public final class JUnitMarkers extends AbstractCapability<TestRunSession, Collection<IMarkerBuilder>> {
+public final class JUnitMarkers extends LinearCapability<TestRunSession, Collection<IMarkerBuilder>> {
 
 	/**
 	 * Construct a capability that produces problem markers for failed JUnit tests in a test session.
@@ -47,16 +50,15 @@ public final class JUnitMarkers extends AbstractCapability<TestRunSession, Colle
 		super("JUnit Marker Builder",
 			  "edu.washington.cs.cupid.junit.internal.markers",
 			  "Create problem markers from failed tests",
-			  TypeToken.of(TestRunSession.class),
-			  IMarkerBuilder.MARKER_RESULT,
-			  Flag.PURE, Flag.LOCAL);
+			  TypeToken.of(TestRunSession.class), IMarkerBuilder.MARKER_RESULT,
+			  Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<TestRunSession, Collection<IMarkerBuilder>> getJob(final TestRunSession input) {
-		return new CapabilityJob<TestRunSession, Collection<IMarkerBuilder>>(this, input) {
+	public LinearJob<TestRunSession, Collection<IMarkerBuilder>> getJob(final TestRunSession input) {
+		return new LinearJob<TestRunSession, Collection<IMarkerBuilder>>(this, input) {
 			@Override
-			protected CapabilityStatus<Collection<IMarkerBuilder>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<Collection<IMarkerBuilder>> run(final IProgressMonitor monitor) {
 				monitor.beginTask("Building JUnit Markers", input.getAllFailedTestElements().length);
 				Collection<IMarkerBuilder> result = Sets.newHashSet();
 				
@@ -102,9 +104,9 @@ public final class JUnitMarkers extends AbstractCapability<TestRunSession, Colle
 
 						monitor.worked(1);
 					}
-					return CapabilityStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Exception e){
-					return CapabilityStatus.makeError(e);
+					return LinearStatus.<Collection<IMarkerBuilder>>makeError(e);
 				} finally {
 					monitor.done();
 				}	

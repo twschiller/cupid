@@ -15,15 +15,15 @@ import java.util.Date;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns a file's last modified date.
  * @author Todd Schiller
  */
-public final class LastModifiedCapability extends AbstractCapability<IFile, Date> {
+public final class LastModifiedCapability extends LinearCapability<IFile, Date> {
 
 	/**
 	 * Construct a capability that returns a file's last modified date.
@@ -34,19 +34,19 @@ public final class LastModifiedCapability extends AbstractCapability<IFile, Date
 				"edu.washington.cs.cupid.resources.lastmodified",
 				"The file's last modified date",
 				IFile.class, Date.class,
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<IFile, Date> getJob(final IFile input) {
-		return new CapabilityJob<IFile, Date>(this, input) {
+	public LinearJob<IFile, Date> getJob(final IFile input) {
+		return new LinearJob<IFile, Date>(this, input) {
 			@Override
-			protected CapabilityStatus<Date> run(final IProgressMonitor monitor) {
+			protected LinearStatus<Date> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 1);
-					return CapabilityStatus.makeOk(new Date(this.input.getLocalTimeStamp()));
+					return LinearStatus.makeOk(getCapability(), new Date(getInput().getLocalTimeStamp()));
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<Date>makeError(ex);
 				} finally {
 					monitor.done();
 				}

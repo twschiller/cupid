@@ -26,13 +26,16 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability that returns the Git history from a single line of descent (i.e., branch) for
  * a resource.
  * @author Todd Schiller
  */
-public final class GitHistoryCapability extends AbstractCapability<IResource, List<IFileRevision>> {
+public final class GitHistoryCapability extends LinearCapability<IResource, List<IFileRevision>> {
 
 	/**
 	 * Constructs capability that returns the Git history from a single line of descent (i.e., branch) for
@@ -47,10 +50,10 @@ public final class GitHistoryCapability extends AbstractCapability<IResource, Li
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<IFileRevision>> getJob(final IResource input) {
-		return new CapabilityJob<IResource, List<IFileRevision>>(this, input) {
+	public LinearJob<IResource, List<IFileRevision>> getJob(final IResource input) {
+		return new LinearJob<IResource, List<IFileRevision>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<IFileRevision>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<IFileRevision>> run(final IProgressMonitor monitor) {
 				
 				try {
 					monitor.beginTask(getName(), 100);
@@ -60,9 +63,9 @@ public final class GitHistoryCapability extends AbstractCapability<IResource, Li
 					
 					List<IFileRevision> revisions = Lists.newArrayList(history.getFileRevisions());
 					
-					return CapabilityStatus.makeOk(revisions);
+					return LinearStatus.makeOk(getCapability(), revisions);
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<List<IFileRevision>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
 
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,12 +45,15 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.Parameter;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 
@@ -70,12 +74,11 @@ public class CreatePipelinePage extends WizardPage{
 
 	private static final String DEFAULT_MESSAGE = "Select capabilities to form a pipeline.";
 	
-	
 	//
 	// Model
 	//
 	
-	private List<ICapability<?,?>> current = Lists.newLinkedList();
+	private List<ICapability> current = Lists.newLinkedList();
 	
 	//
 	// View
@@ -121,7 +124,7 @@ public class CreatePipelinePage extends WizardPage{
 				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
 				
 				if (selected instanceof ICapability){
-					current.add((ICapability<?,?>) selected);
+					current.add((ICapability) selected);
 				}else if (selected instanceof DerivedCapability){
 					current.add(((DerivedCapability) selected).toPipeline());
 				}
@@ -149,7 +152,7 @@ public class CreatePipelinePage extends WizardPage{
 		public void keyReleased(KeyEvent e) {
 			if (!pipelineTable.getSelection().isEmpty()){
 				IStructuredSelection selected = ((IStructuredSelection) pipelineTable.getSelection());
-				ICapability<?,?> element = (ICapability<?,?>) selected.getFirstElement();
+				ICapability element = (ICapability) selected.getFirstElement();
 				
 				int index = -1;
 				for (int i = 0; i < current.size(); i++){
@@ -238,14 +241,14 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public String getColumnText(Object element, int columnIndex) {
-			ICapability<?,?> capability = (ICapability<?,?>) element;
+			ICapability capability = (ICapability) element;
 			switch(columnIndex){
 			case 0:
 				return capability.getName();
 			case 1:
-				return TypeManager.simpleTypeName(capability.getParameterType().getType());
+				return TypeManager.simpleTypeName(CapabilityUtil.unaryParameter(capability).getType().getType());
 			case 2:
-				return TypeManager.simpleTypeName(capability.getReturnType().getType());
+				return TypeManager.simpleTypeName(CapabilityUtil.singleOutput(capability).getType().getType());
 			default:
 				return null;
 			}
@@ -261,28 +264,27 @@ public class CreatePipelinePage extends WizardPage{
 		
 		if (!current.isEmpty()){
 			
-			TypeToken<?> last = current.get(0).getReturnType();
+			TypeToken<?> last = CapabilityUtil.singleOutput(current.get(0)).getType();
 			
 			for (int i = 1; i < current.size(); i++){
-				ICapability<?,?> next = current.get(i);
-				if (!TypeManager.isCompatible(next, last)){
-					result.add("Capability " + next.getName() + " with input " + next.getParameterType() + " is not compatible with type " + last);
+				ICapability next = current.get(i);
+				Parameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
+				if (!TypeManager.isCompatible(nextParameter, last)){
+					result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
 				}
-				last = next.getReturnType();
+				last = CapabilityUtil.singleOutput(next).getType();
 			}
 		}
 		
 		return result;
 	}
 	
-	
-	
 	private class TreeLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider{
 
 		@Override
 		public String getText(Object element) {
 			if (element instanceof ICapability){
-				ICapability<?,?> capability = (ICapability<?,?>) element;
+				ICapability capability = (ICapability) element;
 				return capability.getName() + ": " + capability.getDescription();
 			}else if (element instanceof DerivedCapability){
 				DerivedCapability capability = (DerivedCapability) element;
@@ -297,11 +299,13 @@ public class CreatePipelinePage extends WizardPage{
 			if (current.isEmpty()){
 				return null;
 			}else{
-				ICapability<?,?> capability = element instanceof ICapability 
-						?  (ICapability<?,?>) element
+				ICapability capability = element instanceof ICapability 
+						?  (ICapability) element
 						:  ((DerivedCapability) element).getCapability();
 				
-				if (TypeManager.isCompatible(capability, current.get(current.size()-1).getReturnType())){
+				ICapability last = current.get(current.size()-1);
+						
+				if (TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())){
 					return null;
 				}else{
 					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
@@ -343,8 +347,8 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public Object[] getElements(Object inputElement) {
-			List<ICapability<?,?>> xs = Lists.newArrayList((Collection<ICapability<?,?>>) inputElement);
-			Collections.sort(xs, new Comparator<ICapability<?,?>>(){
+			List<ICapability> xs = Lists.newArrayList((Collection<ICapability>) inputElement);
+			Collections.sort(xs, new Comparator<ICapability>(){
 				@Override
 				public int compare(ICapability lhs, ICapability rhs) {
 					return lhs.getName().compareTo(rhs.getName());
@@ -357,7 +361,7 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof ICapability){
-				List<DerivedCapability> xs = DerivedCapability.derived((ICapability<?,?>) parentElement);
+				List<DerivedCapability> xs = DerivedCapability.derived((ICapability) parentElement);
 				Collections.sort(xs, new Comparator<DerivedCapability>(){
 					@Override
 					public int compare(DerivedCapability lhs, DerivedCapability rhs) {
@@ -382,7 +386,7 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public boolean hasChildren(Object element) {
 			if (element instanceof ICapability){
-				return !DerivedCapability.derived((ICapability<?,?>) element).isEmpty();
+				return !DerivedCapability.derived((ICapability) element).isEmpty();
 			}else{
 				return false;
 			}
@@ -426,7 +430,7 @@ public class CreatePipelinePage extends WizardPage{
 			if (x instanceof Serializable){
 				descriptors.add(x);
 			}else{
-				descriptors.add(((ICapability<?,?>)x).getUniqueId());
+				descriptors.add(((ICapability)x).getUniqueId());
 			}
 		}
 		
@@ -450,7 +454,14 @@ public class CreatePipelinePage extends WizardPage{
 		column.setText("Capability");
 		capabilityTree.getTree().setLayoutData(data);
 		
-		capabilityTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilities());
+		SortedSet<ICapability> linear = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
+			@Override
+			public boolean apply(ICapability capability) {
+				return CapabilityUtil.isLinear(capability);
+			}
+		});
+		
+		capabilityTree.setInput(Lists.newArrayList(linear));
 	}
 	
 	private void buildPipelineTable(Composite composite){

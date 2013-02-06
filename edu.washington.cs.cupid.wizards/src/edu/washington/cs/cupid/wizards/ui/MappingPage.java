@@ -51,9 +51,11 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.capability.linear.ILinearSerializableCapability;
 import edu.washington.cs.cupid.wizards.TypeComboListener;
 import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
@@ -94,8 +96,8 @@ public class MappingPage extends WizardPage {
 	private boolean keyAsType = true;
 	private TypeToken<?> keyType;
 	
-	private ISerializableCapability<?,?> keySet;
-	private ISerializableCapability<?,?> valueSet;
+	private ISerializableCapability keySet;
+	private ISerializableCapability valueSet;
 	
 	private ArrayList<Method> valueLinks;
 	private ArrayList<Method> keyLinks;
@@ -241,13 +243,13 @@ public class MappingPage extends WizardPage {
 		valueTree.refresh();
 	}
 	
-	private ISerializableCapability<?,?> selectedCapability(TreeViewer viewer){
+	private ISerializableCapability selectedCapability(TreeViewer viewer){
 		Object selected = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 	
 		if (selected == null){
 			return null;
 		}else if (selected instanceof ISerializableCapability){
-			return (ISerializableCapability<?,?>) selected;
+			return (ISerializableCapability) selected;
 		}else if (selected instanceof ICapability){
 			return new SerializablePipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
 		}else if (selected instanceof DerivedCapability){
@@ -267,8 +269,8 @@ public class MappingPage extends WizardPage {
 		}
 	}
 	
-	private TypeToken<?> getElementType(ICapability<?,?> capability){
-		ParameterizedType type = (ParameterizedType) capability.getReturnType().getType();
+	private TypeToken<?> getElementType(ICapability capability){
+		ParameterizedType type = (ParameterizedType) CapabilityUtil.singleOutput(capability).getType().getType();
 		Class<?> param = (Class<?>) type.getActualTypeArguments()[0];
 		return TypeToken.of(param);
 	}
@@ -418,7 +420,7 @@ public class MappingPage extends WizardPage {
 		@Override
 		public String getText(Object element) {
 			if (element instanceof ICapability){
-				ICapability<?,?> capability = (ICapability<?,?>) element;
+				ICapability capability = (ICapability) element;
 				return capability.getName() + ": " + capability.getDescription();
 			}else if (element instanceof DerivedCapability){
 				DerivedCapability capability = (DerivedCapability) element;
@@ -429,11 +431,11 @@ public class MappingPage extends WizardPage {
 		}
 	}
 
-	private boolean isValidValue(ICapability<?,?> generator){
+	private boolean isValidValue(ICapability generator){
 		if (keyAsType){
-			return generator.getParameterType().equals(TypeToken.of(Void.class));
+			return CapabilityUtil.isGenerator(generator);
 		}else if (keySet != null){
-			return TypeManager.isCompatible(generator, keySet.getInputType());
+			return TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet));
 		}else{
 			return true;
 		}
@@ -472,7 +474,7 @@ public class MappingPage extends WizardPage {
 		@Override
 		public String getText(Object element) {
 			if (element instanceof ICapability){
-				ICapability<?,?> capability = (ICapability<?,?>) element;
+				ICapability capability = (ICapability) element;
 				return capability.getName() + ": " + capability.getDescription();
 			}else if (element instanceof DerivedCapability){
 				DerivedCapability capability = (DerivedCapability) element;
@@ -484,9 +486,8 @@ public class MappingPage extends WizardPage {
 
 		@Override
 		public Color getForeground(Object element, int columnIndex) {
-
-			ICapability<?,?> capability = element instanceof ICapability 
-					? (ICapability<?,?>) element
+			ICapability capability = element instanceof ICapability 
+					? (ICapability) element
 					: ((DerivedCapability) element).getCapability();
 
 			return isValidValue(capability) 
@@ -532,15 +533,14 @@ public class MappingPage extends WizardPage {
 
 		@Override
 		public Object[] getElements(Object inputElement) {
-			@SuppressWarnings("unchecked")
-			Collection<ICapability<?,?>> xs = (Collection<ICapability<?,?>>) inputElement;
+			Collection<ICapability> xs = (Collection<ICapability>) inputElement;
 			return xs.toArray();
 		}
 
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof ICapability){
-				return DerivedCapability.derivedProjections((ICapability<?,?>) parentElement).toArray();
+				return DerivedCapability.derivedProjections((ICapability) parentElement).toArray();
 			}else{
 				return new Object[]{};
 			}
@@ -558,7 +558,7 @@ public class MappingPage extends WizardPage {
 		@Override
 		public boolean hasChildren(Object element) {
 			if (element instanceof ICapability){
-				return !DerivedCapability.derivedProjections((ICapability<?,?>) element).isEmpty();
+				return !DerivedCapability.derivedProjections((ICapability) element).isEmpty();
 			}else{
 				return false;
 			}
@@ -581,18 +581,17 @@ public class MappingPage extends WizardPage {
 		
 		return new ValueMapping(name, description,
 				keyType, pullComboLink(keyLinkCombo),
-				valueSet, valueSet.getOutputType(), pullComboLink(valueLinkCombo));
+				valueSet, CapabilityUtil.singleOutput(valueSet).getType(), pullComboLink(valueLinkCombo));
 		
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public CapabilityMapping<?,?,?> getCapabilityMapping(){
 		String name = nameEntry.getText();
 		String description = descriptionEntry.getText();
 		
 		return new CapabilityMapping(name, description,
-				keySet.getInputType(),
-				keySet, keySet.getOutputType(), pullComboLink(keyLinkCombo),
-				valueSet, valueSet.getOutputType(), pullComboLink(valueLinkCombo));
+				CapabilityUtil.unaryParameter(keySet).getType(),
+				keySet, CapabilityUtil.singleOutput(keySet).getType(), pullComboLink(keyLinkCombo),
+				valueSet, CapabilityUtil.singleOutput(valueSet).getType(), pullComboLink(valueLinkCombo));
 	}
 }

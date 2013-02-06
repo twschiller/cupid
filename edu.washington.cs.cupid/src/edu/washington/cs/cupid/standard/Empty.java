@@ -14,7 +14,7 @@ import java.util.Collection;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 
@@ -23,7 +23,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class Empty<V> extends GenericAbstractLinearCapability<Collection<V>, Boolean> {
+public final class Empty<V> extends GenericLinearCapability<Collection<V>, Boolean> {
 
 	/**
 	 * A capability that indicates whether or not a collection is empty.

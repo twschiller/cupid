@@ -10,7 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.EnumSet;
 
 import com.google.common.reflect.TypeToken;
@@ -37,6 +37,10 @@ public class CapabilityUtil {
 		} else {
 			return capability.getOutputs().iterator().next();
 		}
+	}
+	
+	public static boolean hasSingleOutput(ICapability capability){
+		return capability.getOutputs().size() == 1;
 	}
 	
 	public static <T> ICapabilityOutput packSingleOutputValue(ICapability capability, T value){
@@ -75,6 +79,10 @@ public class CapabilityUtil {
 		return required;	
 	}
 	
+	public static boolean isLinear(final ICapability capability){
+		return (isGenerator(capability) || isUnary(capability)) && capability.getOutputs().size() == 1;
+	}
+	
 	public static boolean isGenerator(final ICapability capability){
 		return inputArrity(capability) == 0;
 	}
@@ -83,7 +91,11 @@ public class CapabilityUtil {
 		return inputArrity(capability) == 1;
 	}
 	
-	public static EnumSet<Flag> union(Collection<? extends ICapability> capabilities){
+	public static EnumSet<Flag> union(ICapability... capabilities){
+		return union(Arrays.asList(capabilities));
+	}
+	
+	public static EnumSet<Flag> union(Iterable<? extends ICapability> capabilities){
 		EnumSet<Flag> flags = EnumSet.of(Flag.PURE);
 		for (ICapability capability : capabilities){
 			if (!capability.getFlags().contains(Flag.PURE)){

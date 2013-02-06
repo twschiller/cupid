@@ -12,11 +12,11 @@ package edu.washington.cs.cupid.tests;
 
 import org.eclipse.jdt.core.IMethod;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 
-public class MethodCapabilityTest extends AbstractLinearCapability<IMethod, Boolean> {
+public class MethodCapabilityTest extends LinearCapability<IMethod, Boolean> {
 
 	public MethodCapabilityTest(){
 		super(

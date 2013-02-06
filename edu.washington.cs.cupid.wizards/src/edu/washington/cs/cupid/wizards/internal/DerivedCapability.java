@@ -22,22 +22,23 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.Output;
 import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
 
 /**
  * Helper class for combination of Capability + Getter
  * @author Todd Schiller
  */
-@SuppressWarnings("rawtypes")
 public class DerivedCapability{
 	private final ICapability capability;
-	private final IExtractCapability getter;
+	private final IExtractCapability<?,? > getter;
 	
 	private static final Set<String> FILTER = Sets.newHashSet( 
 			"hashCode" , "getClass" , "toString", "iterator", "listIterator", "toArray");
 	
-	public DerivedCapability(ICapability capability, IExtractCapability getter) {
+	public DerivedCapability(ICapability capability, IExtractCapability<?, ?> getter) {
 		this.capability = capability;
 		this.getter = getter;
 	}
@@ -57,7 +58,7 @@ public class DerivedCapability{
 		return capability;
 	}
 
-	public IExtractCapability getGetter() {
+	public IExtractCapability<?, ?> getGetter() {
 		return getter;
 	}
 	
@@ -68,71 +69,82 @@ public class DerivedCapability{
 				&& (method.getModifiers() & Modifier.PUBLIC) == Modifier.PUBLIC;
 	}
 	
-	public static List<DerivedCapability> derived(ICapability<?,?> capability){
+	public static List<DerivedCapability> derived(ICapability capability){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		result.addAll(derivedFields(capability));
 		result.addAll(derivedProjections(capability));
 		return result;
 	}
 	
-	public static List<DerivedCapability> derivedFields(ICapability<?,?> capability){
-		Class<?> clazz = capability.getReturnType().getRawType();
+	public static List<DerivedCapability> derivedFields(ICapability capability){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
-		for (Method method : clazz.getMethods()){
-			if (isGetter(method)){
-				Getter getter = new Getter(
-						method.getName(), 
-						TypeToken.of(clazz), 
-						TypeManager.boxType(TypeToken.of(method.getReturnType())));
-				
-				result.add(new DerivedCapability(capability, getter));
+		if (capability.getOutputs().size() == 1){
+			Output<?> output = CapabilityUtil.singleOutput(capability);
+			Class<?> clazz = output.getType().getRawType();
+			
+			for (Method method : clazz.getMethods()){
+				if (isGetter(method)){
+					Getter<?, ?> getter = new Getter(
+							method.getName(), 
+							TypeToken.of(clazz), 
+							TypeManager.boxType(TypeToken.of(method.getReturnType())));
+					
+					result.add(new DerivedCapability(capability, getter));
+				}
 			}
+		} else {
+			throw new UnsupportedOperationException("Derived fields not supported for capabilities with multiple outputs");
 		}
 		
-		return result;
+		return result;	
 	}
 	
-	public static List<DerivedCapability> derivedProjections(ICapability<?,?> capability){
-		
-		// TODO refactor
-		
-		Class<?> clazz = capability.getReturnType().getRawType();
+	public static List<DerivedCapability> derivedProjections(ICapability capability){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
-		if (List.class.isAssignableFrom(clazz)){
-			ParameterizedType type = (ParameterizedType) capability.getReturnType().getType();
-			Type param = type.getActualTypeArguments()[0];
+		if (capability.getOutputs().size() == 1){
+			Output<?> output = CapabilityUtil.singleOutput(capability);
+			Class<?> clazz = output.getType().getRawType();
+		
+			// TODO refactor
 			
-			if (param instanceof Class){
-				Class eltClazz = (Class) type.getActualTypeArguments()[0];
-				for (Method method : eltClazz.getMethods()){
-					if (isGetter(method)){
-						ListGetter getter = new ListGetter(
-								method.getName(), 
-								TypeToken.of(eltClazz), 
-								TypeManager.boxType(TypeToken.of(method.getReturnType())));
-						
-						result.add(new DerivedCapability(capability, getter));
+			if (List.class.isAssignableFrom(clazz)){
+				ParameterizedType type = (ParameterizedType) output.getType();
+				Type param = type.getActualTypeArguments()[0];
+				
+				if (param instanceof Class){
+					Class<?> eltClazz = (Class<?>) type.getActualTypeArguments()[0];
+					for (Method method : eltClazz.getMethods()){
+						if (isGetter(method)){
+							ListGetter<?, ?> getter = new ListGetter(
+									method.getName(), 
+									TypeToken.of(eltClazz), 
+									TypeManager.boxType(TypeToken.of(method.getReturnType())));
+							
+							result.add(new DerivedCapability(capability, getter));
+						}
+					}
+				}
+			}else if (Set.class.isAssignableFrom(clazz)){
+				ParameterizedType type = (ParameterizedType) output.getType();
+				Type param = type.getActualTypeArguments()[0];
+				
+				if (param instanceof Class){
+					Class<?> eltClazz = (Class<?>) type.getActualTypeArguments()[0];
+					for (Method method : eltClazz.getMethods()){
+						if (isGetter(method)){
+							SetGetter<?, ?> getter = new SetGetter(
+									method.getName(), 
+									TypeToken.of(eltClazz), 
+									TypeManager.boxType(TypeToken.of(method.getReturnType())));
+							result.add(new DerivedCapability(capability, getter));
+						}
 					}
 				}
 			}
-		}else if (Set.class.isAssignableFrom(clazz)){
-			ParameterizedType type = (ParameterizedType) capability.getReturnType().getType();
-			Type param = type.getActualTypeArguments()[0];
-			
-			if (param instanceof Class){
-				Class eltClazz = (Class) type.getActualTypeArguments()[0];
-				for (Method method : eltClazz.getMethods()){
-					if (isGetter(method)){
-						SetGetter getter = new SetGetter(
-								method.getName(), 
-								TypeToken.of(eltClazz), 
-								TypeManager.boxType(TypeToken.of(method.getReturnType())));
-						result.add(new DerivedCapability(capability, getter));
-					}
-				}
-			}
+		} else {
+			throw new UnsupportedOperationException("Derived fields not supported for capabilities with multiple outputs");
 		}
 		
 		return result;

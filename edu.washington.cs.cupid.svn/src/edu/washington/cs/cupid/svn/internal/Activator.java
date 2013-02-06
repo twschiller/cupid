@@ -68,7 +68,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 
 	@Override
 	public ICapability[] publish() {
-		return new ICapability<?,?>[]{
+		return new ICapability[]{
 				new SVNLogCapability(),
 				new SVNInfoCapability()
 		};

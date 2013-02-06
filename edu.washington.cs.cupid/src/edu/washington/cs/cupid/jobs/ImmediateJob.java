@@ -12,7 +12,6 @@ package edu.washington.cs.cupid.jobs;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.ICapabilityInput;
 import edu.washington.cs.cupid.capability.linear.ILinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
@@ -67,7 +66,7 @@ public final class ImmediateJob<I, V> extends LinearJob {
 	protected LinearStatus run(final IProgressMonitor monitor) {
 		try {
 			monitor.beginTask(getName(), 1);
-			return value != null ? LinearStatus.makeOk(value) : LinearStatus.makeError(exception);
+			return value != null ? LinearStatus.makeOk(getCapability(), value) : LinearStatus.makeError(exception);
 		} catch (Exception ex) {
 			return LinearStatus.makeError(ex);
 		} finally {

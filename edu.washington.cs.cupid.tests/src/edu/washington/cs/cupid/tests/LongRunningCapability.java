@@ -13,16 +13,16 @@ package edu.washington.cs.cupid.tests;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * The identity capability that returns after {@link #RUNTIME_IN_MINUTES} minutes.
  * Updates the progress monitor every minute.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class LongRunningCapability extends AbstractCapability<IResource, IResource>{
+public class LongRunningCapability extends AbstractLinearCapability<IResource, IResource>{
 	
 	public static final int RUNTIME_IN_SECONDS = 300;
 	
@@ -32,22 +32,21 @@ public class LongRunningCapability extends AbstractCapability<IResource, IResour
 				"Long Running",
 				"edu.washington.cs.cupid.tests.longrunning",
 				"Runs for a long time",
-				IResource.class,
-				IResource.class,
-				Flag.PURE, Flag.LOCAL);
+				IResource.class, IResource.class,
+				Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<IResource, IResource> getJob(IResource input) {
-		return new CapabilityJob<IResource, IResource>(this, input){
+	public LinearJob getJob(IResource input) {
+		return new LinearJob(this, input){
 			@Override
-			protected CapabilityStatus<IResource> run(IProgressMonitor monitor) {
+			protected LinearStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("Long Job", RUNTIME_IN_SECONDS);
 				
 				for (int i = 0; i < RUNTIME_IN_SECONDS; i++){
 					if (monitor.isCanceled()){
 						monitor.done();
-						return CapabilityStatus.makeCancelled();
+						return LinearStatus.makeCancelled();
 					}
 					
 					try {
@@ -59,7 +58,7 @@ public class LongRunningCapability extends AbstractCapability<IResource, IResour
 				}
 				
 				monitor.done();
-				return CapabilityStatus.makeOk(this.input);
+				return LinearStatus.makeOk(getCapability(), getInput());
 			}
 		};
 	}

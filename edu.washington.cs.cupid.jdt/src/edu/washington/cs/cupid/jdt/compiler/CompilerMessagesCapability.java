@@ -24,12 +24,15 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns the compiler messages for a compilation unit.
  * @author Todd Schiller
  */
-public final class CompilerMessagesCapability extends AbstractCapability<ICompilationUnit, List<Message>> {
+public final class CompilerMessagesCapability extends AbstractLinearCapability<ICompilationUnit, List<Message>> {
 		
 	/**
 	 * Construct a capability that returns the compiler messages for a compilation unit.
@@ -43,16 +46,16 @@ public final class CompilerMessagesCapability extends AbstractCapability<ICompil
 	}
 	
 	@Override
-	public CapabilityJob<ICompilationUnit, List<Message>> getJob(final ICompilationUnit input) {
-		return new CapabilityJob<ICompilationUnit, List<Message>>(this, input) {
+	public LinearJob getJob(final ICompilationUnit input) {
+		return new LinearJob(this, input) {
 			@Override
-			protected CapabilityStatus<List<Message>> run(final IProgressMonitor monitor) {
+			protected LinearStatus run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					CompilationUnit unit = ParseUtil.parse(input, new SubProgressMonitor(monitor, 100));	
-					return CapabilityStatus.makeOk(Arrays.asList(unit.getMessages()));
+					return LinearStatus.makeOk(getCapability(), Arrays.asList(unit.getMessages()));
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.makeError(ex);
 				} finally {
 					monitor.done();
 				}

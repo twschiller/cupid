@@ -6,8 +6,6 @@ import java.util.Set;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.ICapability.Output;
-import edu.washington.cs.cupid.capability.ICapability.Parameter;
 import edu.washington.cs.cupid.capability.ICapabilityInput;
 import edu.washington.cs.cupid.capability.OutputImpl;
 import edu.washington.cs.cupid.capability.ParameterImpl;
@@ -55,7 +53,9 @@ public abstract class GenericAbstractLinearCapability<I, V> extends AbstractCapa
 	
 	@Override
 	public final LinearJob getJob(final ICapabilityInput input) {
-		return getJob((I) input.getArguments().get(this.input));
+		Parameter<?> unary = getParameter();
+		I arg = (I) input.getArguments().get(unary);
+		return getJob(arg);
 	}
 
 }

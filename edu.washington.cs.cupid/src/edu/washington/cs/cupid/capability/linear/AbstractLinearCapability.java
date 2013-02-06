@@ -13,7 +13,7 @@ public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLine
 	private Parameter<I> input;
 	private Output<V> output;
 	
-	public  AbstractLinearCapability(String name, String uniqueId,
+	public AbstractLinearCapability(String name, String uniqueId,
 			String description, 
 			TypeToken<I> inputType, TypeToken<V> outputType,
 			Flag... flags) {
@@ -21,6 +21,14 @@ public abstract class AbstractLinearCapability<I, V> extends GenericAbstractLine
 		
 		input = new ParameterImpl<I>(null, inputType);
 		output = new OutputImpl<V>(null, outputType);
+	}
+	
+	public AbstractLinearCapability(String name, String uniqueId,
+			String description, 
+			Class<I> inputType, Class<V> outputType,
+			Flag... flags) {
+		
+		this(name, uniqueId, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
 	}
 
 	@Override

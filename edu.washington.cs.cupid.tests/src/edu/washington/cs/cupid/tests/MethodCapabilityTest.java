@@ -10,14 +10,13 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.tests;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IMethod;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.jobs.ImmediateJob;
 
-public class MethodCapabilityTest extends AbstractCapability<IMethod, Boolean> {
+public class MethodCapabilityTest extends AbstractLinearCapability<IMethod, Boolean> {
 
 	public MethodCapabilityTest(){
 		super(
@@ -26,17 +25,11 @@ public class MethodCapabilityTest extends AbstractCapability<IMethod, Boolean> {
 				"true iff the method is called foo",
 				IMethod.class,
 				Boolean.class,
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<IMethod, Boolean> getJob(IMethod input) {
-		return new CapabilityJob<IMethod, Boolean>(this, input){
-			@Override
-			protected CapabilityStatus<Boolean> run(IProgressMonitor monitor) {
-				monitor.done();
-				return CapabilityStatus.makeOk(input.getElementName().equals("foo"));
-			}
-		};
+	public LinearJob getJob(IMethod input) {
+		return new ImmediateJob<IMethod, Boolean>(this, input, input.getElementName().equals("foo"));	
 	}
 }

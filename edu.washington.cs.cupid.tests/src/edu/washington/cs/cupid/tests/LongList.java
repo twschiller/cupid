@@ -18,11 +18,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public class LongList extends AbstractCapability<IResource, List<Integer>>  {
+public class LongList extends AbstractLinearCapability<IResource, List<Integer>>  {
 
 	public LongList(){
 		super(
@@ -30,16 +30,16 @@ public class LongList extends AbstractCapability<IResource, List<Integer>>  {
 				"edu.washington.cs.cupid.tests.longlist",
 				"Returns a long list",
 				TypeToken.of(IResource.class), new TypeToken<List<Integer>>(){},
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<IResource, List<Integer>> getJob(IResource input) {
+	public LinearJob getJob(IResource input) {
 		
-		return new CapabilityJob<IResource,List<Integer>>(this, input){
+		return new LinearJob(this, input){
 
 			@Override
-			protected CapabilityStatus<List<Integer>> run(IProgressMonitor monitor) {
+			protected LinearStatus run(final IProgressMonitor monitor) {
 				int size = 1500;
 				monitor.beginTask("Create long list", size);
 				
@@ -49,7 +49,7 @@ public class LongList extends AbstractCapability<IResource, List<Integer>>  {
 					result.add(i);
 				}
 				monitor.done();
-				return CapabilityStatus.makeOk(result);
+				return LinearStatus.makeOk(getCapability(), result);
 			}
 			
 		};

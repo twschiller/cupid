@@ -18,11 +18,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public class LongArray extends AbstractCapability<IResource, Object[]>  {
+public class LongArray extends AbstractLinearCapability<IResource, Object[]>  {
 
 	public LongArray(){
 		super(
@@ -30,16 +30,16 @@ public class LongArray extends AbstractCapability<IResource, Object[]>  {
 				"edu.washington.cs.cupid.tests.longarray",
 				"Returns a long array",
 				TypeToken.of(IResource.class), new TypeToken<Object[]>(){},
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<IResource, Object[]> getJob(IResource input) {
+	public LinearJob getJob(IResource input) {
 		
-		return new CapabilityJob<IResource,Object[]>(this, input){
+		return new LinearJob(this, input){
 
 			@Override
-			protected CapabilityStatus<Object[]> run(IProgressMonitor monitor) {
+			protected LinearStatus run(IProgressMonitor monitor) {
 				int size = 1500;
 				monitor.beginTask("Create long array", size);
 				
@@ -49,7 +49,7 @@ public class LongArray extends AbstractCapability<IResource, Object[]>  {
 					result.add(i);
 				}
 				monitor.done();
-				return CapabilityStatus.makeOk(result.toArray());
+				return LinearStatus.makeOk(getCapability(), result.toArray());
 			}
 			
 		};

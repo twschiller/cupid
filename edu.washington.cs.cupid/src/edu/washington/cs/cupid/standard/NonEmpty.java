@@ -15,8 +15,8 @@ import java.util.Collection;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.linear.GenericAbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 /**
  * A capability that computes whether or not a collection has elements.

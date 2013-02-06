@@ -382,7 +382,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			try {
 				ICapabilityInput args = CapabilityUtil.isGenerator(capability)
 						? new InputImpl()
-						: CapabilityUtil.singleton(capability, input);
+						: CapabilityUtil.packUnaryInput(capability, input);
 
 				CapabilityExecutor.asyncExec(capability, args, family, new IJobChangeListener() {
 
@@ -400,7 +400,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 					public synchronized void done(final IJobChangeEvent event) {
 						finished = true;
 						result = event.getResult();
-						value = CapabilityUtil.singleOutput(capability, (CapabilityStatus) result);
+						value = CapabilityUtil.singleOutputValue(capability, (CapabilityStatus) result);	
 						updateStatus("Done");
 					}
 

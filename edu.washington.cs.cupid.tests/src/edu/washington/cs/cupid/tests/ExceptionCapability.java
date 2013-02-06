@@ -13,8 +13,8 @@ package edu.washington.cs.cupid.tests;
 import org.eclipse.core.resources.IResource;
 
 import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 /**
  * An identity capability that immediately returns exceptionally. Returns a {@link IResource}

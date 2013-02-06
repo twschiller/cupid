@@ -10,13 +10,14 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
+import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
 import edu.washington.cs.cupid.capability.ICapability.Parameter;
 
-public class InputImpl implements ICapabilityInput{
+public class InputImpl implements ICapabilityInput {
 
 	private Map<Parameter<?>, Object> arguments;
 	private Map<String, Object> named;
@@ -33,12 +34,14 @@ public class InputImpl implements ICapabilityInput{
 	
 	@Override
 	public <T> T getArgument(Parameter<T> parameter){
-		return (T) arguments.get(parameter);
+		@SuppressWarnings("unchecked") // checked in the add(...) method
+		T result = (T) arguments.get(parameter);
+		return result ;
 	}
 	
 	@Override
 	public Map<Parameter<?>, Object> getArguments() {
-		return arguments;
+		return Collections.unmodifiableMap(arguments);
 	}
 
 	@Override

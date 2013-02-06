@@ -11,8 +11,8 @@
 package edu.washington.cs.cupid.tests;
 
 import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.jobs.ImmediateJob;
 
 public class ClassTest extends AbstractLinearCapability<Object, String>  {
 

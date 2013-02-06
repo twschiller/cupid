@@ -110,7 +110,7 @@ public interface ICapability {
 	 * @see CapabilityJob
 	 * @return a job that calculates a result for <code>input</code> when executed
 	 */
-	CapabilityJob getJob(ICapabilityInput input);
+	CapabilityJob<? extends ICapability> getJob(ICapabilityInput input);
 	
 	/**
 	 * @return the flags for the capability.

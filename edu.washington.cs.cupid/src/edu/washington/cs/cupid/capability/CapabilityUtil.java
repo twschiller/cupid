@@ -21,32 +21,39 @@ import edu.washington.cs.cupid.capability.ICapability.Parameter;
 
 public class CapabilityUtil {
 	
-	public static Object singleOutput(ICapability capability, CapabilityStatus status){
-		return status.value().getOutputs().get(singleOutput(capability));
+	public static Object singleOutputValue(final ICapability capability, final CapabilityStatus status){
+		if (status.value() == null) {
+			return null;
+		} else{
+			return status.value().getOutput(singleOutput(capability));	
+		}		
 	}
 	
-	public static <T> ICapabilityOutput singletonOutput(ICapability capability, T value){
-		return singletonOutput((Output<T>)singleOutput(capability), value);
+	public static Output<?> singleOutput(ICapability capability){
+		if (capability.getOutputs().isEmpty()){
+			throw new IllegalArgumentException("Capability has no outputs");
+		} else if (capability.getOutputs().size() > 1) {
+			throw new IllegalArgumentException("Capability has multiple outputs");
+		} else {
+			return capability.getOutputs().iterator().next();
+		}
 	}
 	
-	public static <T> ICapabilityOutput singletonOutput(Output<T> output, T value){
+	public static <T> ICapabilityOutput packSingleOutputValue(ICapability capability, T value){
+		return packSingleOutputValue((Output<T>)singleOutput(capability), value);
+	}
+	
+	public static <T> ICapabilityOutput packSingleOutputValue(Output<T> output, T value){
 		ReturnImpl result = new ReturnImpl();
 		result.add(output, value);
 		return result;
 	}
 	
-	public static <T> ICapabilityInput singleton(ICapability capability, T argument){
+	public static <T> ICapabilityInput packUnaryInput(ICapability capability, T argument){
 		InputImpl input = new InputImpl();
 		Parameter<T> parameter = (Parameter<T>)unaryParameter(capability);
 		input.add(parameter, argument);
 		return input;
-	}
-	
-	public static Output<?> singleOutput(ICapability capability){
-		for (Output<?> output : capability.getOutputs()){
-			return output;
-		}
-		throw new IllegalArgumentException("Capability has multiple output");
 	}
 	
 	public static Parameter<?> unaryParameter(ICapability capability){

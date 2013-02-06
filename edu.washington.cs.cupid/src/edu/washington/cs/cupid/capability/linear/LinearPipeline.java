@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability.linear;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -139,7 +140,7 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 	}
 
 	@Override
-	public Parameter<I> getParameter() {
+	public Parameter<I> getParameter() {	
 		return (Parameter<I>) capabilities.get(0).getParameter();
 	}
 
@@ -150,12 +151,12 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
-		return (Set<Parameter<?>>) capabilities.get(0).getParameters();
+		return Collections.<Parameter<?>>singleton(getParameter());
 	}
 
 	@Override
 	public Set<Output<?>> getOutputs() {
-		return (Set<Output<?>>) capabilities.get(capabilities.size()-1).getOutputs();
+		return Collections.<Output<?>>singleton(getOutput());
 	}
 	
 }

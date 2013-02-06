@@ -22,7 +22,7 @@ import com.vectrace.MercurialEclipse.model.ChangeSet;
 import com.vectrace.MercurialEclipse.model.HgRoot;
 import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 
-import edu.washington.cs.cupid.capability.linear.AbstractLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
@@ -30,7 +30,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * A capability that returns the Hg heads for a resource.
  * @author Todd Schiller
  */
-public final class HgHeadsCapability extends AbstractLinearCapability<IResource, List<ChangeSet>> {
+public final class HgHeadsCapability extends LinearCapability<IResource, List<ChangeSet>> {
 
 	/**
 	 * Construct a capability that returns the Hg heads for a resource.

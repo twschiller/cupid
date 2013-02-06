@@ -34,13 +34,20 @@ public class CapabilityArguments implements ICapabilityArguments {
 	
 	@Override
 	public <T> T getValueArgument(IParameter<T> parameter){
-		Object result = arguments.get(parameter);
 		
-		if (result instanceof ICapability){
-			throw new IllegalArgumentException("Parameter has capability argument");
+		if (arguments.containsKey(parameter)) {
+			Object result = arguments.get(parameter);
+			if (result instanceof ICapability){
+				throw new IllegalArgumentException("Parameter has capability argument");
+			} else {
+				return (T) result;
+			}
+			
+		} else if (parameter.hasDefault()) {
+			return parameter.getDefault();
 		} else {
-			return (T) result;
-		}
+			throw new IllegalArgumentException("No argument supplied for parameter: " + parameter);
+		}	
 	}
 	
 	@Override

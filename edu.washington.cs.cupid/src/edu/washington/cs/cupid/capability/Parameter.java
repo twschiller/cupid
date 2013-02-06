@@ -34,6 +34,15 @@ public class Parameter<T> implements ICapability.IParameter<T>{
 		this(name, type, null, false);
 	}
 	
+	public Parameter(String name, Class<T> type, T def){
+		this(name, TypeToken.of(type), def);
+	}
+	
+	public Parameter(String name, Class<T> type){
+		this(name, TypeToken.of(type));
+	}
+	
+	
 	@Override
 	public String getName() {
 		return name;

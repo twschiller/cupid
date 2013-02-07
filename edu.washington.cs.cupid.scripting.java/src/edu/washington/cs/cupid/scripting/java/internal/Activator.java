@@ -11,17 +11,18 @@
 package edu.washington.cs.cupid.scripting.java.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -92,50 +93,9 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		}
 		
 		if (cupidProject.exists()) {
-			new Job("Open Cupid Project") {
-
-				@Override
-				protected IStatus run(final IProgressMonitor monitor) {
-					try {
-						monitor.beginTask("Open Cupid Project", 100);
-						
-						cupidProject.open(new SubProgressMonitor(monitor, 40));
-						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
-						new UpdateClasspathJob().schedule();
-						return Status.OK_STATUS;
-						
-					} catch (CoreException ex) {
-						logError("Unable to open Cupid project in workspace", ex);
-						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error opening Cupid project", ex);
-					
-					} finally {
-						monitor.done();
-					}
-				}
-			}.schedule();
+			new OpenCupidProjectJob().schedule();
 		} else {
-			new Job("Create Cupid Project") {
-				@Override
-				protected IStatus run(final IProgressMonitor monitor) {
-					try {
-						final int totalWork = 3;
-						monitor.beginTask("Create Cupid Project", totalWork);
-						
-						cupidProject.create(new SubProgressMonitor(monitor, 1));
-						cupidProject.open(new SubProgressMonitor(monitor, 1));
-						JavaProjectManager.populateCupidProject(cupidProject, new SubProgressMonitor(monitor, 1));
-					
-						ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
-						return Status.OK_STATUS;
-					} catch (Exception ex) {
-						logError("Unable to create Cupid project in workspace", ex);
-						return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating Cupid project", ex);
-					
-					} finally {
-						monitor.done();
-					}
-				}
-			}.schedule();
+			new CreateCupidProjectJob().schedule();
 		}
 	}
 	
@@ -170,34 +130,109 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		return plugin;
 	}
 	
-	/**
-	 * Load the custom capabilities from the Cupid workspace project.
-	 */
-	public void loadDynamicCapabilities() {		
-		dynamic.clear();
-
-		CompilationUnitLocator finder = new CompilationUnitLocator();
-		try {
-			cupidProject.accept(finder);
-		} catch (CoreException e) {
-			logError("Error finding changed dynamic class files", e);
-			return;
+	private class CreateCupidProjectJob extends Job {
+		public CreateCupidProjectJob() {
+			super("Create Cupid Project");
+			super.setRule(cupidProject);
 		}
 
-		for (ICompilationUnit clazz : finder.getCapabilityClasses()) {		
-			
-			logInformation("Loading dynamic capability " + simpleName(clazz));
-
+		@Override
+		protected IStatus run(final IProgressMonitor monitor) {
 			try {
-				loadDynamicCapability(clazz, false);
-			} catch (Exception e) {
-				logError("Error loading dynamic capability " + simpleName(clazz), e);
-			} catch (Error e) {
-				// expected when there are compilation errors
+				final int totalWork = 3;
+				monitor.beginTask("Create Cupid Project", totalWork);
+				
+				cupidProject.create(new SubProgressMonitor(monitor, 1));
+				cupidProject.open(new SubProgressMonitor(monitor, 1));
+				JavaProjectManager.populateCupidProject(cupidProject, new SubProgressMonitor(monitor, 1));
+			
+				ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
+				return Status.OK_STATUS;
+			} catch (Exception ex) {
+				logError("Unable to create Cupid project in workspace", ex);
+				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating Cupid project", ex);
+			
+			} finally {
+				monitor.done();
 			}
 		}
+	}
+		
+	private class OpenCupidProjectJob extends Job {
+		public OpenCupidProjectJob() {
+			super("Open Cupid Project");
+			super.setRule(cupidProject);
+		}
 
-		notifier.onChange(this);
+		@Override
+		protected IStatus run(final IProgressMonitor monitor) {
+			try {
+				monitor.beginTask("Open Cupid Project", 100);
+				
+				cupidProject.open(new SubProgressMonitor(monitor, 40));
+				ResourcesPlugin.getWorkspace().addResourceChangeListener(projectManager, IResourceChangeEvent.POST_BUILD);
+				new UpdateClasspathJob().schedule();
+				new LoadCapabilitiesJob().schedule();
+				return Status.OK_STATUS;
+				
+			} catch (CoreException ex) {
+				logError("Unable to open Cupid project in workspace", ex);
+				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error opening Cupid project", ex);
+			
+			} finally {
+				monitor.done();
+			}
+		}
+		
+	}
+	
+	private class LoadCapabilitiesJob extends Job{
+		public LoadCapabilitiesJob() {
+			super("Load Dynamic Capabilities");
+			super.setRule(cupidProject);
+		}
+
+		@Override
+		protected IStatus run(final IProgressMonitor monitor) {
+			try {
+				SubMonitor progress = SubMonitor.convert(monitor, 100);
+				
+				dynamic.clear();
+				
+				CompilationUnitLocator finder = new CompilationUnitLocator();
+				try {
+					cupidProject.accept(finder);
+				} catch (CoreException e) {
+					logError("Error finding changed dynamic class files", e);
+					return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error finding changed dynamic class files", e);
+				}
+				
+				progress.setWorkRemaining(70);
+				
+				Set<ICompilationUnit> classes = finder.getCapabilityClasses();
+				
+				SubMonitor loopProgress = progress.newChild(70).setWorkRemaining(classes.size());
+		          
+				for (ICompilationUnit clazz : classes) {		
+					logInformation("Loading dynamic capability " + simpleName(clazz));
+
+					try {
+						loadDynamicCapability(clazz, false);
+					} catch (Exception e) {
+						logError("Error loading dynamic capability " + simpleName(clazz), e);
+					} catch (Error e) {
+						// expected when there are compilation errors
+					} finally {
+						loopProgress.worked(1);
+					}
+				}
+
+				return Status.OK_STATUS;
+			} finally {
+				notifier.onChange(Activator.this);
+				monitor.done();
+			}
+		}
 	}
 	
 	private String simpleName(final IJavaElement clazz) {

@@ -44,7 +44,7 @@ public class CapabilityUtil {
 	}
 	
 	public static <T> ICapabilityOutputs packSingleOutputValue(ICapability capability, T value){
-		return packSingleOutputValue((IOutput<T>)singleOutput(capability), value);
+		return packSingleOutputValue((IOutput<T>) singleOutput(capability), value);
 	}
 	
 	public static <T> ICapabilityOutputs packSingleOutputValue(IOutput<T> output, T value){
@@ -55,7 +55,7 @@ public class CapabilityUtil {
 	
 	public static <T> ICapabilityArguments packUnaryInput(ICapability capability, T argument){
 		CapabilityArguments input = new CapabilityArguments();
-		IParameter<T> parameter = (IParameter<T>)unaryParameter(capability);
+		IParameter<T> parameter = (IParameter<T>) unaryParameter(capability);
 		input.add(parameter, argument);
 		return input;
 	}

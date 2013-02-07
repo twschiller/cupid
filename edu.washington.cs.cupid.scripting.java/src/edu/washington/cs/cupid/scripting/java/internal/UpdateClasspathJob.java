@@ -39,6 +39,7 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 	 */
 	public UpdateClasspathJob() {
 		super("Update Cupid Classpath");
+		super.setRule(Activator.getDefault().getCupidJavaProject().getSchedulingRule());
 	}
 	
 	@Override

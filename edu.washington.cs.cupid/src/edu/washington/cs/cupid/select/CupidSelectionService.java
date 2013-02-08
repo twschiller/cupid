@@ -13,8 +13,8 @@ package edu.washington.cs.cupid.select;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
@@ -23,13 +23,13 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.internal.NullPartListener;
 
@@ -37,7 +37,7 @@ import edu.washington.cs.cupid.internal.NullPartListener;
  * A selection manager to track selections in Eclipse and SWT Widgets.
  * @author Todd Schiller
  */
-public final class CupidSelectionService extends NullPartListener implements ISelectionListener {
+public final class CupidSelectionService extends NullPartListener {
 
 	// TODO fix broadcaster memory leak when parts are disposed
 	// TODO support for list selection
@@ -46,10 +46,10 @@ public final class CupidSelectionService extends NullPartListener implements ISe
 	private Class<?> partPaneClazz = null;
 	private Method getPaneMethod = null;
 	private Method getControlMethod = null;
-
+	
 	private final Map<IWorkbenchPart, Broadcaster> broadcasters = Maps.newHashMap();
 	
-	private final List<ICupidSelectionListener> listeners = Lists.newArrayList();
+	private final Set<ICupidSelectionListener> listeners = Sets.newIdentityHashSet();
 	
 	private static CupidSelectionService instance = null;
 	
@@ -149,13 +149,22 @@ public final class CupidSelectionService extends NullPartListener implements ISe
 	private class Broadcaster implements SelectionListener {
 
 		private IWorkbenchPart part;
+		private int seen = Integer.MIN_VALUE;
 		
 		public Broadcaster(final IWorkbenchPart part) {
 			this.part = part;
 		}
 
 		@Override
-		public void widgetSelected(final SelectionEvent e) {
+		public void widgetSelected(final SelectionEvent e) {	
+			
+			if (e.time == seen){
+				return;
+			} 
+			
+			seen = e.time;
+			System.out.println("Part: " + Integer.toHexString(part.hashCode()) + " Detail:" + e.stateMask + " Time:" + e.time);
+			
 			if (e.widget instanceof Table) {
 				Table table = (Table) e.widget;
 				
@@ -198,11 +207,4 @@ public final class CupidSelectionService extends NullPartListener implements ISe
 		
 	}
 
-	@Override
-	public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
-		for (ICupidSelectionListener listener : listeners) {
-			listener.selectionChanged(part, selection);
-		}
-	}
-	
 }

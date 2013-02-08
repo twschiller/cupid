@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.google.common.collect.Lists;
@@ -486,25 +487,7 @@ public class InspectorView extends ViewPart {
 	}
 	
 	private final class SelectionModel implements ICupidSelectionListener {
-		@Override
-		public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
-			synchronized (viewer) {
-				cancelOldJobs();
-				
-				CupidDataCollector.record(
-						CupidEventBuilder.contextEvent(getClass(), part, selection, CupidActivator.getDefault())
-						.create());
-				
-				if (selection instanceof StructuredSelection) {
-					// TODO handle multiple data case
-					Object argument = ((StructuredSelection) selection).getFirstElement();
-					viewer.setInput(argument);
-				} 
-			}
-			
-			// TODO handle other selection types
-		}
-
+		
 		@Override
 		public void selectionChanged(final IWorkbenchPart part, final Object data) {
 			synchronized (viewer) {
@@ -728,7 +711,7 @@ public class InspectorView extends ViewPart {
 	 * @param row the row to update
 	 */
 	private void update(final CapabilityRow row) {
-		Display.getDefault().asyncExec(new Runnable() {
+		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
 				synchronized (viewer) {

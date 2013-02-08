@@ -24,13 +24,6 @@ public interface ICupidSelectionListener {
 	 * @param part the part where the selection occurred
 	 * @param data the data that was selected
 	 */
-	void selectionChanged(IWorkbenchPart part, Object data);
-	
-	/**
-	 * Triggered when the user makes a selection in the workbench.
-	 * @param part the part where the selection occurred
-	 * @param data the data that was selected
-	 */
 	void selectionChanged(IWorkbenchPart part, Object [] data);
 	
 }

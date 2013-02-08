@@ -31,7 +31,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -39,7 +38,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -488,21 +486,6 @@ public class InspectorView extends ViewPart {
 	
 	private final class SelectionModel implements ICupidSelectionListener {
 		
-		@Override
-		public void selectionChanged(final IWorkbenchPart part, final Object data) {
-			synchronized (viewer) {
-				if (!part.equals(InspectorView.this)) {
-					cancelOldJobs();
-					
-					CupidDataCollector.record(
-							CupidEventBuilder.contextEvent(getClass(), part, data, CupidActivator.getDefault())
-							.create());
-					
-					viewer.setInput(data);			
-				}
-			}
-		}
-
 		@Override
 		public void selectionChanged(final IWorkbenchPart part, final Object[] data) {
 			synchronized (viewer) {

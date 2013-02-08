@@ -167,15 +167,6 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 	}
 	
 	@Override
-	public final void selectionChanged(final IWorkbenchPart part, final Object data) {
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
-				.create());
-		
-		show(new Object[]{ data });
-	}
-
-	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {
 		CupidDataCollector.record(
 				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())

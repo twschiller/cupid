@@ -168,34 +168,22 @@ public final class CupidSelectionService extends NullPartListener {
 			if (e.widget instanceof Table) {
 				Table table = (Table) e.widget;
 				
-				if (table.getSelectionCount() == 1) {
-					for (ICupidSelectionListener listener : listeners) {
-						listener.selectionChanged(part, table.getSelection()[0].getData());
-					}
-				} else {
-					List<Object> selection = Lists.newArrayList();
-					for (TableItem item : table.getSelection()) {
-						selection.add(item.getData());
-					}
-					for (ICupidSelectionListener listener : listeners) {
-						listener.selectionChanged(part, selection.toArray());
-					}
+				List<Object> selection = Lists.newArrayList();
+				for (TableItem item : table.getSelection()) {
+					selection.add(item.getData());
+				}
+				for (ICupidSelectionListener listener : listeners) {
+					listener.selectionChanged(part, selection.toArray());
 				}
 			} else if (e.widget instanceof Tree) {
 				Tree tree = (Tree) e.widget;
 				
-				if (tree.getSelectionCount() == 1) {
-					for (ICupidSelectionListener listener : listeners) {
-						listener.selectionChanged(part, tree.getSelection()[0].getData());
-					}
-				} else {
-					List<Object> selection = Lists.newArrayList();
-					for (TreeItem item : tree.getSelection()) {
-						selection.add(item.getData());
-					}
-					for (ICupidSelectionListener listener : listeners) {
-						listener.selectionChanged(part, selection.toArray());
-					}
+				List<Object> selection = Lists.newArrayList();
+				for (TreeItem item : tree.getSelection()) {
+					selection.add(item.getData());
+				}
+				for (ICupidSelectionListener listener : listeners) {
+					listener.selectionChanged(part, selection.toArray());
 				}
 			}
 		}

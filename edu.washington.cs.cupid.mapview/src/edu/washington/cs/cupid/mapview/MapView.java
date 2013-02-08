@@ -213,15 +213,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	}
 	
 	@Override
-	public final void selectionChanged(final IWorkbenchPart part, final Object data) {
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
-				.create());
-		
-		showMapping(data);
-	}
-
-	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {
 		CupidDataCollector.record(
 				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())

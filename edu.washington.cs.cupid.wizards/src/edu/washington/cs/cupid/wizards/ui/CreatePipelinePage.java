@@ -246,7 +246,11 @@ public class CreatePipelinePage extends WizardPage{
 			case 0:
 				return capability.getName();
 			case 1:
-				return TypeManager.simpleTypeName(CapabilityUtil.unaryParameter(capability).getType().getType());
+				if (CapabilityUtil.isUnary(capability)){
+					return TypeManager.simpleTypeName(CapabilityUtil.unaryParameter(capability).getType().getType());
+				} else {
+					return null;
+				}
 			case 2:
 				return TypeManager.simpleTypeName(CapabilityUtil.singleOutput(capability).getType().getType());
 			default:
@@ -268,10 +272,14 @@ public class CreatePipelinePage extends WizardPage{
 			
 			for (int i = 1; i < current.size(); i++){
 				ICapability next = current.get(i);
-				IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
-				if (!TypeManager.isCompatible(nextParameter, last)){
-					result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
+				
+				if (!CapabilityUtil.isGenerator(next)){
+					IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
+					if (!TypeManager.isCompatible(nextParameter, last)){
+						result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
+					}	
 				}
+				
 				last = CapabilityUtil.singleOutput(next).getType();
 			}
 		}
@@ -305,7 +313,8 @@ public class CreatePipelinePage extends WizardPage{
 				
 				ICapability last = current.get(current.size()-1);
 						
-				if (TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())){
+				if (CapabilityUtil.isGenerator(capability)
+					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())){
 					return null;
 				}else{
 					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);

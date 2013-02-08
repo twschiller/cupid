@@ -163,19 +163,18 @@ public final class TypeManager {
 		} else if (isJavaCompatible(parameterType, argumentType)) {
 			// Java's standard typing rules work
 			return true;	
-//		} 
-//		else if (parameterType.getType() instanceof ParameterizedType) {
-//			if (parameterType.getRawType().isAssignableFrom(argumentType.getRawType())) {
-//				// check if type is all variables (i.e., fully generic)
-//				for (Type arg : ((ParameterizedType) parameterType.getType()).getActualTypeArguments()) {
-//					if (!(arg instanceof TypeVariable)) {
-//						return capability.getParameterType().isAssignableFrom(argumentType);
-//					}
-//				}
-//				return true;
-//			} else {
-//				return false;
-//			}
+		} else if (parameterType.getType() instanceof ParameterizedType) {
+			if (parameterType.getRawType().isAssignableFrom(argumentType.getRawType())) {
+				// check if type is all variables (i.e., fully generic)
+				for (Type arg : ((ParameterizedType) parameterType.getType()).getActualTypeArguments()) {
+					if (!(arg instanceof TypeVariable)) {
+						return parameterType.isAssignableFrom(argumentType);
+					}
+				}
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return ADAPTER_REGISTRY.getTypeAdapter(argumentType, parameterType) != null;
 		}

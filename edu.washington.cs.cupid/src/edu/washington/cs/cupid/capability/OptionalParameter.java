@@ -1,32 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2013 Todd Schiller.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Todd Schiller - initial API, implementation, and documentation
- ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
 import java.io.Serializable;
 
 import com.google.common.reflect.TypeToken;
 
-public class Parameter<T> implements ICapability.IParameter<T>, Serializable {
+public class OptionalParameter<T extends Serializable> implements ICapability.IParameter<T> {
 	private static final long serialVersionUID = 1L;
 	
 	private final String name;
 	private final TypeToken<T> type;
+	private final T def;
 	
-	public Parameter(final String name, final TypeToken<T> type){
+	public OptionalParameter(String name, TypeToken<T> type, T def){
 		this.name = name;
 		this.type = type;
+		this.def = def;
 	}
-	
-	public Parameter(final String name, final Class<T> type){
-		this(name, TypeToken.of(type));
+
+	public OptionalParameter(String name, Class<T> type, T def){
+		this(name, TypeToken.of(type), def);
 	}
 	
 	@Override
@@ -46,12 +38,12 @@ public class Parameter<T> implements ICapability.IParameter<T>, Serializable {
 
 	@Override
 	public T getDefault() {
-		throw new IllegalArgumentException("Parameter does not have a default value");
+		return def;
 	}
 
 	@Override
 	public boolean hasDefault() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -71,10 +63,10 @@ public class Parameter<T> implements ICapability.IParameter<T>, Serializable {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof Parameter)) {
+		if (!(obj instanceof OptionalParameter)) {
 			return false;
 		}
-		Parameter<?> other = (Parameter<?>) obj;
+		OptionalParameter<?> other = (OptionalParameter<?>) obj;
 		if (name == null) {
 			if (other.name != null) {
 				return false;
@@ -90,5 +82,5 @@ public class Parameter<T> implements ICapability.IParameter<T>, Serializable {
 			return false;
 		}
 		return true;
-	}
+	}	
 }

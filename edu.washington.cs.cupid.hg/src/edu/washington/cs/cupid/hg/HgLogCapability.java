@@ -27,6 +27,7 @@ import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.OptionalParameter;
 import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
 
@@ -36,9 +37,9 @@ import edu.washington.cs.cupid.capability.Parameter;
  */
 public final class HgLogCapability extends AbstractBaseCapability {
 
-	public static final Parameter<Integer> PARAM_MAX_ENTRIES = new Parameter<Integer>("Maximum Entries", Integer.class, 100);
-	public static final Parameter<Integer> PARAM_START_REVISION = new Parameter<Integer>("Start Revision", Integer.class, 0);
-	public static final Parameter<IResource> PARAM_RESOURCE = new Parameter<IResource>("Resource", IResource.class);
+	public static final IParameter<Integer> PARAM_MAX_ENTRIES = new OptionalParameter<Integer>("Maximum Entries", Integer.class, 100);
+	public static final IParameter<Integer> PARAM_START_REVISION = new OptionalParameter<Integer>("Start Revision", Integer.class, 0);
+	public static final IParameter<IResource> PARAM_RESOURCE = new Parameter<IResource>("Resource", IResource.class);
 	
 	public static final Output<List<JHgChangeSet>> OUT_LOG = new Output<List<JHgChangeSet>>("Log", new TypeToken<List<JHgChangeSet>>(){});
 	
@@ -49,7 +50,7 @@ public final class HgLogCapability extends AbstractBaseCapability {
 		super("Hg Log",
 			  "edu.washington.cs.cupid.hg.log",
 			  "Hg log entries for the resource",
-			  Lists.<Parameter<?>>newArrayList(PARAM_RESOURCE, PARAM_MAX_ENTRIES, PARAM_START_REVISION),
+			  Lists.<IParameter<?>>newArrayList(PARAM_RESOURCE, PARAM_MAX_ENTRIES, PARAM_START_REVISION),
 			  Lists.<Output<?>>newArrayList(OUT_LOG),
 			  Flag.PURE, Flag.TRANSIENT);
 	}

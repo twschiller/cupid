@@ -16,6 +16,8 @@ import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
 public class Output<I> implements IOutput<I> {
 
+	private static final long serialVersionUID = 1L;
+	
 	private String name;
 	private TypeToken<I> type;
 	
@@ -34,4 +36,5 @@ public class Output<I> implements IOutput<I> {
 		return type;
 	}
 
+	
 }

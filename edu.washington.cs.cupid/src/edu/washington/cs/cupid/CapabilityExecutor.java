@@ -47,6 +47,7 @@ import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.internal.CupidJobStatus;
 import edu.washington.cs.cupid.internal.SchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
+import edu.washington.cs.cupid.jobs.JobManager;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
 
@@ -92,6 +93,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 	private final Set<CapabilityJob<?>> canceling;
 	
 	private final Set<IInvalidationListener> cacheListeners = Sets.newIdentityHashSet();
+	
+	private final JobManager manager = new JobManager();
 	
 	/**
 	 * Singleton instance.
@@ -147,6 +150,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		synchronized (INSTANCE_MONITOR) {
 			if (instance != null) {
 				ResourcesPlugin.getWorkspace().removeResourceChangeListener(instance);
+				instance.manager.stop();
 				instance = null;
 			}
 		}
@@ -250,21 +254,19 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 					
 					job = capability.getJob(input);
 					
-					
-					
 					if (job == null) {
 						job = new CapabilityJob<ICapability>(capability, input){
 							@Override
 							protected CapabilityStatus run(final IProgressMonitor monitor) {
 								try{
-									monitor.beginTask("Retrieve Cached Value", 1);
+									monitor.beginTask("Produce error", 1);
 									return CapabilityStatus.makeError(new MalformedCapabilityException(capability, "Capability returned null job"));
 								} finally {
 									monitor.done();
 								}			
 							}
 						};
-					}
+					} 
 					
 					if (!capability.getFlags().contains(Flag.TRANSIENT)) {
 						job.addJobChangeListener(executor.cacher);
@@ -461,4 +463,7 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		}
 	}
 
+	public static JobManager getJobManager() {
+		return getInstance().manager;
+	}
 }

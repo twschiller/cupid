@@ -16,7 +16,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -24,10 +23,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -54,7 +49,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.math.IntMath;
 import com.google.common.reflect.TypeToken;
@@ -62,11 +56,11 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
-import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
 import edu.washington.cs.cupid.preferences.PreferenceConstants;
@@ -81,7 +75,7 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
  * View that shows capabilities (and their outputs) that apply to the current workbench selection.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class InspectorView extends ViewPart implements IPropertyChangeListener {
+public class InspectorView extends ViewPart {
 	
 	//TODO: when a resource is re-selected, use the calculations already in progress (need to keeps a map of jobs?)
 	//TODO: add preference for log messages
@@ -90,8 +84,6 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	//TODO: localize status messages
 	
 	private static final int COLLECTION_PARTITION_SIZE = 10;
-
-	private static final int MILLISECONDS_PER_SECOND = 1000;
 
 	private static final int DEFAULT_COLUMN_WIDTH = 100;
 
@@ -111,14 +103,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 	
 	private SelectionModel selectionModel;
 
-	private long reapThresholdInSeconds;
-	
-	/**
-	 * Family -> Last Job Submit Time. Used smooth killing of jobs when clicking around the UI
-	 */
-	private Map<JobFamily, Long> inspectorFamilies;
-	
-	
+	private Set<JobFamily> oldJobs = Sets.newIdentityHashSet();
 	
 	@Override
 	public void init(IViewSite site) throws PartInitException {
@@ -161,13 +146,12 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		selectionModel = new SelectionModel();
 		CupidSelectionService.addListener(selectionModel);
 		
-		inspectorFamilies = Maps.newHashMap();
-		
-		IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
-		reapThresholdInSeconds = preferences.getInt(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS);
-		preferences.addPropertyChangeListener(this);
-		
 		viewer.addSelectionChangedListener(new DetailContentProvider());
+	}
+	
+	private void cancelOldJobs(){
+		CapabilityExecutor.getJobManager().cancel(oldJobs);
+		oldJobs.clear();
 	}
 	
 	private class DetailContentProvider implements ISelectionChangedListener {
@@ -190,28 +174,7 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 		}
 	}
-	
-	/**
-	 * Cancel families of jobs that have not been accessed in longer than
-	 * {@link #reapThresholdInSeconds}.
-	 */
-	private void cancelOldJobs() {
-		synchronized (inspectorFamilies) {
-			List<Object> cancel = Lists.newLinkedList();
-			for (Object key : inspectorFamilies.keySet()) {
-				long last = inspectorFamilies.get(key);
-				if (System.currentTimeMillis() - last > (reapThresholdInSeconds * MILLISECONDS_PER_SECOND)) {
-					cancel.add(key);
-				}
-			}
-			
-			for (Object family : cancel) {
-				Job.getJobManager().cancel(family);
-				inspectorFamilies.remove(family);
-			}
-		}
-	}
-	
+		
 	private interface Row {
 		boolean hasChildren();
 		Row[] getChildren();
@@ -371,14 +334,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 		private CapabilityRow(final ICapability capability, final Object input) {
 
 			this.capability = capability;
-
-			// TODO need an Inspector View specific family
-			JobFamily family = family(input); 
-
-			synchronized (inspectorFamilies) {
-				inspectorFamilies.put(family, System.currentTimeMillis());	
-			}
-
+			JobFamily family = family(input);
+			
+			oldJobs.add(family);
+			CapabilityExecutor.getJobManager().register(family);
+			
 			try {
 				ICapabilityArguments args = CapabilityUtil.isGenerator(capability)
 						? new CapabilityArguments()
@@ -467,7 +427,11 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 				} else if (finished) {
 					switch (result.getCode()) {
 					case Status.OK:
-						return value.toString();
+						if (value != null){
+							return value.toString();		
+						} else {
+							return null;
+						}
 					case Status.CANCEL:
 						return "Update Cancelled...";
 					case Status.ERROR:
@@ -779,12 +743,4 @@ public class InspectorView extends ViewPart implements IPropertyChangeListener {
 			}
 		});
 	}
-
-	@Override
-	public final void propertyChange(final PropertyChangeEvent event) {
-		if (event.getProperty().equals(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS)) {
-			reapThresholdInSeconds = (Integer) event.getNewValue();
-		}
-	}
-	
 }

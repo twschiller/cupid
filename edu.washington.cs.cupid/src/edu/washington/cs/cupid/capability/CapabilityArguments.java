@@ -19,6 +19,8 @@ import edu.washington.cs.cupid.capability.ICapability.IParameter;
 
 public class CapabilityArguments implements ICapabilityArguments {
 
+	public static final CapabilityArguments NONE = new CapabilityArguments(); 
+	
 	private Map<IParameter<?>, Object> arguments;
 	private Map<String, Object> named;
 	

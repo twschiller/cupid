@@ -55,8 +55,16 @@ public class CapabilityUtil {
 	
 	public static <T> ICapabilityArguments packUnaryInput(ICapability capability, T argument){
 		CapabilityArguments input = new CapabilityArguments();
-		IParameter<T> parameter = (IParameter<T>) unaryParameter(capability);
-		input.add(parameter, argument);
+		
+		if (isGenerator(capability)){
+			// NO OP
+		} else if (isUnary(capability)) {
+			IParameter<T> parameter = (IParameter<T>) unaryParameter(capability);
+			input.add(parameter, argument);
+		} else {
+			throw new IllegalArgumentException("Expected generator or unary capability");
+		}
+		
 		return input;
 	}
 	

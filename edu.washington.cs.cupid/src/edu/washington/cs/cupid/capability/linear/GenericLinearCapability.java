@@ -17,7 +17,10 @@ import java.util.Set;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.AbstractCapability;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
@@ -50,7 +53,7 @@ public abstract class GenericLinearCapability<I, V> extends AbstractCapability i
 	@Override
 	public final IParameter<I> getParameter() {
 		if (input == null){
-			input = new Parameter<I>(null, getInputType());
+			input = new Parameter<I>(TypeManager.simpleTypeName(getInputType()), getInputType());
 		}
 		return input;
 	}
@@ -58,14 +61,18 @@ public abstract class GenericLinearCapability<I, V> extends AbstractCapability i
 	@Override
 	public final IOutput<V> getOutput() {
 		if (output == null){
-			output = new Output<V>(null, getOutputType());
+			output = new Output<V>(TypeManager.simpleTypeName(getOutputType()), getOutputType());
 		}
 		return output;
 	}
 
 	@Override
 	public final LinearJob<I, V> getJob(final ICapabilityArguments input) {
-		return getJob(input.getValueArgument(getParameter()));
+		if (CapabilityUtil.isGenerator(this)){
+			return getJob((I) null);
+		} else {
+			return getJob(input.getValueArgument(getParameter()));
+		}
 	}
 	
 	@Override

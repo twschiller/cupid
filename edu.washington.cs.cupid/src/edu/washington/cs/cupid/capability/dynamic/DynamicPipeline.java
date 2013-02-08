@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
@@ -90,7 +91,11 @@ public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements 
 
 	@Override
 	public LinearJob<I, V> getJob(ICapabilityArguments input) {
-		return getJob(input.getValueArgument(getParameter()));
+		if (CapabilityUtil.isGenerator(this)){
+			return getJob((I) null);
+		} else {
+			return getJob(input.getValueArgument(getParameter()));
+		}
 	}
 
 	@Override

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
+import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ public interface ICapability {
 		TRANSIENT
 	}
 	
-	interface IParameter<T> {
+	interface IParameter<T> extends Serializable {
 		/**
 		 * Returns the name of the input.
 		 * @return the name of the input
@@ -66,7 +67,7 @@ public interface ICapability {
 		boolean hasDefault();
 	}
 	
-	interface IOutput<T> {
+	interface IOutput<T> extends Serializable {
 		/**
 		 * Returns the name of the output.
 		 * @return the name of the output

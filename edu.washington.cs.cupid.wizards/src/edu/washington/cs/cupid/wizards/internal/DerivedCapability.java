@@ -103,23 +103,23 @@ public class DerivedCapability{
 	public static List<DerivedCapability> derivedProjections(ICapability capability){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
-		if (capability.getOutputs().size() == 1){
+		if (CapabilityUtil.hasSingleOutput(capability)){
 			IOutput<?> output = CapabilityUtil.singleOutput(capability);
 			Class<?> clazz = output.getType().getRawType();
 		
 			// TODO refactor
 			
 			if (List.class.isAssignableFrom(clazz)){
-				ParameterizedType type = (ParameterizedType) output.getType();
-				Type param = type.getActualTypeArguments()[0];
+				ParameterizedType outputType = (ParameterizedType) output.getType().getType();
+				Type elementType = outputType.getActualTypeArguments()[0];
 				
-				if (param instanceof Class){
-					Class<?> eltClazz = (Class<?>) type.getActualTypeArguments()[0];
-					for (Method method : eltClazz.getMethods()){
+				if (elementType instanceof Class){
+					Class<?> elementClass = (Class<?>) elementType;
+					for (Method method : elementClass.getMethods()){
 						if (isGetter(method)){
 							ListGetter<?, ?> getter = new ListGetter(
 									method.getName(), 
-									TypeToken.of(eltClazz), 
+									TypeToken.of(elementClass), 
 									TypeManager.boxType(TypeToken.of(method.getReturnType())));
 							
 							result.add(new DerivedCapability(capability, getter));
@@ -127,16 +127,16 @@ public class DerivedCapability{
 					}
 				}
 			}else if (Set.class.isAssignableFrom(clazz)){
-				ParameterizedType type = (ParameterizedType) output.getType();
-				Type param = type.getActualTypeArguments()[0];
+				ParameterizedType outputType = (ParameterizedType) output.getType().getType();
+				Type elementType = outputType.getActualTypeArguments()[0];
 				
-				if (param instanceof Class){
-					Class<?> eltClazz = (Class<?>) type.getActualTypeArguments()[0];
-					for (Method method : eltClazz.getMethods()){
+				if (elementType instanceof Class){
+					Class<?> elementClass = (Class<?>) outputType.getActualTypeArguments()[0];
+					for (Method method : elementClass.getMethods()){
 						if (isGetter(method)){
 							SetGetter<?, ?> getter = new SetGetter(
 									method.getName(), 
-									TypeToken.of(eltClazz), 
+									TypeToken.of(elementClass), 
 									TypeManager.boxType(TypeToken.of(method.getReturnType())));
 							result.add(new DerivedCapability(capability, getter));
 						}

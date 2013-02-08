@@ -15,8 +15,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -212,20 +210,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 				}
 			}
 		});
-	}
-	
-	@Override
-	public final void selectionChanged(final IWorkbenchPart part, final ISelection selection) {	
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
-				.create());
-		
-		if (selection instanceof StructuredSelection) {	
-			// TODO handle multiple selected elements
-			final StructuredSelection all = ((StructuredSelection) selection);
-			showMapping(all.getFirstElement());
-		} 
-		// TODO handle other selection types
 	}
 	
 	@Override

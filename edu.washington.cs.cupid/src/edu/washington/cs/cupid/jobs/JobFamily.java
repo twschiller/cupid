@@ -10,9 +10,6 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.jobs;
 
-import java.util.Arrays;
-
-
 /**
  * A job family constructed from other families.
  * @author Todd Schiller (tws@cs.washington.edu)

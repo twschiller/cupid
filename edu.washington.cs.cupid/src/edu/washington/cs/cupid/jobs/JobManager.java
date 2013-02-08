@@ -51,6 +51,11 @@ public class JobManager implements IPropertyChangeListener {
 	}
 	
 	public synchronized void stop(){
+		for (Object family : jobs.keySet()){
+			cancelled.remove(family);
+			Job.getJobManager().cancel(family);
+		}
+		jobs.clear();
 		reaper.cancel();
 	}
 	
@@ -97,7 +102,7 @@ public class JobManager implements IPropertyChangeListener {
 		Job.getJobManager().cancel(family);
 	}
 	
-	public synchronized void cancelNow(Collection<Object> families){
+	public synchronized void cancelNow(Collection<? extends Object> families){
 		for (Object family : families) {
 			cancelNow(family);
 		}

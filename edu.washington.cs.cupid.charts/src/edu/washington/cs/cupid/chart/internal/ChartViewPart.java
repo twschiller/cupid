@@ -8,15 +8,11 @@ import java.util.concurrent.ConcurrentMap;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -37,19 +33,19 @@ import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
+import edu.washington.cs.cupid.select.CupidSelectionService;
+import edu.washington.cs.cupid.select.ICupidSelectionListener;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.usage.events.EventConstants;
 
-public abstract class ChartViewPart extends ViewPart implements ISelectionListener {
+public abstract class ChartViewPart extends ViewPart implements ICupidSelectionListener {
 
 	protected ICapability capability;
 	
 	protected ConcurrentMap<Object, Object> results;
 	
 	protected Frame frame;
-	
-	private ISelectionService selectionService;
 	
 	protected abstract void buildChart();
 	
@@ -68,8 +64,7 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 
 	@Override
 	public void createPartControl(Composite parent) {
-		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionService.addPostSelectionListener(this);
+		CupidSelectionService.addListener(this);
 		
 		Composite inner = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
 		frame = SWT_AWT.new_Frame(inner);
@@ -132,22 +127,14 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 		});
 	}
 	
-	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
-				.create());
-		
-		if (capability != null && selection instanceof StructuredSelection){
+	private void show(Object [] all){
+		if (capability != null){
 			ChartViewPart.this.showBusy(true);
 			
 			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
 			
-			final StructuredSelection all = ((StructuredSelection) selection);
-			
 			final List<Object> compatible = Lists.newArrayList();
-			for (Object x : all.toList()){
+			for (Object x : all){
 				if (TypeManager.isCompatible(parameter, x)){
 					compatible.add(x);
 				}
@@ -177,6 +164,24 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 				});
 			}
 		}
+	}
+	
+	@Override
+	public final void selectionChanged(final IWorkbenchPart part, final Object data) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
+				.create());
+		
+		show(new Object[]{ data });
+	}
+
+	@Override
+	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
+				.create());
+		
+		show(data);
 	}
 	
 	@Override

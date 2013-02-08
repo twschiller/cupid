@@ -106,10 +106,6 @@ public final class CupidActivator extends AbstractUIPlugin {
 		
 		final IWorkbench workbench = PlatformUI.getWorkbench();
 		
-		for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
-			window.getSelectionService().addSelectionListener(selectionManager);
-		}
-		
 		workbench.getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {

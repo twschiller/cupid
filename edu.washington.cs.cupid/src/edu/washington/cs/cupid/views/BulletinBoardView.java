@@ -26,11 +26,10 @@ import org.eclipse.ui.part.ViewPart;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
-import edu.washington.cs.cupid.capability.linear.ILinearCapability;
-import edu.washington.cs.cupid.utility.CapabilityUtil;
 
 /**
  * A view that lists available capabilities in a table.
@@ -123,8 +122,10 @@ public final class BulletinBoardView extends ViewPart {
 		inputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				if (element instanceof ILinearCapability){
-					return TypeManager.simpleTypeName(((ILinearCapability<?,?>) element).getParameter().getType().getType());
+				ICapability capability = (ICapability) element;
+				
+				if (CapabilityUtil.isUnary(capability)){
+					return TypeManager.simpleTypeName(CapabilityUtil.unaryParameter(capability).getType());		
 				} else {
 					return null;
 				}
@@ -135,8 +136,10 @@ public final class BulletinBoardView extends ViewPart {
 		outputColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(final Object element) {
-				if (element instanceof ILinearCapability){
-					return TypeManager.simpleTypeName(((ILinearCapability<?,?>) element).getOutput().getType().getType());
+				ICapability capability = (ICapability) element;
+				
+				if (CapabilityUtil.hasSingleOutput(capability)){
+					return TypeManager.simpleTypeName(CapabilityUtil.singleOutput(capability).getType());			
 				} else {
 					return null;
 				}

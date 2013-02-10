@@ -33,7 +33,8 @@ Export-Package: com.google.common.base,
  edu.washington.cs.cupid.standard,
  edu.washington.cs.cupid.types,
  edu.washington.cs.cupid.usage.events,
- edu.washington.cs.cupid.utility
+ edu.washington.cs.cupid.utility,
+ edu.washington.cs.cupid.views
 Eclipse-BuddyPolicy: global, app, ext, boot
 Bundle-ClassPath: lib/TimeOperations.jar,
  lib/ZipOperations.jar,

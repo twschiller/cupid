@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -22,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
@@ -44,14 +46,15 @@ public class DerivedCapability{
 	}
 	
 	public DynamicSerializablePipeline toPipeline(){
-		List<Object> pipeline = Lists.<Object>newArrayList(
+		List<Serializable> pipeline = Lists.<Serializable>newArrayList(
 				capability.getUniqueId(),
 				getter);
 		
 		return new DynamicSerializablePipeline(
 				capability.getName() + " + " + getter.getName(), 
 				capability.getName() + " + " + getter.getName(), 
-				pipeline);
+				pipeline,
+				CapabilityUtil.noArgs(pipeline.size()));
 	}
 
 	public ICapability getCapability() {

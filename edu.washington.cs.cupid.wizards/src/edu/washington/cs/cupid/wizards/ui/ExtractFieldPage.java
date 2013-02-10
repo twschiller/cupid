@@ -13,20 +13,31 @@ package edu.washington.cs.cupid.wizards.ui;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.TableLayout;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -47,9 +58,11 @@ public class ExtractFieldPage extends WizardPage {
 		this.startClazz = clazz;
 	}
 	
-	private List methodList;
+	private TreeViewer methodTree;
 	private Combo type;
-	private String method;
+	private TableRow selected;
+	
+	private ViewContentProvider treeContent = new ViewContentProvider();
 
 	@Override
 	public void createControl(Composite parent) {
@@ -99,20 +112,39 @@ public class ExtractFieldPage extends WizardPage {
 		type.addModifyListener(new ModifyListener(){
 			@Override
 			public void modifyText(ModifyEvent e) {
-				updateMethodList();
+				methodTree.setInput(type.getText());
+				methodTree.refresh();
 			}
 		});
 		
-		methodList = new List(composite, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL);
+		final Tree tree = new Tree(composite, SWT.BORDER | SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL);
+		
+		TreeColumn cMethod = new TreeColumn(tree, SWT.LEFT);
+		cMethod.setText("Method");
+		
+		TreeColumn cType = new TreeColumn(tree, SWT.LEFT);
+		cType.setText("Type");
+		
+		methodTree = new TreeViewer(tree);
+		methodTree.setContentProvider(treeContent);
+		methodTree.setLabelProvider(new ViewLabelProvider());
+		
 		data = new GridData(GridData.FILL_BOTH);
 		data.heightHint = 300;
 		data.horizontalSpan = 2;
-		methodList.setLayoutData(data);
-	
-		methodList.addSelectionListener(new SelectionListener(){
+		tree.setLayoutData(data);
+		
+		TableLayout treeLayout = new TableLayout();
+		treeLayout.addColumnData(new ColumnWeightData(1));
+		treeLayout.addColumnData(new ColumnWeightData(1));
+		tree.setLayout(treeLayout);
+		
+		tree.setHeaderVisible(true);
+		
+		tree.addSelectionListener(new SelectionListener(){
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				method = methodList.getSelection()[0];
+				selected = (TableRow) tree.getSelection()[0].getData();
 			}
 
 			@Override
@@ -121,40 +153,142 @@ public class ExtractFieldPage extends WizardPage {
 			}
 		});
 		
-		updateMethodList();
-		
 		setControl(composite);
 	}
-	
-	private void updateMethodList(){
-		methodList.removeAll();
 		
-		Class<?> clazz;
-		try {
-			clazz = Activator.getDefault().getBundle().loadClass(type.getText());
-		} catch (ClassNotFoundException e) {
-			return;
+	public Getter<?,?> getGetter() throws Exception {
+		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
+		
+		List<String> fields = Lists.newArrayList();
+		TableRow row = selected;
+		while (row != null){
+			fields.add(0, row.method.getName());
+			row = row.parent;
 		}
 		
-		ArrayList<String> names = Lists.newArrayList();
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Getter<?, ?> result = new Getter(fields, TypeToken.of(clazz), TypeManager.boxType(TypeToken.of(selected.method.getGenericReturnType())));
+		
+		return result;
+	}
+	
+	private class TableRow{
+		private final TableRow parent;
+		private final Method method;
+		
+		private TableRow(TableRow parent, Method method) {
+			this.parent = parent;
+			this.method = method;
+		}
+	}
+	
+	private static Method[] getters(Class<?> clazz){
+		ArrayList<Method> result = Lists.newArrayList();
 		
 		for (Method m : clazz.getMethods()){
 			if (DerivedCapability.isGetter(m)){
-				names.add(m.getName());
-				
+				result.add(m);	
 			}
 		}
 		
-		Collections.sort(names);
+		Collections.sort(result, new Comparator<Method>(){
+			@Override
+			public int compare(Method lhs, Method rhs) {
+				return lhs.getName().compareTo(rhs.getName());
+			}
+		});
 		
-		for (String name : names){
-			methodList.add(name);
+		return result.toArray(new Method[]{});
+	}
+	
+	private final class ViewContentProvider implements ITreeContentProvider {
+		@Override
+		public void dispose() {
+			// NO OP
+		}
+
+		@Override
+		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+			// NO OP
+		}
+
+		@Override
+		public Object[] getElements(Object inputElement) {
+			Class<?> clazz;
+			try {
+				clazz = Activator.getDefault().getBundle().loadClass((String) inputElement);
+			} catch (ClassNotFoundException e) {
+				return new Object[]{};
+			}
+			ArrayList<TableRow> elements = Lists.newArrayList();
+			for (Method getter : getters(clazz)){
+				elements.add(new TableRow(null, getter));
+			}
+			return elements.toArray();
+		}
+
+		@Override
+		public Object[] getChildren(Object parentElement) {
+			TableRow row = (TableRow) parentElement;
+			
+			ArrayList<TableRow> elements = Lists.newArrayList();
+			for (Method getter : getters(row.method.getReturnType())){
+				elements.add(new TableRow(row, getter));
+			}
+			return elements.toArray();
+		}
+
+		@Override
+		public Object getParent(Object element) {
+			return ((TableRow) element).parent;
+		}
+
+		@Override
+		public boolean hasChildren(Object element) {
+			TableRow row = (TableRow) element;
+			Class<?> type = row.method.getReturnType();
+			return !type.isPrimitive() && !type.equals(Object.class) && type.getMethods().length != 0;
 		}
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" }) // type is determined dynamically by text
-	public Getter<?,?> getGetter() throws Exception {
-		Class<?> clazz = Activator.getDefault().getBundle().loadClass(type.getText());
-		return new Getter(method, TypeToken.of(clazz), TypeManager.boxType(TypeToken.of(clazz.getMethod(method).getReturnType())));
+	private final class ViewLabelProvider implements ITableLabelProvider {
+
+		@Override
+		public void addListener(ILabelProviderListener listener) {
+			// NO OP
+		}
+
+		@Override
+		public void dispose() {
+			// NO OP
+		}
+
+		@Override
+		public boolean isLabelProperty(Object element, String property) {
+			return false;
+		}
+
+		@Override
+		public void removeListener(ILabelProviderListener listener) {
+			// NO OP
+		}
+
+		@Override
+		public Image getColumnImage(Object element, int columnIndex) {
+			return null;
+		}
+
+		@Override
+		public String getColumnText(Object element, int columnIndex) {
+			switch (columnIndex){
+			case 0: 
+				return ((TableRow) element).method.getName();
+			case 1: 
+				return TypeManager.simpleTypeName(((TableRow) element).method.getGenericReturnType());
+			default:
+				return null;
+			}
+		}
+
 	}
 }

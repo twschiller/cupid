@@ -1,38 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2013 Todd Schiller.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Todd Schiller - initial API, implementation, and documentation
- ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.ICapability.IOutput;
-
-public class Output<I> implements IOutput<I> {
+public abstract class AbstractParameter<T> implements ICapability.IParameter<T> {
 
 	private static final long serialVersionUID = 1L;
+
+	private final String name;
+	private final TypeToken<T> type;
 	
-	private String name;
-	private TypeToken<I> type;
-	
-	public Output(String name, TypeToken<I> type) {
+	public AbstractParameter(final String name, final TypeToken<T> type){
 		this.name = name;
 		this.type = type;
 	}
 
 	@Override
-	public String getName() {
+	public String toString() {
+		return name;
+	}
+	
+	@Override
+	public final String getName() {
 		return name;
 	}
 
 	@Override
-	public TypeToken<I> getType() {
+	public final TypeToken<T> getType() {
 		return type;
 	}
 
@@ -53,10 +46,10 @@ public class Output<I> implements IOutput<I> {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof Output)) {
+		if (!(obj instanceof AbstractParameter)) {
 			return false;
 		}
-		Output<?> other = (Output<?>) obj;
+		AbstractParameter<?> other = (AbstractParameter<?>) obj;
 		if (name == null) {
 			if (other.name != null) {
 				return false;

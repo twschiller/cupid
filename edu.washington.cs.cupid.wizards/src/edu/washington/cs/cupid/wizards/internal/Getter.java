@@ -11,9 +11,12 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
@@ -27,7 +30,7 @@ public final class Getter<I, V> extends LinearSerializableCapability<I, V> imple
 
 	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
 	
-	private final String field;
+	private final List<String> fields;
 	
 	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
 		
@@ -36,30 +39,42 @@ public final class Getter<I, V> extends LinearSerializableCapability<I, V> imple
 			  type, result,
 			  Flag.PURE);
 					
-		this.field = field;
+		this.fields = Lists.newArrayList(field);
 	}
 	
-	public String getField() {
-		return field;
+	
+	public Getter(final List<String> fields, final TypeToken<I> type, final TypeToken<V> result) {
+		
+		super(TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields), 
+			  BASE_ID + ".[" + type.getRawType().getName() + "]." + Joiner.on(".").join(fields),
+			  TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields),
+			  type, result,
+			  Flag.PURE);
+					
+		this.fields = fields;
 	}
+	
 	
 	@Override
 	public LinearJob<I, V> getJob(final I input) {
-		return new LinearJob<I,V>(this, input){
+		return new LinearJob<I, V>(this, input){
 			@Override
 			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
-					monitor.beginTask(getName(), 1);
+					monitor.beginTask(getName(), fields.size());
 					
-					Method method = input.getClass().getMethod(field);
+					Object result = getInput();
 					
-					if (!method.isAccessible()) {
-						method.setAccessible(true);
+					for (String field : fields){
+						Method method = result.getClass().getMethod(field);
+						if (!method.isAccessible()) {
+							method.setAccessible(true);
+						}
+						result = method.invoke(result);		
+						monitor.worked(1);
 					}
-					
-					Object out = method.invoke(input);
 					// TODO check the conversion
-					return LinearStatus.makeOk(getCapability(), (V) out);
+					return LinearStatus.makeOk(getCapability(), (V) result);
 				} catch (Exception ex) {
 					return LinearStatus.<V>makeError(ex);
 				} finally {
@@ -68,5 +83,10 @@ public final class Getter<I, V> extends LinearSerializableCapability<I, V> imple
 			}
 		};
 	}
+	
+	public List<String> getFields(){
+		return Lists.newArrayList(fields);
+	}
+	
 
 }

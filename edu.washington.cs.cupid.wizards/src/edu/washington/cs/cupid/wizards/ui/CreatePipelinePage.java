@@ -17,15 +17,19 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -44,17 +48,24 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.swt.widgets.Widget;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
+import edu.washington.cs.cupid.views.OptionEditorFactory;
+import edu.washington.cs.cupid.views.OptionEditorFactory.OptionEditor;
+import edu.washington.cs.cupid.views.OptionEditorFactory.ValueChangedListener;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 
 /**
@@ -63,8 +74,6 @@ import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
  */
 public class CreatePipelinePage extends WizardPage{
 	
-	// TODO organization (alphabetize, or use unique id paths?)
-	// TODO window icon
 	
 	// http://www.vogella.com/articles/EclipseDialogs/article.html#tutorialswt
 	
@@ -78,11 +87,26 @@ public class CreatePipelinePage extends WizardPage{
 	// Model
 	//
 	
+	/**
+	 * The current pipeline
+	 */
 	private List<ICapability> current = Lists.newLinkedList();
+	
+	/**
+	 * Options for the selected capability that is in the pipeline
+	 */
+	private List<CapabilityArguments> currentOptions = Lists.newArrayList();;
+	
+	/**
+	 * Options for the selected capability that has not been added yet
+	 */
+	private CapabilityArguments newOptions = new CapabilityArguments();
 	
 	//
 	// View
 	// 
+	
+	private Object selection = null;
 	
 	private TreeViewer capabilityTree;
 	private TableViewer pipelineTable;
@@ -90,6 +114,10 @@ public class CreatePipelinePage extends WizardPage{
 	private Text nameEntry;
 	private Text descriptionEntry;
 	
+	private Group optionGroup;
+    private List<Widget> optionWidgets = Lists.newArrayList();
+    private BiMap<IParameter<?>, OptionEditor<?>> optionInputs = HashBiMap.create();
+
 	@Override
 	public void createControl(Composite parent) {
 		this.setTitle("New Pipeline");
@@ -117,6 +145,7 @@ public class CreatePipelinePage extends WizardPage{
 		
 		buildCapabilityTree(composite);
 		buildPipelineTable(composite);
+		buildOptionEditor(composite);
 		
 		capabilityTree.addDoubleClickListener(new IDoubleClickListener(){
 			@Override
@@ -129,12 +158,49 @@ public class CreatePipelinePage extends WizardPage{
 					current.add(((DerivedCapability) selected).toPipeline());
 				}
 				
+				currentOptions.add(newOptions);
+				
 				pipelineTable.setInput(current);
 				capabilityTree.refresh(true);
 				refreshMessage();
 			}
 		});
+		
+		capabilityTree.addSelectionChangedListener(new ISelectionChangedListener(){
+			@Override
+			public void selectionChanged(final SelectionChangedEvent event) {
+				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				
+				if (selection != selected){
+					clearOptions();
+					
+					ICapability capability = null;
+					if (selected instanceof ICapability){
+						capability = (ICapability) selected;
+					}else if (selected instanceof DerivedCapability){
+						capability = ((DerivedCapability) selected).toPipeline();
+					}
+					
+					showOptions(capability, null);
+				
+					selection = selected;
+				}
+			}
+		});
 
+		pipelineTable.addSelectionChangedListener(new ISelectionChangedListener(){
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				
+				if (selected == null){
+					clearOptions();
+				}else{
+					showOptions((ICapability) selected, pipelineTable.getTable().getSelectionIndex());
+				}
+			}
+		});
+		
 		pipelineTable.getTable().addKeyListener(new DeleteListener());
 		
 		this.setMessage(DEFAULT_MESSAGE);
@@ -168,6 +234,7 @@ public class CreatePipelinePage extends WizardPage{
 				case SWT.DEL:
 				case SWT.BS:
 					current.remove(index);
+					currentOptions.remove(index);
 					pipelineTable.setInput(current);
 					pipelineTable.getTable().select(index == current.size() ? current.size()-1 : index);
 					break;
@@ -180,6 +247,7 @@ public class CreatePipelinePage extends WizardPage{
 	}
 	
 	private void refreshMessage(){
+		this.setMessage(null);
 		List<String> errors = typeErrors();
 		if (current.isEmpty()){
 			this.setMessage(DEFAULT_MESSAGE);
@@ -434,10 +502,10 @@ public class CreatePipelinePage extends WizardPage{
 	}
 	
 	public DynamicSerializablePipeline createPipeline(){
-		List<Object> descriptors = Lists.newArrayList();
+		List<Serializable> descriptors = Lists.newArrayList();
 		for (Object x : current){
 			if (x instanceof Serializable){
-				descriptors.add(x);
+				descriptors.add((Serializable) x);
 			}else{
 				descriptors.add(((ICapability)x).getUniqueId());
 			}
@@ -446,7 +514,8 @@ public class CreatePipelinePage extends WizardPage{
 		DynamicSerializablePipeline pipeline = new DynamicSerializablePipeline(
 				nameEntry.getText(),
 				descriptionEntry.getText(),
-				descriptors);
+				descriptors,
+				currentOptions);
 		
 		return pipeline;
 	}
@@ -455,13 +524,16 @@ public class CreatePipelinePage extends WizardPage{
 		capabilityTree = new TreeViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		capabilityTree.setContentProvider(new TreeContentProvider());
 		capabilityTree.setLabelProvider(new TreeLabelProvider());
-		GridData data = new GridData(GridData.FILL_BOTH);
+
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.minimumHeight = 400;
+		data.verticalSpan = 2;
+		capabilityTree.getTree().setLayoutData(data);
+		
 		
 		TreeColumn column = new TreeColumn(capabilityTree.getTree(), SWT.LEFT);
 		column.setWidth(300);
 		column.setText("Capability");
-		capabilityTree.getTree().setLayoutData(data);
 		
 		SortedSet<ICapability> linear = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
 			@Override
@@ -476,28 +548,96 @@ public class CreatePipelinePage extends WizardPage{
 	private void buildPipelineTable(Composite composite){
 		pipelineTable = new TableViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		
-		GridData data = new GridData(GridData.FILL_BOTH);
-		data = new GridData(GridData.FILL_BOTH);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.minimumWidth = 300;
+		pipelineTable.getTable().setLayoutData(data);
 		
 		pipelineTable.setContentProvider(new TableContentProvider());
 		pipelineTable.setLabelProvider(new TableLabelProvider());
-		pipelineTable.getTable().setLayoutData(data);
+		
 		
 		TableColumn nameColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		nameColumn.setText("Capability");
-		nameColumn.setWidth(200);
 		
 		TableColumn inputTypeColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		inputTypeColumn.setText("Input Type");
-		inputTypeColumn.setWidth(100);
 		
 		TableColumn outputTypeColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		outputTypeColumn.setText("Output Type");
-		outputTypeColumn.setWidth(100);
+		
+		TableLayout layout = new TableLayout();
+		layout.addColumnData(new ColumnWeightData(2));
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(1));
+		pipelineTable.getTable().setLayout(layout);
 		
 		pipelineTable.getTable().setHeaderVisible(true);
 	}
+	
+	private void clearOptions(){
+        for (Widget control : optionWidgets){
+        	control.dispose();
+        }
+        
+        newOptions = new CapabilityArguments();
+        
+        optionWidgets.clear();
+        optionInputs.clear();
+        optionGroup.layout(true);
+	}	
 
+	
+	private void buildOptionEditor(Composite composite){
+		optionGroup = new Group(composite, SWT.BORDER);
+		optionGroup.setText("Capability Options");
+		optionGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        optionGroup.setLayout(layout);
+	}
+
+	private void showOptions(final ICapability capability, final Integer pipeIndex){
+        if (!optionWidgets.isEmpty()){
+        	clearOptions();
+        }
+        
+        if (capability == null){
+        	return;
+        }
+        
+    	final CapabilityArguments capabilityOptions = (pipeIndex == null)
+    			? newOptions
+    			: currentOptions.get(pipeIndex);
+        
+        for (ICapability.IParameter<?> option : CapabilityUtil.options(capability)){
+        	Label label = new Label(optionGroup, SWT.LEFT);
+        	label.setText(option.getName());
+        	
+        	@SuppressWarnings("rawtypes")
+			final OptionEditor input = OptionEditorFactory.getEditor(capability, option);
+        	
+        	if (input != null){
+        		input.create(optionGroup, capabilityOptions.getValueArgument(option));
+        	} else {
+        		// don't show options that don't have a defined view
+        		label.dispose();
+        		continue;
+        	}
+        	
+        	input.addValueChangedListener(new ValueChangedListener(){
+				@Override
+				public void valueChanged(OptionEditor option, Object value) {
+					capabilityOptions.add((IParameter)input.getOption(), value);
+				}
+        	});
+        	
+        	optionInputs.put(option, input);
+        	optionWidgets.add(input.getWidget());
+        	optionWidgets.add(label);
+        }
+
+        optionGroup.layout(true);
+	}
 	
 }

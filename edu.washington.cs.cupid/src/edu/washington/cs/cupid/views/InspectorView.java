@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
@@ -76,15 +75,11 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
  */
 public class InspectorView extends ViewPart {
 	
-	//TODO: when a resource is re-selected, use the calculations already in progress (need to keeps a map of jobs?)
-	//TODO: add preference for log messages
-	
 	//TODO: support multiple selections for "local" capabilities
 	//TODO: localize status messages
 	
 	private static final int COLLECTION_PARTITION_SIZE = 10;
 
-	private static final int DEFAULT_COLUMN_WIDTH = 100;
 
 	private static final boolean INCLUDE_NULL_OUTPUT = false;
 	
@@ -123,16 +118,13 @@ public class InspectorView extends ViewPart {
 		
 		TreeColumn cCapability = new TreeColumn(tree, SWT.LEFT);
 		cCapability.setText("Capability");
-		cCapability.setWidth(DEFAULT_COLUMN_WIDTH);
 		
 		TreeColumn cValue = new TreeColumn(tree, SWT.LEFT);
 		cValue.setText("Value");
-		cValue.setWidth(DEFAULT_COLUMN_WIDTH);
 		
 		TableLayout layout = new TableLayout();
 		layout.addColumnData(new ColumnWeightData(1));
 		layout.addColumnData(new ColumnWeightData(2));
-		
 		tree.setLayout(layout);
 		
 		tree.setHeaderVisible(true);
@@ -166,7 +158,7 @@ public class InspectorView extends ViewPart {
 					detail.setText(((ClassRow) row).value.toString());
 				} else if (row instanceof CapabilityRow) {
 					CapabilityRow x = (CapabilityRow) row;
-					if (x.finished && x.result.getCode() == Status.OK) {
+					if (x.finished && x.status.getCode() == Status.OK) {
 						detail.setText(x.value.toString());
 					}
 				}
@@ -319,14 +311,14 @@ public class InspectorView extends ViewPart {
 	private final class CapabilityRow implements Row {
 		private final ICapability capability;
 		
-		private String status = "Updating (submitted)...";
+		private String statusMsg = "Updating (submitted)...";
 		private boolean interrupted = false;
 		private boolean finished = false;
-		private IStatus result = null;
+		private CapabilityStatus status = null;
 		private Object value = null;
 		
 		private synchronized void updateStatus(final String msg) {
-			status = msg;
+			statusMsg = msg;
 			update(CapabilityRow.this);
 		}
 		
@@ -357,10 +349,12 @@ public class InspectorView extends ViewPart {
 
 					@Override
 					public synchronized void done(final IJobChangeEvent event) {
-						finished = true;
-						result = event.getResult();
-						value = CapabilityUtil.singleOutputValue(capability, (CapabilityStatus) result);	
-						updateStatus("Done");
+						synchronized(CapabilityRow.this){
+							finished = true;
+							status = (CapabilityStatus) event.getResult();
+							value = CapabilityUtil.singleOutputValue(capability, status);
+							updateStatus("Done");
+						}
 					}
 
 					@Override
@@ -386,7 +380,7 @@ public class InspectorView extends ViewPart {
 
 		@Override
 		public synchronized boolean hasChildren() {
-			if (finished && result.getCode() == Status.OK) {
+			if (finished && status.getCode() == Status.OK) {
 				return valueHasChildren(value);
 			} else {
 				return false;
@@ -395,7 +389,7 @@ public class InspectorView extends ViewPart {
 
 		@Override
 		public synchronized Row[] getChildren() {
-			if (finished && result.getCode() == Status.OK) {
+			if (finished && status.getCode() == Status.OK) {
 				if (value instanceof List) {
 					return generateListRows(this, capability.getName(), (List<?>) value, 0, ((List<?>) value).size());
 				} else if (value.getClass().isArray()) {
@@ -424,7 +418,7 @@ public class InspectorView extends ViewPart {
 				if (interrupted) {
 					return "Error (interrupted)";
 				} else if (finished) {
-					switch (result.getCode()) {
+					switch (status.getCode()) {
 					case Status.OK:
 						if (value != null){
 							return value.toString();		
@@ -434,12 +428,12 @@ public class InspectorView extends ViewPart {
 					case Status.CANCEL:
 						return "Update Cancelled...";
 					case Status.ERROR:
-						return "Exception: " + result.getException().getLocalizedMessage();
+						return "Exception: " + status.getException().getLocalizedMessage();
 					default: 
-						throw new RuntimeException("Unexpected plugin-specific status code: " + result.getCode());
+						throw new RuntimeException("Unexpected plugin-specific status code: " + status.getCode());
 					}
 				} else {
-					return status;
+					return statusMsg;
 				}
 			default:
 				return null;

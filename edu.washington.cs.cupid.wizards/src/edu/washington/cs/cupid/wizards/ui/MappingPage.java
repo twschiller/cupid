@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.ui;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -55,8 +56,10 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.wizards.TypeComboListener;
@@ -254,7 +257,10 @@ public class MappingPage extends WizardPage {
 		}else if (selected instanceof ISerializableCapability){
 			return (ISerializableCapability) selected;
 		}else if (selected instanceof ICapability){
-			return new DynamicSerializablePipeline(null, null, Lists.newArrayList(((ICapability) selected).getUniqueId()));
+			return new DynamicSerializablePipeline(
+					null, null, 
+					Lists.<Serializable>newArrayList(((ICapability) selected).getUniqueId()),
+					Lists.<ICapabilityArguments>newArrayList(CapabilityArguments.NONE));
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();
 		}else{

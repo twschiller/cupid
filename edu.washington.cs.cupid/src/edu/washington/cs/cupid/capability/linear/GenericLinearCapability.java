@@ -19,7 +19,6 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.Output;

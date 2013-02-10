@@ -14,6 +14,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
+import com.google.common.base.Joiner;
+
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEvent;
@@ -43,7 +45,7 @@ public class ExtractFieldWizard extends Wizard{
 			
 			CupidEvent event = CupidEventBuilder
 					.createCapabilityEvent(ExtractFieldWizard.class, pipe, Activator.getDefault())
-					.addData("field", pipe.getField())
+					.addData("getter", Joiner.on('.').join(pipe.getFields()))
 					.create();
 			
 			CupidDataCollector.record(event);

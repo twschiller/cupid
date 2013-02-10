@@ -20,13 +20,13 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
-import edu.washington.cs.cupid.utility.CapabilityUtil;
 
 /**
  * A thread-safe registry of the available Cupid capabilities.
@@ -51,7 +51,17 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	
 	@Override
 	public synchronized void onChange(final ICapabilityPublisher publisher) {
-		Set<ICapability> available = Sets.newHashSet(publisher.publish());
+		Set<ICapability> available = Sets.newHashSet();
+		
+		for (ICapability published : publisher.publish()){
+			if (published == null){
+				CupidActivator.getDefault().logError(
+						"Publisher published null capability: " + publisher.getClass().getName(), 
+						new NullPointerException());
+			} else {
+				available.add(published);
+			}
+		}
 		
 		if (capabilityMap.containsKey(publisher)) {
 			Set<ICapability> old = capabilityMap.get(publisher);	
@@ -180,8 +190,12 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	
 	@Override
 	public void registerStaticCapability(final ICapability capability) {
-		capabilities.add(capability);
-		notifier.onChange(this);
+		if (capability == null){
+			CupidActivator.getDefault().logError("Plug-in tried to register null capability", new NullPointerException());
+		} else {
+			capabilities.add(capability);
+			notifier.onChange(this);
+		}
 	}
 
 	@Override

@@ -22,16 +22,18 @@ public class CapabilityArguments implements ICapabilityArguments {
 	public static final CapabilityArguments NONE = new CapabilityArguments(); 
 	
 	private Map<IParameter<?>, Object> arguments;
-	private Map<String, Object> named;
 	
 	public CapabilityArguments(){
-		arguments = Maps.newHashMap();
-		named = Maps.newHashMap();
+		arguments = Maps.newIdentityHashMap();
+	}
+	
+	public CapabilityArguments(ICapabilityArguments other){
+		arguments = Maps.newIdentityHashMap();
+		arguments.putAll(other.getArguments());
 	}
 	
 	public <T> void add(IParameter<T> parameter, T argument){
 		arguments.put(parameter, argument);
-		named.put(parameter.getName(), argument);
 	}
 	
 	@Override
@@ -55,11 +57,6 @@ public class CapabilityArguments implements ICapabilityArguments {
 	@Override
 	public Map<IParameter<?>, Object> getArguments() {
 		return Collections.unmodifiableMap(arguments);
-	}
-
-	@Override
-	public Object getArgument(String name) {
-		return named.get(name);
 	}
 
 }

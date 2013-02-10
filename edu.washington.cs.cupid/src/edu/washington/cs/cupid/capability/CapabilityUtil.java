@@ -11,8 +11,13 @@
 package edu.washington.cs.cupid.capability;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability.Flag;
@@ -87,6 +92,16 @@ public class CapabilityUtil {
 		return required;	
 	}
 	
+	public static List<IParameter<?>> options(final ICapability capability){
+		List<IParameter<?>> result = Lists.newArrayList();
+		for (IParameter<?> param : capability.getParameters()){
+			if (param.hasDefault()){
+				result.add(param);
+			}
+		}
+		return result;
+	}
+	
 	public static boolean isLinear(final ICapability capability){
 		return (isGenerator(capability) || isUnary(capability)) && capability.getOutputs().size() == 1;
 	}
@@ -103,6 +118,14 @@ public class CapabilityUtil {
 		return union(Arrays.asList(capabilities));
 	}
 	
+	public static List<ICapabilityArguments> noArgs(int length){
+		List<ICapabilityArguments> result = Lists.newArrayList();
+		for (int i = 0; i < length; i++){
+			result.add(CapabilityArguments.NONE);
+		}
+		return result;
+	}
+	
 	public static EnumSet<Flag> union(Iterable<? extends ICapability> capabilities){
 		EnumSet<Flag> flags = EnumSet.of(Flag.PURE);
 		for (ICapability capability : capabilities){
@@ -115,6 +138,28 @@ public class CapabilityUtil {
 			}
 		}
 		return flags;
+	}
+	
+	/**
+	 * Compares capabilities by name (ascending).
+	 */
+	public static final Comparator<ICapability> COMPARE_NAME = new Comparator<ICapability>() {
+		@Override
+		public int compare(final ICapability lhs, final ICapability rhs) {
+			return lhs.getName().compareToIgnoreCase(rhs.getName());
+		}
+	};
+	
+	/**
+	 * Constructs a new list of capabilities sorted by <code>comparator</code>.
+	 * @param source the source collection
+	 * @param comparator sort comparator
+	 * @return a new list of capabilities sorted by <code>comparator</code>.
+	 */
+	public static List<ICapability> sort(final Collection<ICapability> source, final Comparator<ICapability> comparator) {
+		List<ICapability> result = Lists.newArrayList(source);
+		Collections.sort(result, comparator);
+		return result;
 	}
 	
 }

@@ -16,8 +16,7 @@ import edu.washington.cs.cupid.capability.ICapability.IParameter;
 
 public interface ICapabilityArguments {
 
-	Map<ICapability.IParameter<?>, Object> getArguments();
+	Map<IParameter<?>, Object> getArguments();
 	<T> T getValueArgument(IParameter<T> parameter);
-	Object getArgument(String name);
 	
 }

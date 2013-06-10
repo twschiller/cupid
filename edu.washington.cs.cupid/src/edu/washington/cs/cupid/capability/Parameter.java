@@ -12,6 +12,11 @@ package edu.washington.cs.cupid.capability;
 
 import com.google.common.reflect.TypeToken;
 
+/**
+ * An immutable named parameter that does not have a default value
+ * @author Todd Schiller
+ * @param <T> the parameter type
+ */
 public class Parameter<T> extends AbstractParameter<T> {
 	private static final long serialVersionUID = 1L;
 	

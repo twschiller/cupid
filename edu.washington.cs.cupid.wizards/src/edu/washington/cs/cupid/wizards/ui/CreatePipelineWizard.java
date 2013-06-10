@@ -45,7 +45,7 @@ public class CreatePipelineWizard extends Wizard{
 					CupidEventBuilder.createCapabilityEvent(CreatePipelineWizard.class, pipe, Activator.getDefault())
 					.addData("length", Integer.toString(page.getPipelineLength()))
 					.create());
-			return true;
+     		return true;
 		} catch (IOException e) {
 			ErrorDialog.openError(
 					this.getShell(), 

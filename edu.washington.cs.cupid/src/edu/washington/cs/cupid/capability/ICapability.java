@@ -67,6 +67,11 @@ public interface ICapability {
 		boolean hasDefault();
 	}
 	
+	/**
+	 * The named output of a capability.
+	 * @author Todd Schiller
+	 * @param <T> the type of the output
+	 */
 	interface IOutput<T> extends Serializable {
 		/**
 		 * Returns the name of the output.

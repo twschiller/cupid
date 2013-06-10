@@ -14,12 +14,15 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability;
@@ -65,6 +68,44 @@ public final class TypeManager {
 	 */
 	public static ITypeAdapterRegistry getTypeAdapterRegistry() {
 		return ADAPTER_REGISTRY;
+	}
+	
+	private static Set<Class<?>> getClassesBfs(Class<?> clazz) {
+		// adapted from: http://stackoverflow.com/questions/9797212/finding-the-nearest-common-superclass-or-superinterface-of-a-collection-of-cla
+		
+		Set<Class<?>> classes = Sets.newLinkedHashSet();
+	    Set<Class<?>> nextLevel = Sets.newLinkedHashSet();
+	    nextLevel.add(clazz);
+	    do {
+	        classes.addAll(nextLevel);
+	        Set<Class<?>> thisLevel = Sets.newLinkedHashSet(nextLevel);
+	        nextLevel.clear();
+	        for (Class<?> each : thisLevel) {
+	            Class<?> superClass = each.getSuperclass();
+	            if (superClass != null && superClass != Object.class) {
+	                nextLevel.add(superClass);
+	            }
+	            for (Class<?> eachInt : each.getInterfaces()) {
+	                nextLevel.add(eachInt);
+	            }
+	        }
+	    } while (!nextLevel.isEmpty());
+	    return classes;
+	}
+
+	/**
+	 * Returns the common set of superclasses sorted by distance from the first class?
+	 * @param classes
+	 * @return
+	 */
+	public static List<Class<?>> commonSuperClass(Class<?>... classes) {
+		// adapted from: http://stackoverflow.com/questions/9797212/finding-the-nearest-common-superclass-or-superinterface-of-a-collection-of-cla
+			
+	    Set<Class<?>> result = new LinkedHashSet<Class<?>>(getClassesBfs(classes[0]));
+	    for (Class<?> clazz : classes){
+	    	result.retainAll(getClassesBfs(clazz));
+	    }
+	    return Lists.newArrayList(result);
 	}
 	
 	private static boolean isPrimitive(Type type){

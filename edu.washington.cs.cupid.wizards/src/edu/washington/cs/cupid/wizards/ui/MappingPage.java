@@ -457,7 +457,8 @@ public class MappingPage extends WizardPage {
 		if (keyAsType){
 			return CapabilityUtil.isGenerator(generator);
 		}else if (keySet != null){
-			return TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet));
+			return CapabilityUtil.isGenerator(generator) || 
+				   TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet));
 		}else{
 			return true;
 		}

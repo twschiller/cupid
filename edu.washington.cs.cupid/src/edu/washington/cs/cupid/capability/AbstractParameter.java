@@ -2,6 +2,11 @@ package edu.washington.cs.cupid.capability;
 
 import com.google.common.reflect.TypeToken;
 
+/**
+ * Base implementation of an immutable named parameter.
+ * @author Todd Schiller
+ * @param <T> the parameter type
+ */
 public abstract class AbstractParameter<T> implements ICapability.IParameter<T> {
 
 	private static final long serialVersionUID = 1L;
@@ -9,6 +14,11 @@ public abstract class AbstractParameter<T> implements ICapability.IParameter<T> 
 	private final String name;
 	private final TypeToken<T> type;
 	
+	/**
+	 * Create an abstract parameter
+	 * @param name the name of the parameter
+	 * @param type the type of the parameter
+	 */
 	public AbstractParameter(final String name, final TypeToken<T> type){
 		this.name = name;
 		this.type = type;

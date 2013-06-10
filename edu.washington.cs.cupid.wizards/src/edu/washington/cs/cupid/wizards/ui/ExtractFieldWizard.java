@@ -27,10 +27,10 @@ public class ExtractFieldWizard extends Wizard{
 	private ExtractFieldPage page;
 	
 	public ExtractFieldWizard(){
-		this("java.lang.Object");
+		this(Object.class);
 	}
 	
-	public ExtractFieldWizard(String clazz){
+	public ExtractFieldWizard(Class<?> clazz){
 		this.page = new ExtractFieldPage(clazz);
 		this.setWindowTitle("New Extraction Capability");
 		this.addPage(page);

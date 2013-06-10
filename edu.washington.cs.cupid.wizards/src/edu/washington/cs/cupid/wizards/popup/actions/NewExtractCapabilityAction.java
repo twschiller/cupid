@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.popup.actions;
 
+import java.util.List;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -19,6 +21,9 @@ import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
+import com.google.common.collect.Lists;
+
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.wizards.ui.ExtractFieldWizard;
 
 public class NewExtractCapabilityAction implements IObjectActionDelegate {
@@ -44,9 +49,32 @@ public class NewExtractCapabilityAction implements IObjectActionDelegate {
 	 * @see IActionDelegate#run(IAction)
 	 */
 	public void run(IAction action) {
-		String name = ((IStructuredSelection) selection).getFirstElement().getClass().getName();
 		
-		ExtractFieldWizard wizard = new ExtractFieldWizard(name);
+		ExtractFieldWizard wizard = null;
+		
+		if (selection.isEmpty()) {
+			wizard = new ExtractFieldWizard();
+		} else if (selection instanceof IStructuredSelection) {
+			
+			IStructuredSelection values = (IStructuredSelection) selection;
+			
+			if (values.size() == 1){
+				wizard = new ExtractFieldWizard(values.getFirstElement().getClass());
+			} else {
+				List<Class<?>> classes = Lists.newArrayList();
+				for (Object value : values.toList()){
+					classes.add(value.getClass());
+				}
+				
+				List<Class<?>> common = TypeManager.commonSuperClass(classes.toArray(new Class[]{}));
+				if (common.isEmpty()){
+					wizard = new ExtractFieldWizard();
+				}else{
+					wizard = new ExtractFieldWizard(common.get(0));
+				}
+			}
+		}
+		
 		WizardDialog dialog = new WizardDialog(shell, wizard);
 		dialog.create();
 		dialog.open();

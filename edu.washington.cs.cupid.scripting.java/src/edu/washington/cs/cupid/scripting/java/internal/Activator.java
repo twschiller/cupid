@@ -133,7 +133,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	private class CreateCupidProjectJob extends Job {
 		public CreateCupidProjectJob() {
 			super("Create Cupid Project");
-			super.setRule(cupidProject);
+			//super.setRule(cupidProject);
 		}
 
 		@Override

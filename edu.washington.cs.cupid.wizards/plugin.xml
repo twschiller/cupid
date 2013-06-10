@@ -58,7 +58,7 @@
          </menu>
          <action
                class="edu.washington.cs.cupid.wizards.popup.actions.NewExtractCapabilityAction"
-               enablesFor="1"
+               enablesFor="+"
                id="edu.washington.cs.cupid.wizards.extract.capability"
                label="Extract Capability"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">

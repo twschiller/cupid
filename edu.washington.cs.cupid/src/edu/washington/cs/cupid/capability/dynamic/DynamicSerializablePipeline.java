@@ -85,20 +85,19 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 				sources.add(capabilitySources);
 			}
 			
-			
 			ICapability first = bind.get(0);
 			if (CapabilityUtil.isUnary(first)){
 				IParameter<?> input = CapabilityUtil.unaryParameter(first);
 				IParameter<?> copy = new Parameter(input.getName(), input.getType());
-				parameters.add(copy);
+				parameters.add(CapabilityUtil.unaryParameter(first));
 				sources.get(0).put(input, copy);
 			}
 			
 			output = CapabilityUtil.singleOutput(bind.get(bind.size()-1));
+		
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
-		}
-		
+		}	
 	}
 	
 	private List<ICapability> inorder() throws NoSuchCapabilityException {

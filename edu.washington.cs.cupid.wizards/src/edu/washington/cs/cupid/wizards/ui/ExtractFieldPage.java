@@ -51,9 +51,9 @@ import edu.washington.cs.cupid.wizards.internal.Getter;
 
 public class ExtractFieldPage extends WizardPage {
 
-	private String startClazz;
+	private Class<?> startClazz;
 	
-	protected ExtractFieldPage(String clazz) {
+	protected ExtractFieldPage(Class<?> clazz) {
 		super("Extract Field");
 		this.startClazz = clazz;
 	}
@@ -85,7 +85,7 @@ public class ExtractFieldPage extends WizardPage {
 		data = new GridData(GridData.FILL_HORIZONTAL);
 		type.setLayoutData(data);
 		type.addModifyListener(new TypeComboListener(type));
-		type.setText(startClazz);
+		type.setText(startClazz.getName());
 		
 		Button search = new Button(composite, SWT.PUSH);
 		search.setText("Select");

@@ -10,8 +10,6 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.views;
 
-import java.util.List;
-
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -20,6 +18,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -30,8 +29,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
-
-import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
@@ -58,7 +55,6 @@ public final class BulletinBoardView extends ViewPart {
 	
 	private class ViewContentProvider implements IStructuredContentProvider, ICapabilityChangeListener {
 		private ICapabilityPublisher publisher;
-		private String query = null;
 		
 		@Override
 		public void inputChanged(final Viewer v, final Object oldInput, final Object newInput) {
@@ -70,34 +66,16 @@ public final class BulletinBoardView extends ViewPart {
 			this.publisher = publisher;
 			this.publisher.addChangeListener(this);
 		}
-
-		private void refresh(){
-			onChange(null);
-		}
 		
 		@Override
 		public void dispose() {
 			publisher.removeChangeListener(this);
 		}
-		
-		private boolean isMatch(String query, String text){
-			return text.toUpperCase().contains(query.toUpperCase());
-		}
+	
 		
 		@Override
 		public Object[] getElements(final Object parent) {
-			if (query != null){
-				List<ICapability> capabilities = Lists.newArrayList();
-				for (ICapability capability : publisher.publish()){
-					if (isMatch(query, capability.getName()) || isMatch(query, capability.getDescription())){
-						// TODO: match of input/output types
-						capabilities.add(capability);
-					}
-				}
-				return capabilities.toArray();
-			}else{
-				return publisher.publish();			
-			}
+			return publisher.publish();			
 		}
 
 		@Override
@@ -129,6 +107,11 @@ public final class BulletinBoardView extends ViewPart {
 	    return viewerColumn;
 	}
 	
+	
+	private boolean isMatch(String query, String text){
+		return text.toUpperCase().contains(query.toUpperCase());
+	}
+	
 	@Override
 	public void createPartControl(final Composite parent) {	
 		
@@ -145,8 +128,22 @@ public final class BulletinBoardView extends ViewPart {
 		search.addModifyListener(new ModifyListener(){
 			@Override
 			public void modifyText(ModifyEvent e) {
-				provider.query = search.getText().isEmpty() ? null : search.getText();
-				provider.refresh();
+				viewer.setFilters(new ViewerFilter[]{
+						new ViewerFilter(){
+							@Override
+							public boolean select(Viewer viewer,
+									Object parentElement, Object element) {
+								
+								final String query = search.getText();
+								ICapability capability = (ICapability) element;
+								
+								return query.isEmpty() 
+								      || isMatch(query, capability.getName()) 
+								      || isMatch(query, capability.getDescription());
+								
+							}
+						}
+				});
 			}
 		});
 		
@@ -208,7 +205,7 @@ public final class BulletinBoardView extends ViewPart {
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
 		viewer.setInput(getViewSite());
-		
+				
 		// sort table by capability name
 		viewer.setComparator(new ViewerComparator() {
 			@Override

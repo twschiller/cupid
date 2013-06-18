@@ -123,7 +123,7 @@ public final class BulletinBoardView extends ViewPart {
 		panel.setLayout(gridLayout);
 		panel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		search = new Text(panel, SWT.SEARCH);
+		search = new Text(panel, SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL);
 		search.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		search.addModifyListener(new ModifyListener(){
 			@Override

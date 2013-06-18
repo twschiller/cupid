@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.views;
 
+import java.util.List;
+
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -19,10 +21,17 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
+
+import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
@@ -42,10 +51,14 @@ public final class BulletinBoardView extends ViewPart {
 	 */
 	public static final String ID = "edu.washington.cs.cupid.views.BulletinBoardView";
 
+	private Composite panel;
+	private Text search;
 	private TableViewer viewer;
+	private ViewContentProvider provider;
 	
-	class ViewContentProvider implements IStructuredContentProvider, ICapabilityChangeListener {
+	private class ViewContentProvider implements IStructuredContentProvider, ICapabilityChangeListener {
 		private ICapabilityPublisher publisher;
+		private String query = null;
 		
 		@Override
 		public void inputChanged(final Viewer v, final Object oldInput, final Object newInput) {
@@ -58,14 +71,33 @@ public final class BulletinBoardView extends ViewPart {
 			this.publisher.addChangeListener(this);
 		}
 
+		private void refresh(){
+			onChange(null);
+		}
+		
 		@Override
 		public void dispose() {
 			publisher.removeChangeListener(this);
 		}
 		
+		private boolean isMatch(String query, String text){
+			return text.toUpperCase().contains(query.toUpperCase());
+		}
+		
 		@Override
 		public Object[] getElements(final Object parent) {
-			return publisher.publish();	
+			if (query != null){
+				List<ICapability> capabilities = Lists.newArrayList();
+				for (ICapability capability : publisher.publish()){
+					if (isMatch(query, capability.getName()) || isMatch(query, capability.getDescription())){
+						// TODO: match of input/output types
+						capabilities.add(capability);
+					}
+				}
+				return capabilities.toArray();
+			}else{
+				return publisher.publish();			
+			}
 		}
 
 		@Override
@@ -99,8 +131,28 @@ public final class BulletinBoardView extends ViewPart {
 	
 	@Override
 	public void createPartControl(final Composite parent) {	
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		viewer.setContentProvider(new ViewContentProvider(CupidPlatform.getCapabilityRegistry()));
+		
+		provider = new ViewContentProvider(CupidPlatform.getCapabilityRegistry());
+		
+		panel = new Composite(parent, SWT.NONE);
+		GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 1;
+		panel.setLayout(gridLayout);
+		panel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		search = new Text(panel, SWT.SEARCH);
+		search.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		search.addModifyListener(new ModifyListener(){
+			@Override
+			public void modifyText(ModifyEvent e) {
+				provider.query = search.getText().isEmpty() ? null : search.getText();
+				provider.refresh();
+			}
+		});
+		
+		viewer = new TableViewer(panel, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer.setContentProvider(provider);
+		viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
 		final TableViewerColumn nameColumn = createColumn("Name", 100, 0);
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {

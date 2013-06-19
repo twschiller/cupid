@@ -48,7 +48,7 @@ public class CapabilityMapping<I, K, V> extends AbstractMapping<I, K, V> impleme
 		super(name, description, 
 			  BASE_ID + ".[" + inputType.toString() + "].[" + inputGenerator.getUniqueId() + "].[" + valueGenerator.getUniqueId() + "]",
 			  inputType, keyType, valueType,
-			  CapabilityUtil.union(inputGenerator, valueGenerator));
+			  CapabilityUtil.mergeFlags(inputGenerator, valueGenerator));
 		
 		this.inputGenerator = inputGenerator;
 		this.keyLink = keyLink;

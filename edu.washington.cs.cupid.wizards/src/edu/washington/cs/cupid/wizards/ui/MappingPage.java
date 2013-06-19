@@ -62,7 +62,7 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
-import edu.washington.cs.cupid.wizards.TypeComboListener;
+import edu.washington.cs.cupid.wizards.TypeComboUpdater;
 import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.CapabilityMapping;
@@ -300,7 +300,8 @@ public class MappingPage extends WizardPage {
 		objectType = new Combo(typeGroup, SWT.LEFT | SWT.BORDER);
 		objectType.setText(keyType != null ? keyType.toString() : DEFAULT_KEY_TYPE);
 		objectType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		objectType.addModifyListener(new TypeComboListener(objectType));
+		
+		final TypeComboUpdater updater = new TypeComboUpdater(objectType);
 		
 		objectType.addModifyListener(new ModifyListener(){
 			@Override
@@ -317,7 +318,9 @@ public class MappingPage extends WizardPage {
 				try {
 					IType selected = TypeUtil.showTypeDialog(getShell());
 					if (selected != null){
-						objectSelect.setText(selected.getFullyQualifiedName());
+						String newType = selected.getFullyQualifiedName();
+						objectSelect.setText(newType);
+						updater.updateSuperTypeList(newType);
 					}
 				} catch (JavaModelException ex) {
 					throw new RuntimeException("Error opening type search dialog", ex);

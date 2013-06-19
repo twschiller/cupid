@@ -17,34 +17,33 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.ui.progress.UIJob;
 
-
 /**
- * A modify listener that attaches to a {@link Combo} to automatically update list with super types of the currently selected type.
+ * Updates the supertype list for the associated {@link Combo}.
  * @author Todd Schiller
  */
-public class TypeComboListener implements ModifyListener {
+public class TypeComboUpdater {
 
 	private final Combo combo;
 	private Job findReferences = null;
 	private UIJob updateList = null;
 	
 	/**
-	 * Construct a {@link TypeComboListener}
+	 * Construct a {@link TypeComboUpdater}
 	 * @param combo the combobox to update
 	 */
-	public TypeComboListener(Combo combo) {
+	public TypeComboUpdater(Combo combo) {
 		this.combo = combo;
 	}
 
-	@Override
-	public void modifyText(ModifyEvent e) {
-		final String current = combo.getText();
-
+	/**
+	 * Spawn jobs to update the list for the associated combo with the supertypes
+	 * for <tt>type</tt>.
+	 * @param type the qualified type
+	 */
+	public void updateSuperTypeList(final String type){
 		if (findReferences != null){
 			findReferences.cancel();
 		}
@@ -57,7 +56,7 @@ public class TypeComboListener implements ModifyListener {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 
-					final java.util.List<IType> xs = TypeUtil.fetchTypes(current);
+					final java.util.List<IType> xs = TypeUtil.fetchTypes(type);
 
 					updateList = new UIJob("Update Supertype List"){
 						@Override
@@ -97,5 +96,4 @@ public class TypeComboListener implements ModifyListener {
 		};
 		findReferences.schedule();
 	}
-
 }

@@ -70,6 +70,11 @@
                label="Create Mapping"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.Action1"
+               id="edu.washington.cs.cupid.wizards.conditional.format"
+               label="Add Formatting Rule">
+         </action>
       </objectContribution>
    </extension>
    <extension

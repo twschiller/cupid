@@ -23,7 +23,6 @@ import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 
 /**
- * 
  * @author Todd Schiller
  */
 public class CreatePipelineWizard extends Wizard{

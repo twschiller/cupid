@@ -43,7 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
-import edu.washington.cs.cupid.wizards.TypeComboListener;
+import edu.washington.cs.cupid.wizards.TypeComboUpdater;
 import edu.washington.cs.cupid.wizards.TypeUtil;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
@@ -83,9 +83,12 @@ public class ExtractFieldPage extends WizardPage {
 		
 		type = new Combo(composite, SWT.LEFT | SWT.BORDER);
 		data = new GridData(GridData.FILL_HORIZONTAL);
+		
 		type.setLayoutData(data);
-		type.addModifyListener(new TypeComboListener(type));
 		type.setText(startClazz.getName());
+		
+		final TypeComboUpdater updater = new TypeComboUpdater(type);
+		updater.updateSuperTypeList(startClazz.getName());
 		
 		Button search = new Button(composite, SWT.PUSH);
 		search.setText("Select");
@@ -96,7 +99,9 @@ public class ExtractFieldPage extends WizardPage {
 				try {
 					IType selected = TypeUtil.showTypeDialog(getShell());
 					if (selected != null){
-						type.setText(selected.getFullyQualifiedName());
+						String newType = selected.getFullyQualifiedName();
+						type.setText(newType);
+						updater.updateSuperTypeList(newType);
 					}
 				} catch (Exception ex) {
 					throw new RuntimeException("Error opening type search dialog", ex);

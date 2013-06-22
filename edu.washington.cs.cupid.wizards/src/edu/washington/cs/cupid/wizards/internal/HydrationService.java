@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -51,7 +52,7 @@ public class HydrationService {
 		return new String(result);
 	}
 	
-	public ISerializableCapability hydrate(File file) throws FileNotFoundException, IOException, ClassNotFoundException{
+	public ISerializableCapability hydrate(File file) throws NotSerializableException, FileNotFoundException, IOException, ClassNotFoundException{
 		ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
 		return (ISerializableCapability) fileIn.readObject();
 	}

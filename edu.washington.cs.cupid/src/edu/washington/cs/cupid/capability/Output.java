@@ -14,6 +14,12 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
+/**
+ * An immutable named capability output; two outputs are considered equal if 
+ * their name and type are equal.
+ * @author Todd Schiller
+ * @param <I> the type of the output
+ */
 public class Output<I> implements IOutput<I> {
 
 	private static final long serialVersionUID = 1L;

@@ -46,12 +46,14 @@ public class CreatePipelineWizard extends Wizard{
 					.create());
      		return true;
 		} catch (IOException e) {
+			String msg = "Error saving capability " + pipe.getName() + ": " + e.getMessage();
+					
 			ErrorDialog.openError(
-					this.getShell(), 
+					this.getShell(), msg,
 					"Error saving capability", 
-					"Error saving capability " + pipe.getName() + ": " + e.getMessage(),
-					new Status(Status.ERROR, Activator.PLUGIN_ID, "Error saving capability " + pipe.getName(), e));
+					new Status(Status.ERROR, Activator.PLUGIN_ID, msg, e));
 			
+			Activator.getDefault().logError(msg, e);
 			return false;
 		}
 	}

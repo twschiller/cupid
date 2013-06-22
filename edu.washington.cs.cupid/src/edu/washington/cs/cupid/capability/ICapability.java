@@ -41,6 +41,11 @@ public interface ICapability {
 		TRANSIENT
 	}
 	
+	/**
+	 * A named capability parameter, which may or may not have a default value.
+	 * @author Todd Schiller
+	 * @param <T> type parameter type
+	 */
 	interface IParameter<T> extends Serializable {
 		/**
 		 * Returns the name of the input.
@@ -102,12 +107,12 @@ public interface ICapability {
 	String getDescription();
 
 	/**
-	 * @return the capability's parameter types
+	 * @return the capability's parameter
 	 */
 	Set<? extends IParameter<?>> getParameters();
 	
 	/**
-	 * @return the capability's return types
+	 * @return the capability's outputs
 	 */
 	Set<? extends IOutput<?>> getOutputs();
 	

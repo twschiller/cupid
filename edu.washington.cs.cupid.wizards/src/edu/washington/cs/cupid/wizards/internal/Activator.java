@@ -117,7 +117,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 				try {
 					result.add(hydrate.hydrate(file));
 				} catch (Exception e) {
-					logError("Error hydrating capability " + file.getName() , e);
+					logError("Error hydrating capability " + file.getAbsolutePath(), e);
 				}
 			}
 		} else {

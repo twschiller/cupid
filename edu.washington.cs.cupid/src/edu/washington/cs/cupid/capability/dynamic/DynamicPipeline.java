@@ -151,7 +151,7 @@ public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements 
 	@Override
 	public EnumSet<Flag> getFlags() {
 		try {
-			return CapabilityUtil.union(inorder());
+			return CapabilityUtil.mergeFlags(inorder());
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}

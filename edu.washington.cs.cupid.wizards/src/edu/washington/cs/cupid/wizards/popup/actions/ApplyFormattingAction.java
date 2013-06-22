@@ -1,13 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2013 Todd Schiller.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Todd Schiller - initial API, implementation, and documentation
- ******************************************************************************/
 package edu.washington.cs.cupid.wizards.popup.actions;
 
 import java.util.List;
@@ -24,14 +14,14 @@ import org.eclipse.ui.IWorkbenchPart;
 import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.TypeManager;
-import edu.washington.cs.cupid.wizards.ui.ExtractFieldWizard;
+import edu.washington.cs.cupid.wizards.ui.FormattingRuleWizard;
 
-public class NewExtractCapabilityAction implements IObjectActionDelegate {
+public class ApplyFormattingAction implements IObjectActionDelegate {
 
 	private Shell shell;
 	private ISelection selection;
 	
-	public NewExtractCapabilityAction() {
+	public ApplyFormattingAction() {
 		super();
 	}
 
@@ -47,16 +37,16 @@ public class NewExtractCapabilityAction implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		
-		ExtractFieldWizard wizard = null;
+		FormattingRuleWizard wizard = null;
 		
 		if (selection.isEmpty()) {
-			wizard = new ExtractFieldWizard();
+			wizard = new FormattingRuleWizard();
 		} else if (selection instanceof IStructuredSelection) {
 			
 			IStructuredSelection values = (IStructuredSelection) selection;
 			
 			if (values.size() == 1){
-				wizard = new ExtractFieldWizard(values.getFirstElement().getClass());
+				wizard = new FormattingRuleWizard(values.getFirstElement().getClass());
 			} else {
 				List<Class<?>> classes = Lists.newArrayList();
 				for (Object value : values.toList()){
@@ -64,11 +54,7 @@ public class NewExtractCapabilityAction implements IObjectActionDelegate {
 				}
 				
 				List<Class<?>> common = TypeManager.commonSuperClass(classes.toArray(new Class[]{}));
-				if (common.isEmpty()){
-					wizard = new ExtractFieldWizard();
-				}else{
-					wizard = new ExtractFieldWizard(common.get(0));
-				}
+				wizard = common.isEmpty() ? new FormattingRuleWizard() : new FormattingRuleWizard(common.get(0));
 			}
 		}
 		
@@ -83,5 +69,4 @@ public class NewExtractCapabilityAction implements IObjectActionDelegate {
 	public void selectionChanged(IAction action, ISelection selection) {
 		this.selection = selection;
 	}
-
 }

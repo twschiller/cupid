@@ -59,12 +59,14 @@ public class MappingWizard extends Wizard{
 			
 			return true;
 		} catch (Exception e) {
+			String msg = "Error creating mapping capability";
+			
 			ErrorDialog.openError(
 					this.getShell(), 
-					"Error Creating Capability", 
-					"Error creating capability", // TODO add more descriptive error message?
-					new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating capability", e));
+					"Error Creating Capability", msg,
+					new Status(Status.ERROR, Activator.PLUGIN_ID, msg, e));
 			
+			Activator.getDefault().logError(msg, e);
 			return false;
 		}
 	}

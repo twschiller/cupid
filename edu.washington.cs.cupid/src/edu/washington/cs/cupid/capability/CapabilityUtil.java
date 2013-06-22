@@ -10,9 +10,6 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,8 +24,18 @@ import edu.washington.cs.cupid.capability.ICapability.Flag;
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
 
+/**
+ * Utility methods for working with capabilities.
+ * @author Todd Schiller
+ */
 public class CapabilityUtil {
 	
+	/**
+	 * Returns the output value for the given single-output capability and capability result
+	 * @param capability the capability
+	 * @param status the capability's result
+	 * @return the result of the capability
+	 */
 	public static Object singleOutputValue(final ICapability capability, final CapabilityStatus status){
 		if (status.value() == null) {
 			return null;
@@ -37,6 +44,12 @@ public class CapabilityUtil {
 		}		
 	}
 	
+	/**
+	 * Returns the output reference for the given single-output capability.
+	 * @param capability the capability
+	 * @return the output reference for the given single-output capability.
+	 * @throws IllegalArgumentException if the capability has either zero or more than one output
+	 */
 	public static IOutput<?> singleOutput(ICapability capability){
 		if (capability.getOutputs().isEmpty()){
 			throw new IllegalArgumentException("Capability has no outputs");
@@ -47,20 +60,47 @@ public class CapabilityUtil {
 		}
 	}
 	
+	/**
+	 * Returns <tt>true</tt> iff the capability produces a single output.
+	 * @param capability the capability
+	 * @return <tt>true</tt> iff the capability produces a single output.
+	 */
 	public static boolean hasSingleOutput(ICapability capability){
 		return capability.getOutputs().size() == 1;
 	}
 	
+	/**
+	 * Returns an {@link ICapabilityOutputs} containing the {@code value} for the capability's
+	 * only output.
+	 * @param capability a single-output capability
+	 * @param value the output value
+	 * @return a {@link ICapabilityOutputs} containing the {@code value} for the capability's
+	 * only output
+	 */
 	public static <T> ICapabilityOutputs packSingleOutputValue(ICapability capability, T value){
 		return packSingleOutputValue((IOutput<T>) singleOutput(capability), value);
 	}
 	
+	/**
+	 * Returns an {@link ICapabilityOutputs} containing {@code value} for {@code output}.
+	 * @param output the output
+	 * @param value the output's value
+	 * @return an {@link ICapabilityOutputs} containing {@code value} for {@code output}
+	 */
 	public static <T> ICapabilityOutputs packSingleOutputValue(IOutput<T> output, T value){
 		CapabilityOutputs result = new CapabilityOutputs();
 		result.add(output, value);
 		return result;
 	}
 	
+	/**
+	 * Returns an {@link ICapabilityArguments} containing {@code argument} for the capability's
+	 * only input. Returns an empty {@link ICapabilityArguments} if {@code capability} is nullary.
+	 * @param capability a single-input capability
+	 * @param argument the argument for the parameter, can pass <tt>null</tt> for generators.
+	 * @return an {@link ICapabilityArguments} containing {@code argument} for the capability's
+	 * only input
+	 */
 	public static <T> ICapabilityArguments packUnaryInput(ICapability capability, T argument){
 		CapabilityArguments input = new CapabilityArguments();
 		
@@ -76,6 +116,12 @@ public class CapabilityUtil {
 		return input;
 	}
 	
+	/**
+	 * Returns the <i>first</i> non-optional parameter for {@code capability}.
+	 * @param capability the unary capability
+	 * @return the <i>first</i> non-optional parameter for {@code capability}
+	 * @throws IllegalArgumentException if the capability is a generator
+	 */
 	public static IParameter<?> unaryParameter(ICapability capability){
 		for (IParameter<?> param : capability.getParameters()){
 			if (!(param.hasDefault() || param.getType().equals(TypeToken.of(Void.class)))){
@@ -85,6 +131,11 @@ public class CapabilityUtil {
 		throw new IllegalArgumentException("Capability is a generator (takes no inputs)");
 	}
 	
+	/**
+	 * Returns the number of required parameters for {@code capability}.
+	 * @param capability the capability.
+	 * @return the number of required parameters for {@code capability}.
+	 */
 	public static int inputArrity(final ICapability capability){
 		int required = 0;
 		for (IParameter<?> param : capability.getParameters()){
@@ -95,6 +146,11 @@ public class CapabilityUtil {
 		return required;	
 	}
 	
+	/**
+	 * Returns a list of options (parameters with default values) for {@code capability}.
+	 * @param capability the capability
+	 * @return a list of options (parameters with default values) for {@code capability}.
+	 */
 	public static List<IParameter<?>> options(final ICapability capability){
 		List<IParameter<?>> result = Lists.newArrayList();
 		for (IParameter<?> param : capability.getParameters()){
@@ -105,22 +161,39 @@ public class CapabilityUtil {
 		return result;
 	}
 	
+	/**
+	 * @param capability the capability
+	 * @return <tt>true</tt> if the capability has zero or one inputs, and produces exactly one output
+	 */
 	public static boolean isLinear(final ICapability capability){
 		return (isGenerator(capability) || isUnary(capability)) && capability.getOutputs().size() == 1;
 	}
 	
+	/**
+	 * Returns <tt>true</tt> if the capability has zero required inputs.
+	 * @param capability the capability
+	 * @return <tt>true</tt> if the capability has zero required inputs
+	 * @see {@link CapabilityUtil#isUnary}
+	 */
 	public static boolean isGenerator(final ICapability capability){
 		return inputArrity(capability) == 0;
 	}
 	
+	/**
+	 * Returns <tt>tt</tt> if the capability has exactly one required input
+	 * @param capability the capability
+	 * @return <tt>tt</tt> if the capability has exactly one required input
+	 * @see {@link CapabilityUtil#isGenerator}
+	 */
 	public static boolean isUnary(final ICapability capability){
 		return inputArrity(capability) == 1;
 	}
 	
-	public static EnumSet<Flag> union(ICapability... capabilities){
-		return union(Arrays.asList(capabilities));
-	}
-	
+	/**
+	 * Returns a list of empty argument collections of length {@code length}.
+	 * @param length the number empty argument collections to generate.
+	 * @return a list of empty argument collections of length {@code length}.
+	 */
 	public static List<ICapabilityArguments> noArgs(int length){
 		List<ICapabilityArguments> result = Lists.newArrayList();
 		for (int i = 0; i < length; i++){
@@ -129,7 +202,23 @@ public class CapabilityUtil {
 		return result;
 	}
 	
-	public static EnumSet<Flag> union(Iterable<? extends ICapability> capabilities){
+	/**
+	 * Returns the merged flags for the capabilities. For example, the result contains the
+	 * {@link Flag#PURE} flag iff all of the capabilities have the flag.
+	 * @param capabilities the capabilities
+	 * @return the merged flags for the capabilities.
+	 */
+	public static EnumSet<Flag> mergeFlags(ICapability... capabilities){
+		return mergeFlags(Arrays.asList(capabilities));
+	}
+	
+	/**
+	 * Returns the merged flags for the capabilities. For example, the result contains the
+	 * {@link Flag#PURE} flag iff all of the capabilities have the flag.
+	 * @param capabilities the capabilities
+	 * @return the merged flags for the capabilities.
+	 */
+	public static EnumSet<Flag> mergeFlags(Iterable<? extends ICapability> capabilities){
 		EnumSet<Flag> flags = EnumSet.of(Flag.PURE);
 		for (ICapability capability : capabilities){
 			if (!capability.getFlags().contains(Flag.PURE)){

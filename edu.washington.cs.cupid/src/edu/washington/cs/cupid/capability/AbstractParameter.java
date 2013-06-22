@@ -3,7 +3,8 @@ package edu.washington.cs.cupid.capability;
 import com.google.common.reflect.TypeToken;
 
 /**
- * Base implementation of an immutable named parameter.
+ * Base implementation of an immutable named parameter; to parameters are 
+ * considered equivalent if their name and type are equivalent.
  * @author Todd Schiller
  * @param <T> the parameter type
  */

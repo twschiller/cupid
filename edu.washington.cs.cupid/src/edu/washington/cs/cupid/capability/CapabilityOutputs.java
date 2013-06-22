@@ -17,6 +17,10 @@ import com.google.common.collect.Maps;
 
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
 
+/**
+ * The outputs produced by a capability.
+ * @author Todd Schiller
+ */
 public class CapabilityOutputs implements ICapabilityOutputs {
 
 	private final Map<IOutput<?>, Object> outputs;
@@ -27,6 +31,11 @@ public class CapabilityOutputs implements ICapabilityOutputs {
 		named = Maps.newHashMap();
 	}
 	
+	/**
+	 * Add the output {@code value} for {@code output}.  
+	 * @param output the output reference 
+	 * @param value the output value
+	 */
 	public <T> void add(final IOutput<T> output, final T value){
 		outputs.put(output, value);
 		named.put(output.getName(), value);
@@ -44,8 +53,8 @@ public class CapabilityOutputs implements ICapabilityOutputs {
 
 	@Override
 	public <T> T getOutput(final IOutput<T> output) {
-		@SuppressWarnings("unchecked")
-		T result = (T) outputs.get(output); // checked when building output
+		@SuppressWarnings("unchecked") // checked when building output
+		T result = (T) outputs.get(output); 
 		return result;
 	}
 

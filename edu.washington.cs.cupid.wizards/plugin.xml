@@ -18,28 +18,28 @@
          <action
                class="edu.washington.cs.cupid.wizards.actions.CreateMappingAction"
                icon="icons/mapping-icon.png"
-               id="edu.cs.washington.cs.cupid.wizards.actions.MappingAction"
-               label="&amp;Create Mapping Capability"
+               id="edu.washington.cs.cupid.wizards.actions.MappingAction"
+               label="Create &amp;Mapping Capability"
                toolbarPath="cupidGroup"
                tooltip="Create Mapping Capability">
          </action>
          <action
                class="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
                icon="icons/add-to-database-icon.png"
-               id="edu.cs.washington.cs.cupid.wizards.actions.ExtractFieldAction"
-               label="&amp;Create Extract Field Capability"
+               id="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
+               label="Create &amp;Extract Field Capability"
                state="false"
                style="push"
                toolbarPath="cupidGroup"
                tooltip="Create Extract Field Capability">
          </action>
          <action
-               label="&amp;Create New Capability"
+               label="Create &amp;New Capability"
                icon="icons/heart-add.png"
                class="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction"
                tooltip="Create New Capability"
                toolbarPath="cupidGroup"
-               id="edu.cs.washington.cs.cupid.wizards.actions.CreatePipelineAction">
+               id="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction">
          </action>
       </actionSet>
    </extension>
@@ -67,13 +67,15 @@
                class="edu.washington.cs.cupid.wizards.popup.actions.NewMappingCapabilityAction"
                enablesFor="1"
                id="edu.washington.cs.cupid.wizards.extract.action"
-               label="Create Mapping"
+               label="Create &amp;Mapping"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
          <action
-               class="edu.washington.cs.cupid.wizards.Action1"
+               class="edu.washington.cs.cupid.wizards.popup.actions.ApplyFormattingAction"
+               enablesFor="+"
                id="edu.washington.cs.cupid.wizards.conditional.format"
-               label="Add Formatting Rule">
+               label="Create &amp;Formatting Rule"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
       </objectContribution>
    </extension>

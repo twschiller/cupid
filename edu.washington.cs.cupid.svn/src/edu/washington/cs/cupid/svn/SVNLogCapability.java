@@ -38,7 +38,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * @author Todd Schiller
  */
 public final class SVNLogCapability extends LinearCapability<IResource, List<SVNLogEntry>> {
-
+1
 	// http://wiki.svnkit.com/Printing_Out_Repository_History
 
 	/**

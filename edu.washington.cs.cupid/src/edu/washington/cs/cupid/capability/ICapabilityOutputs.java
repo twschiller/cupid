@@ -12,10 +12,28 @@ package edu.washington.cs.cupid.capability;
 
 import java.util.Map;
 
+/**
+ * The outputs produced by a capability.
+ * @author Todd Schiller
+ */
 public interface ICapabilityOutputs {
 
+	/**
+	 * @return a mapping from output references to the output value.
+	 */
 	Map<ICapability.IOutput<?>, Object> getOutputs();
-	<T> T getOutput(ICapability.IOutput<T> output);
-	Object getOutput(String name);
 	
+	/**
+	 * Returns the output value for the given output reference.
+	 * @param output the output reference
+	 * @return the output value for the given output reference.
+	 */
+	<T> T getOutput(ICapability.IOutput<T> output);
+	
+	/**
+	 * Returns the output value for the output with the given name.
+	 * @param name the name of the output
+	 * @return the output value for the output with the given name.
+	 */
+	Object getOutput(String name);
 }

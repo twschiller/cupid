@@ -102,7 +102,7 @@ public abstract class AbstractDynamicSerializableCapability implements ISerializ
 	@Override
 	public final EnumSet<Flag> getFlags() {
 		try {
-			return CapabilityUtil.union(current().values());
+			return CapabilityUtil.mergeFlags(current().values());
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}

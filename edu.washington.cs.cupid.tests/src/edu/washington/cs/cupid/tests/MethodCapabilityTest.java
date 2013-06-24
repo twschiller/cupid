@@ -29,7 +29,7 @@ public class MethodCapabilityTest extends LinearCapability<IMethod, Boolean> {
 	}
 
 	@Override
-	public LinearJob getJob(IMethod input) {
+	public LinearJob<IMethod, Boolean> getJob(IMethod input) {
 		return new ImmediateJob<IMethod, Boolean>(this, input, input.getElementName().equals("foo"));	
 	}
 }

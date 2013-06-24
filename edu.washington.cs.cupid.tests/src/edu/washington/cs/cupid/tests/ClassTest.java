@@ -26,7 +26,7 @@ public class ClassTest extends LinearCapability<Object, String>  {
 	}
 	
 	@Override
-	public LinearJob getJob(final Object input) {
+	public LinearJob<Object,String> getJob(final Object input) {
 		return new ImmediateJob<Object,String>(this, input, input.getClass().getName());
 	}
 }

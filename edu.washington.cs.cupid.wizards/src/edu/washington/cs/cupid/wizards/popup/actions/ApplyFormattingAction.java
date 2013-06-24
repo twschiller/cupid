@@ -2,6 +2,9 @@ package edu.washington.cs.cupid.wizards.popup.actions;
 
 import java.util.List;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -57,6 +60,8 @@ public class ApplyFormattingAction implements IObjectActionDelegate {
 				wizard = common.isEmpty() ? new FormattingRuleWizard() : new FormattingRuleWizard(common.get(0));
 			}
 		}
+				
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		
 		WizardDialog dialog = new WizardDialog(shell, wizard);
 		dialog.create();

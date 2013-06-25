@@ -8,12 +8,15 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.scripting.java.internal;
+package edu.washington.cs.cupid.scripting.java;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.CodeSource;
 import java.util.List;
+import java.util.Set;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -30,14 +33,22 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.osgi.framework.Bundle;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
+
+import edu.washington.cs.cupid.scripting.java.internal.ClasspathUtil;
 
 /**
  * Manages the Cupid scripting project for Java.
@@ -139,20 +150,69 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		}
 	}
 	
+	private static Set<IFile> snippetFiles = Sets.newHashSet();
+	
+	public static IType createSnippetContext(IJavaProject project, String simpleName, TypeToken<?> inputType, TypeToken<?> outputType, String content, IProgressMonitor monitor) throws CoreException{
+		monitor.beginTask("Create Snippet Context", 5);	
+		try{
+			IFile file = project.getProject().getFile("src/" + simpleName + ".java");
+			
+			if (file.exists()){
+				file.setContents(new ByteArrayInputStream(content.getBytes()), IFile.FORCE, new SubProgressMonitor(monitor, 1));
+			}else{
+				file.create(new ByteArrayInputStream(content.getBytes()), true, new SubProgressMonitor(monitor, 1));	
+			}
+			
+			file.setHidden(true);
+			file.getProject().refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 1));
+			
+			snippetFiles.add(file);
+			ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+			
+			if (!inputType.getRawType().isPrimitive()){
+				unit.createImport(inputType.getRawType().getName(), null, new SubProgressMonitor(monitor, 1));		
+			}
+		
+			if (!outputType.getRawType().isPrimitive()){
+				unit.createImport(outputType.getRawType().getName(), null, new SubProgressMonitor(monitor, 1));
+			}
+			
+			//IType type = unit.createType(content, null, true, new SubProgressMonitor(monitor, 1));
+			return  unit.getTypes()[0];
+		}finally{
+			monitor.done();
+		}
+	}
+	
+	public static void deleteSnippetContext(IType type, IProgressMonitor monitor) throws JavaModelException, CoreException{
+		Preconditions.checkNotNull(type);
+		monitor.beginTask("Delete Snippet Context", 2);
+		try{	
+			IResource r = type.getCompilationUnit().getCorrespondingResource();
+			IProject p = r.getProject();
+			r.delete(true, new SubProgressMonitor(monitor, 1));			
+			p.refreshLocal(IResource.DEPTH_ONE, new SubProgressMonitor(monitor, 1));
+			snippetFiles.remove(r);
+		}finally{
+			monitor.done();
+		}
+	}
+	
 	private static class DynamicChangeVisitor implements IResourceDeltaVisitor {
 		@Override
 		public boolean visit(final IResourceDelta delta) throws CoreException {
 
 			IResource resource = delta.getResource();
-			if (resource != null && resource.getProject() == Activator.getDefault().getCupidProject() && interesting(delta)) {
+			if (resource != null && resource.getProject() == CupidScriptingPlugin.getDefault().getCupidProject() && interesting(delta)) {
 				IJavaElement element = JavaCore.create(resource);
 
 				if (element instanceof IClassFile && !element.getElementName().contains("$")) {
 					IClassFile file = (IClassFile) element;
+					
 					try {
-						Activator.getDefault().loadDynamicCapability(file, true);
+						CupidScriptingPlugin.getDefault().loadDynamicCapability(file, true);
 					} catch (Exception e) {
-						Activator.getDefault().logError("Error reloading dynamic capability " + element.getElementName(), e);
+						CupidScriptingPlugin.getDefault().logError("Error reloading dynamic capability " + element.getElementName(), e);
 					} catch (Error e) {
 						// caused by unresolved compilation problems
 					}

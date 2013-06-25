@@ -35,7 +35,7 @@
    <extension
          point="edu.washington.cs.cupid.publishers">
       <publisher
-            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
+            class="edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin">
       </publisher>
    </extension>
    <extension

@@ -8,7 +8,7 @@
  * Contributors:
  *     Todd Schiller - initial API, implementation, and documentation
  ******************************************************************************/
-package edu.washington.cs.cupid.scripting.java.internal;
+package edu.washington.cs.cupid.scripting.java;
 
 import java.util.List;
 import java.util.Set;
@@ -41,19 +41,20 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.scripting.internal.CompilationUnitLocator;
 import edu.washington.cs.cupid.scripting.internal.CupidCapabilityLoader;
+import edu.washington.cs.cupid.scripting.java.internal.UpdateClasspathJob;
 
 /**
  * Activator for the Cupid Java scripting plug-in.
  * @author Todd Schiller
  */
-public final class Activator extends AbstractUIPlugin implements ICapabilityPublisher {
+public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICapabilityPublisher {
 
 	/**
 	 *  The plug-in ID for the Cupid Java scripting plug-in.
 	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid.scripting.java"; //$NON-NLS-1$
 
-	private static Activator plugin;
+	private static CupidScriptingPlugin plugin;
 	
 	private IProject cupidProject = null;
 	
@@ -72,7 +73,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	/**
 	 *  Construct the Cupid Java scripting plug-in.
 	 */
-	public Activator() {
+	public CupidScriptingPlugin() {
 	}
 
 	@Override
@@ -126,7 +127,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	/**
 	 * @return the shared instance
 	 */
-	public static Activator getDefault() {
+	public static CupidScriptingPlugin getDefault() {
 		return plugin;
 	}
 	
@@ -150,7 +151,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 				return Status.OK_STATUS;
 			} catch (Exception ex) {
 				logError("Unable to create Cupid project in workspace", ex);
-				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error creating Cupid project", ex);
+				return new Status(Status.ERROR, CupidScriptingPlugin.PLUGIN_ID, "Error creating Cupid project", ex);
 			
 			} finally {
 				monitor.done();
@@ -177,7 +178,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 				
 			} catch (CoreException ex) {
 				logError("Unable to open Cupid project in workspace", ex);
-				return new Status(Status.ERROR, Activator.PLUGIN_ID, "Error opening Cupid project", ex);
+				return new Status(Status.ERROR, CupidScriptingPlugin.PLUGIN_ID, "Error opening Cupid project", ex);
 			
 			} finally {
 				monitor.done();
@@ -204,7 +205,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 					cupidProject.accept(finder);
 				} catch (CoreException e) {
 					logError("Error finding changed dynamic class files", e);
-					return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error finding changed dynamic class files", e);
+					return new Status(IStatus.ERROR, CupidScriptingPlugin.PLUGIN_ID, "Error finding changed dynamic class files", e);
 				}
 				
 				progress.setWorkRemaining(70);
@@ -229,7 +230,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 				return Status.OK_STATUS;
 			} finally {
-				notifier.onChange(Activator.this);
+				notifier.onChange(CupidScriptingPlugin.this);
 				monitor.done();
 			}
 		}
@@ -256,8 +257,8 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 
 	/**
-	 * Load a dynamic capability defined by <code>element</code>. If <code>notify</code>, alert
-	 * listeners that the capability has been load.
+	 * Load a class defined by <code>element</code>. If <code>notify</code> and the element is a capability, alert
+	 * listeners that the capability has been loaded.
 	 * @param element the element to load
 	 * @param notify <code>true</code> iff listeners should be alerted
 	 * @throws Exception if loading the capability fails
@@ -265,9 +266,14 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	 */
 	public void loadDynamicCapability(final IJavaElement element, final boolean notify) throws Exception, Error {
 		
-		CupidCapabilityLoader loader = new CupidCapabilityLoader(Activator.class.getClassLoader());
+		CupidCapabilityLoader loader = new CupidCapabilityLoader(CupidScriptingPlugin.class.getClassLoader());
 
+		if (!element.getResource().exists()) return;
+		
 		Class<?> definition = loader.loadClass(simpleName(element));
+		
+		if (!ICapability.class.isAssignableFrom(definition)) return;
+		
 		ICapability capability = (ICapability) definition.newInstance();
 
 		removeCapability(capability.getUniqueId());
@@ -285,7 +291,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	 * @param e the exception
 	 */
 	public void logError(final String msg,  final Throwable e) {
-		pluginLog.log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.ERROR, msg, e));
+		pluginLog.log(new Status(Status.ERROR, CupidScriptingPlugin.PLUGIN_ID, Status.ERROR, msg, e));
 	}
 	
 	/**
@@ -293,7 +299,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	 * @param msg localized information message
 	 */
 	public void logInformation(final String msg) {
-		pluginLog.log(new Status(Status.INFO, Activator.PLUGIN_ID, Status.INFO, msg, null));
+		pluginLog.log(new Status(Status.INFO, CupidScriptingPlugin.PLUGIN_ID, Status.INFO, msg, null));
 	}
 
 	@Override

@@ -27,6 +27,8 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
+
 /**
  * Job that attempts to automatically update the libraries (JAR files) on the Cupid scripting path, since
  * updating a plug-in changes the filename. Uses the scheduling rule of the Cupid Java project.
@@ -39,13 +41,13 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 	 */
 	public UpdateClasspathJob() {
 		super("Update Cupid Classpath");
-		super.setRule(Activator.getDefault().getCupidJavaProject().getSchedulingRule());
+		super.setRule(CupidScriptingPlugin.getDefault().getCupidJavaProject().getSchedulingRule());
 	}
 	
 	@Override
 	public IStatus runInUIThread(final IProgressMonitor monitor) {
 		try {
-			IJavaProject project = Activator.getDefault().getCupidJavaProject();
+			IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
 			
 			int classpathSize = project.getRawClasspath().length;
 			boolean any = false;
@@ -88,7 +90,7 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 			
 			return Status.OK_STATUS;
 		} catch (Exception ex) {
-			return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error updating Cupid scripting classpath", ex);
+			return new Status(IStatus.ERROR, CupidScriptingPlugin.PLUGIN_ID, "Error updating Cupid scripting classpath", ex);
 		} finally {
 			monitor.done();
 		}
@@ -101,6 +103,6 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 
 	@Override
 	public boolean isConflicting(final ISchedulingRule rule) {
-		return Activator.getDefault().getCupidJavaProject().getSchedulingRule().isConflicting(rule);
+		return CupidScriptingPlugin.getDefault().getCupidJavaProject().getSchedulingRule().isConflicting(rule);
 	}
 }

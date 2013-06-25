@@ -12,6 +12,7 @@ package edu.washington.cs.cupid.scripting.java.wizards;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -47,7 +48,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.usage.events.EventConstants;
@@ -139,7 +140,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	private void doFinish(final String name, final String id, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
 			
 		CupidEventBuilder event = 
-				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), Activator.getDefault())
+				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), CupidScriptingPlugin.getDefault())
 				.addData("name", name)
 				.addData("id", id)
 				.addData("parameterType", parameterType.getName())
@@ -151,7 +152,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		monitor.beginTask("Creating " + name, 2);
 		
-		IProject cupid = Activator.getDefault().getCupidProject();
+		IProject cupid = CupidScriptingPlugin.getDefault().getCupidProject();
 		
 		final IFile file = cupid.getFolder("src").getFile(new Path(className + ".java"));
 		
@@ -186,7 +187,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	private InputStream openContents(final String name, final String id, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
 		String separator = System.getProperty("line.separator");
 		
-		Bundle bundle = Activator.getDefault().getBundle();
+		Bundle bundle = CupidScriptingPlugin.getDefault().getBundle();
 		URL fileURL = bundle.getEntry("templates/LinearCapability.template");
 		File file = new File(FileLocator.resolve(fileURL).toURI());
 		

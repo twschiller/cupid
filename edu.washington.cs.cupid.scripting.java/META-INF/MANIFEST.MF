@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Cupid Java Scripting
 Bundle-SymbolicName: edu.washington.cs.cupid.scripting.java;singleton:=true
 Bundle-Version: 1.0.4
-Bundle-Activator: edu.washington.cs.cupid.scripting.java.internal.Activator
+Bundle-Activator: edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin
 Bundle-Vendor: University of Washington PLSE
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -20,3 +20,4 @@ Bundle-ActivationPolicy: lazy
 Eclipse-BuddyPolicy: global, app, ext, boot
 Bundle-ClassPath: .,
  lib/jmte-2.2.jar
+Export-Package: edu.washington.cs.cupid.scripting.java

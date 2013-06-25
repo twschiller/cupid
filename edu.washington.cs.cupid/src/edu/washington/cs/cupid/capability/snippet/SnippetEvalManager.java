@@ -16,6 +16,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.PlatformObject;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -25,7 +26,7 @@ import com.google.common.reflect.TypeToken;
 public class SnippetEvalManager {
 
 	private int counter = 0;
-	private static final String METHOD_NAME = "run";
+	public static final String METHOD_NAME = "run";
 	public static final String VALUE_NAME = "val";
 	
 	private static SnippetEvalManager instance = new SnippetEvalManager();
@@ -101,6 +102,7 @@ public class SnippetEvalManager {
         List<String> jars = Lists.newArrayList();
         jars.add(findJar(inputType.getRawType()));
         jars.add(findJar(IResource.class));
+        jars.add(findJar(PlatformObject.class));
         
         String cp = Joiner.on(System.getProperty("path.separator")).skipNulls().join(jars);
         

@@ -4,33 +4,18 @@ import org.eclipse.jface.wizard.Wizard;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.linear.ILinearCapability;
-import edu.washington.cs.cupid.wizards.ui.SelectCapabilityPage.SelectListener;
-
 public class FormattingRuleWizard extends Wizard {
 
 	private SelectCapabilityPage select;
-	private TransformPage transform;
 		
 	public FormattingRuleWizard(){
 		this(Object.class);
 	}
 	
 	public FormattingRuleWizard(Class<?> clazz){
-		this.select = new SelectCapabilityPage(clazz);
-		this.transform = new TransformPage(TypeToken.of(boolean.class));
+		this.select = new SelectCapabilityPage(clazz, TypeToken.of(boolean.class));
 		this.setWindowTitle("Apply Formatting Rule");
-		this.addPage(this.select);
-		
-		select.addSelectListener(new SelectListener(){
-			@Override
-			public void onSelect(ILinearCapability<?, ?> capability) {
-				FormattingRuleWizard.this.transform.setInputType(capability.getOutput().getType());
-			}
-		});
-		
-		this.addPage(this.transform);
+		this.addPage(this.select);	
 	}
 	
 	@Override
@@ -44,7 +29,14 @@ public class FormattingRuleWizard extends Wizard {
 	}
 	
 	@Override
+	public boolean performCancel() {
+		select.performCleanup();
+		return super.performCancel();
+	}
+	
+	@Override
 	public boolean performFinish() {
+		select.performCleanup();
 		return true;
 	}
 }

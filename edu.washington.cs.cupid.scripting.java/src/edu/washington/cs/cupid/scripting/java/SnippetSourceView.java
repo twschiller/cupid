@@ -141,6 +141,10 @@ public class SnippetSourceView extends Composite {
 				src.toString(), new NullProgressMonitor());
 	}
 	
+	public String getSnippet(){
+		return fViewer.getDocument().get();
+	}
+	
 	public void performCleanup() {
 		try{
 			JavaProjectManager.deleteSnippetContext(context, new NullProgressMonitor());

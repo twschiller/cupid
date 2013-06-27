@@ -21,9 +21,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 
-import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
-import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.IDynamicCapability;
 

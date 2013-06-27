@@ -12,8 +12,10 @@ package edu.washington.cs.cupid.conditional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -44,9 +46,11 @@ import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
@@ -58,12 +62,13 @@ import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.snippet.SnippetCapability;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
-import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 /**
  * Applies conditional formatting rules to workbench items.
@@ -91,12 +96,16 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 	 */
 	private IdentityHashMap<Item, Object> activeItems = Maps.newIdentityHashMap();
 	
+	private Map<FormattingRule, ICapability> capabilities = Maps.newIdentityHashMap();
+	
 	private Class<?> workbenchPartReferenceClazz = null;
 	private Class<?> partPaneClazz = null;
 	private Method getPaneMethod = null;
 	private Method getControlMethod = null;
 	
 	private final ISchedulingRuleRegistry scheduler = CapabilityExecutor.getSchedulingRuleRegistry();
+	
+	private HashSet<FormattingRule> ruleErrors = Sets.newHashSet();
 	
 	/**
 	 * Construct a listener that applies conditional formatting rules to workbench items.
@@ -264,6 +273,46 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		});
 	}
 	
+	private ICapability getCapabilityForRule(FormattingRule rule) throws ClassNotFoundException, NoSuchCapabilityException{
+		if (capabilities.containsKey(rule)){
+			return capabilities.get(rule);
+		}
+		
+		TypeToken<?> inputType = TypeManager.forName(rule.getQualifiedType());
+		
+		ICapability c = rule.getCapabilityId() == null ? null : CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
+		
+		TypeToken<?> snippetInputType = (c == null) ? inputType : CapabilityUtil.unaryParameter(c).getType();
+				
+		@SuppressWarnings({ "rawtypes", "unchecked" }) // checked when the snippet is written, and dynamically at runtime
+		SnippetCapability s = rule.getSnippet() == null ? null :
+			new SnippetCapability(
+					rule.getName() + " snippet",
+					"Predicate snippet for formatting rule " + rule.getName(),
+					snippetInputType, TypeToken.of(boolean.class),
+					rule.getSnippet());
+
+		ICapability result;
+		
+		if (c != null && s != null){
+			result = new DynamicSerializablePipeline(
+					rule.getName() + " capability",
+					"Capability for formatting rule " + rule.getName(),
+					Lists.<Serializable>newArrayList(s,c.getName()),
+					Lists.<ICapabilityArguments>newArrayList());
+		}else if (s != null){
+			result = s;
+		}else if (c != null){
+			result = c;
+		}else{
+			throw new IllegalArgumentException("Formatting rule has no capability or predicate snippet");
+		}
+		
+		capabilities.put(rule, result);
+		return result;
+	}
+	
+	
 	/**
 	 * Asynchronously apply formatting rules to <code>item</code> using {@link Activator#data(Item)} to 
 	 * generate the input for the item.
@@ -281,10 +330,13 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			ICapability capability = null;
 
 			try {
-				capability = Activator.findPredicate(rule);
+				capability = getCapabilityForRule(rule);
 			} catch (Exception e) {
+				if (!ruleErrors.contains(rule)){
+					Activator.getDefault().logError("Error building capability for formatting rule: " + rule.getName(), e);
+					ruleErrors.add(rule);
+				}
 				continue;
-				// TODO error information needs to be aggregated and passed up the line
 			}
 
 			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);

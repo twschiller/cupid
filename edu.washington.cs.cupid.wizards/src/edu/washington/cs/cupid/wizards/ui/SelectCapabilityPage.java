@@ -27,7 +27,8 @@ import edu.washington.cs.cupid.wizards.internal.TypeSelection;
 public class SelectCapabilityPage extends WizardPage {
 
 	public interface SelectListener{
-		public void onSelect(ILinearCapability<?,?> capability);
+		public void onSelectType(TypeToken<?> type);
+		public void onSelectCapability(ILinearCapability<?,?> capability);
 	}
 	
 	private TypeToken<?> inputType;
@@ -139,6 +140,11 @@ public class SelectCapabilityPage extends WizardPage {
 			inputType = TypeToken.of(Class.forName(qualifiedName));
 			setTitle("Define formatting predicate for " + inputType.getRawType().getSimpleName());
 			fViewer.setSnippetType(inputType, outputType);
+			
+			for (SelectListener listener : listeners){
+				listener.onSelectType(inputType);
+			}
+			
 			enableContentAssist();
 		} catch (ClassNotFoundException ex) {
 			Activator.getDefault().logError("Error loading type " + qualifiedName, ex);
@@ -151,6 +157,14 @@ public class SelectCapabilityPage extends WizardPage {
 		return msg;
 	}
 	
+	public TypeToken<?> getInputType() {
+		return inputType;
+	}
+	
+	public String getSnippet(){
+		return fViewer.getSnippet();
+	}
+
 	public void performCleanup() {
 		fViewer.performCleanup();
 	}

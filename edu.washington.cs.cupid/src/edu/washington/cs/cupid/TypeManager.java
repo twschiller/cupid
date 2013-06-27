@@ -246,4 +246,8 @@ public final class TypeManager {
 			}	
 		}	
 	}
+	
+	public static TypeToken<?> forName(String qualifiedName) throws ClassNotFoundException{
+		return TypeToken.of(Class.forName(qualifiedName));
+	}
 }

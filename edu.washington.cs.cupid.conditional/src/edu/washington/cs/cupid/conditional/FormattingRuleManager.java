@@ -66,7 +66,7 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 			List<FormattingRule> current = Lists.newArrayList();
 			
 			for (FormattingRule rule : storedRules()) {
-				if (rule.isActive() && rule.getCapabilityId() != null) {
+				if (rule.isActive() && (rule.getCapabilityId() != null || rule.getSnippet() != null)) {
 					current.add(rule);
 				}
 			}
@@ -109,12 +109,6 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 		}
 		
 		return event;
-	}
-
-	public void addTemporaryRule(FormattingRule rule){
-		synchronized (activeRules) {
-			activeRules.add(rule);
-		}
 	}
 	
 	public void addRule(FormattingRule rule){

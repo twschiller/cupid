@@ -10,7 +10,9 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.conditional.internal;
 
-import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IViewReference;
@@ -23,7 +25,6 @@ import org.osgi.framework.BundleContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
@@ -34,7 +35,6 @@ import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.FormattingRuleManager;
-import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
 
 /**
  * Activator for the conditional formatting plug-in.
@@ -49,6 +49,8 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 
 	private static Activator plugin;
 
+	private static ILog pluginLog;
+	
 	/**
 	 * Construct the conditional formatting plug-in.
 	 */
@@ -104,6 +106,8 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 				});
 			}
 		});
+		
+		pluginLog = Platform.getLog(context.getBundle());
 	}
 	
 	@Override
@@ -124,8 +128,6 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		return plugin;
 	}
 
-	
-	
 	/**
 	 * Returns the predicate capability for <code>rule</code>.
 	 * @param rule the formatting rule.
@@ -148,4 +150,12 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		}
 	}
 
+	/**
+	 * Log an error in the plugin's log.
+	 * @param msg localized error message
+	 * @param e the exception
+	 */
+	public void logError(final String msg, final Exception e) {
+		pluginLog.log(new Status(Status.ERROR, PLUGIN_ID, Status.ERROR, msg, e));			
+	}
 }

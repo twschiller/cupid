@@ -5,6 +5,10 @@ import javax.swing.event.ChangeListener;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -22,10 +26,15 @@ public class FormatPage extends WizardPage {
 	private FontPickerButton bFont;
 	private Text tName;
 	
-	protected FormatPage() {
+	private boolean userModifiedName = false;
+	
+	private Class<?> startType;
+	
+	protected FormatPage(Class<?> startType) {
 		super("Choose Format");
 		this.setTitle("Select formatting");
 		this.setMessage("Specify the rule name and one or more format overrides");
+		this.startType = startType;
 	}
 
 	@Override
@@ -39,11 +48,24 @@ public class FormatPage extends WizardPage {
 		container.setLayout(layout);
 		
 		Label lName = new Label(container, SWT.LEFT);
-		lName.setText("Rule Name (Optional):");
+		lName.setText("Rule Name:");
 		tName = new Text(container, SWT.LEFT | SWT.SINGLE | SWT.BORDER);
 		GridData dName = new GridData(SWT.FILL, SWT.NONE, true, false);
 		dName.horizontalSpan = 5;
 		tName.setLayoutData(dName);
+		tName.setText(startType.getSimpleName() + " formatting");
+		
+		tName.addKeyListener(new KeyListener(){
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// NO OP
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				userModifiedName = true;
+			}
+		});
 		
 		Label lBackground = new Label(container, SWT.LEFT);
 		lBackground.setText("Background Color:");
@@ -74,8 +96,8 @@ public class FormatPage extends WizardPage {
 		Label lFont = new Label(container, SWT.LEFT);
 		lFont.setText("Font:");
 		bFont = new FontPickerButton(container, null);
-		bFont.setText("Select Font");
-		bFont.setLayoutData(new GridData(60, 50));
+		bFont.setText("Select");
+		bFont.setLayoutData(new GridData(70, 50));
 		
 		bFont.addChangeListener(new ChangeListener(){
 			@Override
@@ -93,7 +115,15 @@ public class FormatPage extends WizardPage {
 		return new Format(bForeground.getColor(), bBackground.getColor(), bFont.getFontData());
 	}
 	
-	public String getName(){
+	public boolean hasUserModifiedName(){
+		return userModifiedName;
+	}
+	
+	public void setFormatName(String formatName){
+		tName.setText(formatName);
+	}
+	
+	public String getFormatName(){
 		String trimmed = tName.getText().trim();
 		return trimmed.isEmpty() ? null : trimmed;
 	}

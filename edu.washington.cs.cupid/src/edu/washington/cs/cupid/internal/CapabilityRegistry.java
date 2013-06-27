@@ -58,6 +58,10 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 				CupidActivator.getDefault().logError(
 						"Publisher published null capability: " + publisher.getClass().getName(), 
 						new NullPointerException());
+			} else if (published.getName() == null || published.getName().trim().isEmpty()){ 
+				CupidActivator.getDefault().logError(
+						"Publisher published capability without name: " + publisher.getClass().getName(), 
+						new IllegalArgumentException());
 			} else {
 				available.add(published);
 			}

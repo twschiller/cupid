@@ -31,7 +31,6 @@ public final class NonEmpty<V> extends GenericLinearCapability<Collection<V>, Bo
 	public NonEmpty() {
 		super(
 				"NonEmpty", 
-				"edu.washington.cs.cupid.standard.nonempty",
 				"True if the input is non empty",
 				Flag.PURE);
 	}

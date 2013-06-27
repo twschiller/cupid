@@ -100,9 +100,8 @@ public final class CupidEventBuilder {
 		Map<String, String> data = Maps.newHashMap();
 
 		data.put("name", capability.getName());
-		data.put("id", capability.getUniqueId());
-	
-		// TODO dump paremeter types in event information
+		
+		// TODO dump parameter types in event information
 //		data.put("parameterType", capability.getParameterType().toString());
 //		data.put("returnType", capability.getReturnType().toString());
 

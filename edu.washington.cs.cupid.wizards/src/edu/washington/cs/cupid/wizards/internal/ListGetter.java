@@ -21,22 +21,19 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.exception.TypeException;
-import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.GenericLinearSerializableCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 public final class ListGetter<I,V> extends GenericLinearSerializableCapability<List<I>,List<V>> implements IExtractCapability<List<I>,List<V>>{
-	private static final long serialVersionUID = 2L;
-
-	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.list.getter";
+	private static final long serialVersionUID = 3L;
 	
 	private final TypeToken<I> type;
 	private final String field;
 	private final TypeToken<V> result;
 	
 	public ListGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		super("[ " + field + " ]", BASE_ID + "." + field,
+		super("[ " + field + " ]", 
 			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
 			  Flag.PURE);
 			 	  

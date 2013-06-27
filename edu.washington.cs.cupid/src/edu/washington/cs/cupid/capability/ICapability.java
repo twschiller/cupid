@@ -92,12 +92,7 @@ public interface ICapability {
 	}
 	
 	/**
-	 * @return the capability's unique identifier
-	 */
-	String getUniqueId();
-	
-	/**
-	 * @return a user-friendly name
+	 * @return the capability's name
 	 */
 	String getName();
 	

@@ -34,7 +34,6 @@ public final class Max<V extends Comparable<V>> extends GenericLinearCapability<
 	public Max() {
 		super(
 				"Max", 
-				"edu.washington.cs.cupid.standard.max",
 				"Get the maximum element in a collection",
 				Flag.PURE);
 	}

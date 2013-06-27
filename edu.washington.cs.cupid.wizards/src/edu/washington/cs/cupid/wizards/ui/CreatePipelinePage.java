@@ -507,7 +507,7 @@ public class CreatePipelinePage extends WizardPage{
 			if (x instanceof Serializable){
 				descriptors.add((Serializable) x);
 			}else{
-				descriptors.add(((ICapability)x).getUniqueId());
+				descriptors.add(((ICapability)x).getName());
 			}
 		}
 		

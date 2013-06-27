@@ -19,10 +19,9 @@ package edu.washington.cs.cupid.capability;
  */
 public abstract class AbstractSerializableCapability implements ISerializableCapability {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private final String name;
-	private final String uniqueId;
 	private final String description;
 	
 	/**
@@ -32,15 +31,9 @@ public abstract class AbstractSerializableCapability implements ISerializableCap
 	 * @param description capability description
 	 * @param flags capability property flags
 	 */
-	public AbstractSerializableCapability(final String name, final String uniqueId, final String description) {
+	public AbstractSerializableCapability(final String name, final String description) {
 		this.name = name;
-		this.uniqueId = uniqueId;
 		this.description = description;
-	}
-
-	@Override
-	public final String getUniqueId() {
-		return uniqueId;
 	}
 
 	@Override
@@ -55,7 +48,7 @@ public abstract class AbstractSerializableCapability implements ISerializableCap
 
 	@Override
 	public final String toString() {
-		return getUniqueId();
+		return getName();
 	}
 
 }

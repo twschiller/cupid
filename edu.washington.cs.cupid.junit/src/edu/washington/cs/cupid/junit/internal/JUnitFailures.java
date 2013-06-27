@@ -37,7 +37,6 @@ public final class JUnitFailures extends LinearCapability<TestRunSession, Set<Te
 	 */
 	public JUnitFailures() {
 		super("JUnit Failed Tests",
-			  "edu.washington.cs.cupid.junit.internal.failed",
 			  "Extract failed tests",
 			  TypeToken.of(TestRunSession.class), Types.TEST_ELEMENTS,
 			  Flag.PURE);

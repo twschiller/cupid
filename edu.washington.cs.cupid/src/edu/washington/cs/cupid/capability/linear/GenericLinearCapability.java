@@ -30,10 +30,8 @@ public abstract class GenericLinearCapability<I, V> extends AbstractCapability i
 	private IOutput<V> output;
 	private EnumSet<Flag> flags;
 	
-	public GenericLinearCapability(String name, String uniqueId,
-			String description, 
-			Flag... flags) {
-		super(name, uniqueId, description);
+	public GenericLinearCapability(String name, String description, Flag... flags) {
+		super(name, description);
 		
 		this.flags = EnumSet.noneOf(Flag.class);
 		this.flags.addAll(Arrays.asList(flags));

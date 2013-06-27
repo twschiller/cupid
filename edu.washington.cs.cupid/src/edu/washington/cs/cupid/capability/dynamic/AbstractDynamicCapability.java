@@ -84,7 +84,7 @@ public abstract class AbstractDynamicCapability implements IDynamicCapability {
 		for (Object capability : capabilities) {
 			if (capability instanceof ICapability) {
 				ICapability x = (ICapability) capability;
-				result.put(x.getUniqueId(), x);
+				result.put(x.getName(), x);
 			} else if (capability instanceof String) {
 				result.put((String) capability, CupidPlatform.getCapabilityRegistry().findCapability((String) capability));
 			} else {

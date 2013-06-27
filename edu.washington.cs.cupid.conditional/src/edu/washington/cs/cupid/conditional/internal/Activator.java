@@ -33,6 +33,7 @@ import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
+import edu.washington.cs.cupid.conditional.FormattingRuleManager;
 import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
 
 /**
@@ -59,6 +60,8 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	 * Applies conditional formatting rules to views when they are activated.
 	 */
 	private Formatter formatter;
+	
+	private FormattingRuleManager ruleManager;
 
 	@Override
 	public void start(final BundleContext context) throws Exception {
@@ -66,7 +69,9 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		plugin = this;
 		
 		formatter = new Formatter();
-		getPreferenceStore().addPropertyChangeListener(formatter);
+		ruleManager = FormattingRuleManager.getInstance();
+		
+		getPreferenceStore().addPropertyChangeListener(ruleManager);
 		
 		final IWorkbench workbench = PlatformUI.getWorkbench();
 		
@@ -119,19 +124,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		return plugin;
 	}
 
-	/**
-	 * @return the formatting rules in the preference store
-	 */
-	public FormattingRule[] storedRules() {
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		String json = store.getString(PreferenceConstants.P_RULES);
-		try {
-			FormattingRule[] parsed = (new Gson()).fromJson(json, FormattingRule[].class);
-			return parsed != null ? parsed : new FormattingRule[]{};
-		} catch (Exception ex) {
-			throw new RuntimeException("Error loading formatting rules", ex);
-		}
-	}
+	
 	
 	/**
 	 * Returns the predicate capability for <code>rule</code>.

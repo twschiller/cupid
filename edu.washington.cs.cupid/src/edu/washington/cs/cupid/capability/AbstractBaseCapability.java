@@ -15,10 +15,10 @@ public abstract class AbstractBaseCapability extends AbstractCapability {
 	private LinkedHashSet<? extends IParameter<?>> parameters;
 	private LinkedHashSet<? extends IOutput<?>> outputs;
 	
-	public AbstractBaseCapability(String name, String uniqueId, String description,
+	public AbstractBaseCapability(String name, String description,
 			List<? extends IParameter<?>> parameters, List<? extends IOutput<?>> outputs,
 			Flag...flags) {
-		super(name, uniqueId, description);
+		super(name, description);
 
 		this.flags = EnumSet.noneOf(Flag.class);
 		this.flags.addAll(Arrays.asList(flags));

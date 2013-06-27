@@ -26,15 +26,13 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 public final class Getter<I, V> extends LinearSerializableCapability<I, V> implements IExtractCapability<I,V> {
 
-	private static final long serialVersionUID = 2L;
-
-	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
+	private static final long serialVersionUID = 3L;
 	
 	private final List<String> fields;
 	
 	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
 		
-		super(field, BASE_ID + ".[" + type.getRawType().getName() + "]." + field,
+		super(field, 
 			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
 			  type, result,
 			  Flag.PURE);
@@ -46,7 +44,6 @@ public final class Getter<I, V> extends LinearSerializableCapability<I, V> imple
 	public Getter(final List<String> fields, final TypeToken<I> type, final TypeToken<V> result) {
 		
 		super(TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields), 
-			  BASE_ID + ".[" + type.getRawType().getName() + "]." + Joiner.on(".").join(fields),
 			  TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields),
 			  type, result,
 			  Flag.PURE);
@@ -87,6 +84,4 @@ public final class Getter<I, V> extends LinearSerializableCapability<I, V> imple
 	public List<String> getFields(){
 		return Lists.newArrayList(fields);
 	}
-	
-
 }

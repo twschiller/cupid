@@ -48,7 +48,6 @@ public final class HgLogCapability extends AbstractBaseCapability {
 	 */
 	public HgLogCapability() {
 		super("Hg Log",
-			  "edu.washington.cs.cupid.hg.log",
 			  "Hg log entries for the resource",
 			  Lists.<IParameter<?>>newArrayList(PARAM_RESOURCE, PARAM_MAX_ENTRIES, PARAM_START_REVISION),
 			  Lists.<Output<?>>newArrayList(OUT_LOG),

@@ -81,13 +81,13 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	}
 
 	@Override
-	public synchronized ICapability findCapability(final String uniqueId) throws NoSuchCapabilityException {
+	public synchronized ICapability findCapability(final String name) throws NoSuchCapabilityException {
 		for (ICapability capability : capabilities) {
-			if (capability.getUniqueId().equals(uniqueId)) {
+			if (capability.getName().equals(name)) {
 				return capability;
 			}	
 		}
-		throw new NoSuchCapabilityException(uniqueId);
+		throw new NoSuchCapabilityException(name);
 	}
 
 	@Override

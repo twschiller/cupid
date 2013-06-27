@@ -48,7 +48,6 @@ public final class JUnitMarkers extends LinearCapability<TestRunSession, Collect
 	 */
 	public JUnitMarkers() {
 		super("JUnit Marker Builder",
-			  "edu.washington.cs.cupid.junit.internal.markers",
 			  "Create problem markers from failed tests",
 			  TypeToken.of(TestRunSession.class), IMarkerBuilder.MARKER_RESULT,
 			  Flag.PURE);

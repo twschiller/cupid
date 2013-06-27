@@ -5,22 +5,10 @@ import java.util.List;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.debug.ui.JDISourceViewer;
-import org.eclipse.jdt.internal.debug.ui.contentassist.JavaDebugContentAssistProcessor;
-import org.eclipse.jdt.internal.debug.ui.contentassist.TypeContext;
-import org.eclipse.jdt.internal.debug.ui.display.DisplayViewerConfiguration;
-import org.eclipse.jface.dialogs.DialogPage;
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.ITextListener;
-import org.eclipse.jface.text.TextEvent;
-import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -31,37 +19,32 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.linear.ILinearCapability;
-import edu.washington.cs.cupid.capability.snippet.SnippetEvalManager;
-import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
-import edu.washington.cs.cupid.scripting.java.JavaProjectManager;
+import edu.washington.cs.cupid.scripting.java.SnippetSourceView;
+import edu.washington.cs.cupid.scripting.java.SnippetSourceView.ModifyListener;
 import edu.washington.cs.cupid.wizards.internal.Activator;
+import edu.washington.cs.cupid.wizards.internal.TypeSelection;
 
-@SuppressWarnings("restriction")
 public class SelectCapabilityPage extends WizardPage {
 
 	public interface SelectListener{
 		public void onSelect(ILinearCapability<?,?> capability);
 	}
 	
-	private JDISourceViewer fViewer;
-	
+	private TypeToken<?> inputType;
 	private final TypeToken<?> outputType;
 	
 	private Composite container = null;
+	private SnippetSourceView fViewer;
 	private Class<?> startType;
 	private final List<SelectListener> listeners = Lists.newArrayList();
-	
-	private final IDocument document = new Document();
-	private IType context;
-	private static long snippetId = 42L;
-	
-	private JavaDebugContentAssistProcessor fCompletionProcessor;
 	
 	protected SelectCapabilityPage(Class<?> startType,  TypeToken<?> outputType) {
 		super("Select");
 		this.setTitle("Define formatting predicate for " + startType.getSimpleName());
-		this.setMessage("Define a predicate for the rule");
+		this.setMessage("Define a predicate for the formatting rule");
+		this.setPageComplete(false);
 		this.startType = startType;
+		this.inputType = TypeToken.of(startType);
 		this.outputType = outputType;
 	}
 	
@@ -71,8 +54,6 @@ public class SelectCapabilityPage extends WizardPage {
 	
 	@Override
 	public void createControl(Composite parent) {
-		final TypeToken<?> inputType = TypeToken.of(startType);
-		
 		container = new Composite(parent, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
@@ -80,94 +61,97 @@ public class SelectCapabilityPage extends WizardPage {
 		layout.numColumns = 2;
 		container.setLayout(layout);
 		
-		Label lbl = new Label(container, SWT.LEFT);
-		lbl.setText("Select capability (Optional):");
+		Label selectInputTypeLbl = new Label(container, SWT.LEFT);
+		selectInputTypeLbl.setText("Select Input Type: ");
+		selectInputTypeLbl.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+		final Combo selectType = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY); 
+		selectType.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		for (Class<?> c : TypeSelection.getSuperTypes(TypeToken.of(startType))){
+			selectType.add(c.getName());
+		}
+		selectType.select(0);
+		
+		Label selectCapabilityLbl = new Label(container, SWT.LEFT);
+		selectCapabilityLbl.setText("Select Capability (Optional):");
+		selectCapabilityLbl.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+		
 		Combo matching = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY); 
 		matching.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-			
-		fViewer = new JDISourceViewer(container, null, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.LEFT_TO_RIGHT);
+		
+		Label writeRuleLbl = new Label(container, SWT.LEFT);
+		writeRuleLbl.setText("Formatting condition expression:");
+		GridData lblData = new GridData(SWT.LEFT, SWT.BOTTOM, false, false);
+		lblData.horizontalSpan = 2;
+		writeRuleLbl.setLayoutData(lblData);
+		
+		fViewer = new SnippetSourceView(container, SWT.NONE);
+		fViewer.setSnippetType(TypeToken.of(startType), outputType);
+		
+		enableContentAssist();
 		
 		GridData d = new GridData(SWT.FILL, SWT.FILL, true, true);
 		d.horizontalSpan = 2;
-		fViewer.getControl().setLayoutData(d);
-		fViewer.setInput(document);
+		fViewer.setLayoutData(d);
 		
-		// TODO: configure completion assist
-		// fViewer.configure(new SnippetViewerConfiguration());
+		fViewer.addModifyListener(new SnippetListener());
 		
-		
-		try{
-			this.setupSnippetContext();
-		
-			String src = context.getCompilationUnit().getSource();
-			IDocument doc = new Document(src);
-			int offset = doc.getLineOffset(doc.getNumberOfLines() - 3);
-			
-			fCompletionProcessor = new JavaDebugContentAssistProcessor(new TypeContext(context, offset));
-			
-			fViewer.configure(new DisplayViewerConfiguration() {
-				public IContentAssistProcessor getContentAssistantProcessor() {
-						return fCompletionProcessor;
-				}
-			});
-		
-		}catch (Exception ex){
-			Activator.getDefault().logError("Error creating snippet context", ex);
-		}
-		
-		fViewer.addTextListener(new ITextListener(){
-			@Override
-			public void textChanged(TextEvent event) {
-				
-				DiagnosticCollector<JavaFileObject> msgs = 
-						SnippetEvalManager.getInstance().tryCompile(inputType, outputType, document.get());
-				
-				if (msgs.getDiagnostics().isEmpty()){
-					SelectCapabilityPage.this.setPageComplete(true);
-					SelectCapabilityPage.this.setErrorMessage(null);
-					SelectCapabilityPage.this.setMessage("The expression is valid", DialogPage.INFORMATION);
-				}else{
-					SelectCapabilityPage.this.setMessage(null);
-					SelectCapabilityPage.this.setErrorMessage(msgs.getDiagnostics().get(0).getMessage(null));	
-					SelectCapabilityPage.this.setPageComplete(false);
-				}
-			}
-		});
-		
-	
-		this.document.set("return " + SnippetEvalManager.VALUE_NAME);
 		this.setControl(container);
+		
+		selectType.addSelectionListener(new SelectionListener(){
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				setInputType(selectType.getText());
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// NO OP
+			}
+			
+		});
 	}
 	
-	private void setupSnippetContext() throws CoreException{
-		IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
-		String snippetName = "Snippet" + (snippetId++);
-		
-		TypeToken<?> inputType = TypeToken.of(startType);
-		String outputClass = outputType.getRawType().getName();
-		String inputClass = inputType.getRawType().getName();
-		
-		// Here we specify the source code of the class to be compiled
-        StringBuilder src = new StringBuilder();
-        src.append("import " + inputType.getRawType().getName() + ";\n");
-        src.append("public class " + snippetName + " {\n");
-        src.append("    public static " + outputClass + " " + SnippetEvalManager.METHOD_NAME + "(" + inputClass + " " + SnippetEvalManager.VALUE_NAME + ") {\n");
-        src.append("         throw new RuntimeException();\n");
-        src.append("    }\n");
-        src.append("}\n");
-		
-		context = JavaProjectManager.createSnippetContext(project, snippetName, 
-				TypeToken.of(startType), outputType, 
-				src.toString(), new NullProgressMonitor());
+	private void enableContentAssist(){
+		try {
+			fViewer.enableContentAssist();
+		} catch (Exception e) {
+			this.setErrorMessage("Error enabling content assist for snippet editor; see Eclipse log for more information");
+			Activator.getDefault().logError("Error enabling content assist for snippet editor", e);
+		}
+	}
+	
+	private class SnippetListener implements ModifyListener{
+		@Override
+		public void onModify(String snippet, DiagnosticCollector<JavaFileObject> msgs) {
+			if (msgs.getDiagnostics().isEmpty()){
+				setPageComplete(true);
+				setErrorMessage(null);
+				setMessage("Expression is valid", WizardPage.INFORMATION);
+			}else{
+				setPageComplete(false);
+				setMessage(null);
+				setErrorMessage(cleanMsg(msgs.getDiagnostics().get(0).getMessage(null)));
+			}
+		}
+	}
+	
+	private void setInputType(String qualifiedName){
+		try {
+			inputType = TypeToken.of(Class.forName(qualifiedName));
+			setTitle("Define formatting predicate for " + inputType.getRawType().getSimpleName());
+			fViewer.setSnippetType(inputType, outputType);
+			enableContentAssist();
+		} catch (ClassNotFoundException ex) {
+			Activator.getDefault().logError("Error loading type " + qualifiedName, ex);
+			setErrorMessage("Error loading type " + qualifiedName);
+			setPageComplete(false);
+		}
+	}
+
+	private static String cleanMsg(String msg){
+		return msg;
 	}
 	
 	public void performCleanup() {
-		try{
-			JavaProjectManager.deleteSnippetContext(context, new NullProgressMonitor());
-		}catch(Exception ex){
-			Activator.getDefault().logError("Error deleting snippet context", ex);
-		}finally{
-			context = null;	
-		}
-	}	
+		fViewer.performCleanup();
+	}
 }

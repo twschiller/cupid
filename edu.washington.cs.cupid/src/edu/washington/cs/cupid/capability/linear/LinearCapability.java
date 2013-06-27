@@ -17,11 +17,10 @@ public abstract class LinearCapability<I, V> extends GenericLinearCapability<I, 
 	private TypeToken<I> inputType;
 	private TypeToken<V> outputType;
 	
-	public LinearCapability(String name, String uniqueId,
-			String description, 
+	public LinearCapability(String name, String description, 
 			TypeToken<I> inputType, TypeToken<V> outputType,
 			Flag... flags) {
-		super(name, uniqueId, description, flags);
+		super(name, description, flags);
 		
 		this.inputType = inputType;
 		this.outputType = outputType;
@@ -32,7 +31,7 @@ public abstract class LinearCapability<I, V> extends GenericLinearCapability<I, 
 			Class<I> inputType, Class<V> outputType,
 			Flag... flags) {
 		
-		this(name, uniqueId, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
+		this(name, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
 	}
 
 	@Override

@@ -117,25 +117,6 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 		return result;
 	}
 	
-	@Override
-	public final String getUniqueId() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[pipe:");
-		for (Object capability : capabilities) {
-			if (capability instanceof ICapability) {
-				builder.append(((ICapability) capability).getUniqueId());
-			} else if (capability instanceof String) {
-				builder.append(((String) capability));
-			} else {
-				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
-			}
-			
-			builder.append(";");
-		}
-		builder.append("]");
-		return builder.toString();	
-	}
-
 	private ICapabilityArguments formArguments(
 			final ICapability capability, 
 			final Map<IParameter<?>, IParameter<?>> capabilitySources, 

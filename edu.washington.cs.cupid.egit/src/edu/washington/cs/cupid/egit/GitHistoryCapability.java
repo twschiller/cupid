@@ -43,7 +43,6 @@ public final class GitHistoryCapability extends LinearCapability<IResource, List
 	 */
 	public GitHistoryCapability() {
 		super("Git History",
-			  "edu.washington.cs.cupid.egit.history",
 			  "Git log entries for the resource",
 			  TypeToken.of(IResource.class), new TypeToken<List<IFileRevision>>() {},
 			  Flag.PURE, Flag.TRANSIENT);

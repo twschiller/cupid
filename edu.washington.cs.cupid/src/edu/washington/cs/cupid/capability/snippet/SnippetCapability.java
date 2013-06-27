@@ -13,16 +13,16 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 public class SnippetCapability<I,V> extends GenericLinearSerializableCapability<I,V> {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 	private TypeToken<I> inputType;
 	private TypeToken<V> outputType;
 	private String snippet;
 	
 	public SnippetCapability(
-			String name, String uniqueId, String description, 
+			String name, String description, 
 			TypeToken<I> inputType, TypeToken<V> outputType, String snippet) {
 		
-		super(name, uniqueId, description, Flag.PURE);
+		super(name, description, Flag.PURE);
 		this.inputType = inputType;
 		this.outputType = outputType;
 		this.snippet = snippet;

@@ -27,7 +27,6 @@ public class LongList extends LinearCapability<IResource, List<Integer>>  {
 	public LongList(){
 		super(
 				"Long List",
-				"edu.washington.cs.cupid.tests.longlist",
 				"Returns a long list",
 				TypeToken.of(IResource.class), new TypeToken<List<Integer>>(){},
 				Flag.PURE);

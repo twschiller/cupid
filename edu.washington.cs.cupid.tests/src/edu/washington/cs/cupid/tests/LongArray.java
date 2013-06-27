@@ -27,7 +27,6 @@ public class LongArray extends LinearCapability<IResource, Object[]>  {
 	public LongArray(){
 		super(
 				"Long Array",
-				"edu.washington.cs.cupid.tests.longarray",
 				"Returns a long array",
 				TypeToken.of(IResource.class), new TypeToken<Object[]>(){},
 				Flag.PURE);

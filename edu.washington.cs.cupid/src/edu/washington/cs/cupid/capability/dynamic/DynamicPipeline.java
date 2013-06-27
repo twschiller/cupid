@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Lists;
 
-import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
@@ -70,25 +69,6 @@ public class DynamicPipeline<I, V> extends AbstractDynamicCapability implements 
 		return result;
 	}
 	
-	@Override
-	public final String getUniqueId() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[pipe:");
-		for (Object capability : capabilities) {
-			if (capability instanceof ICapability) {
-				builder.append(((ICapability) capability).getUniqueId());
-			} else if (capability instanceof String) {
-				builder.append(((String) capability));
-			} else {
-				throw new RuntimeException("Unexpected pipeline element of type " + capability.getClass().getName());
-			}
-			
-			builder.append(";");
-		}
-		builder.append("]");
-		return builder.toString();	
-	}
-
 	@Override
 	public LinearJob<I, V> getJob(ICapabilityArguments input) {
 		if (CapabilityUtil.isGenerator(this)){

@@ -109,5 +109,6 @@ public class FormattingRule {
 	 */
 	public final void setActive(final boolean active) {
 		this.active = active;
-	} 
+	}
+
 }

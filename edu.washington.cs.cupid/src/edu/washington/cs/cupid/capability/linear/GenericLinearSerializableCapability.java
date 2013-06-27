@@ -26,16 +26,14 @@ import edu.washington.cs.cupid.capability.Parameter;
 
 public abstract class GenericLinearSerializableCapability<I, V> extends AbstractSerializableCapability implements ILinearCapability<I, V> {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private IParameter<I> input;
 	private IOutput<V> output;
 	private EnumSet<Flag> flags;
 	
-	public GenericLinearSerializableCapability(String name, String uniqueId,
-			String description, 
-			Flag... flags) {
-		super(name, uniqueId, description);
+	public GenericLinearSerializableCapability(String name, String description, Flag... flags) {
+		super(name, description);
 		
 		this.flags = EnumSet.noneOf(Flag.class);
 		this.flags.addAll(Arrays.asList(flags));

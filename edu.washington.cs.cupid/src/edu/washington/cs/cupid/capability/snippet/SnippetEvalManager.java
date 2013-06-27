@@ -118,7 +118,9 @@ public class SnippetEvalManager {
 	
 	public DiagnosticCollector<JavaFileObject> tryCompile(TypeToken<?> inputType, TypeToken<?> outputType, String snippet){
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-		JavaFileManager fileManager = new ClassFileManager(compiler.getStandardFileManager(null, null, null));
+		JavaFileManager fileManager = new ClassFileManager(
+				SnippetEvalManager.class.getClassLoader(), 
+				compiler.getStandardFileManager(null, null, null));
 		return compile(compiler, fileManager, inputType, outputType, snippet).msgs;
 	}
 	
@@ -135,14 +137,14 @@ public class SnippetEvalManager {
         // (our custom implementation of it)
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		
-		JavaFileManager fileManager = new
-		            ClassFileManager(compiler
-		                .getStandardFileManager(null, null, null));
+        ClassFileManager fileManager = new
+		            ClassFileManager(
+		            		SnippetEvalManager.class.getClassLoader(), 
+		            		compiler.getStandardFileManager(null, null, null));
         
 		CompilationStatus s = compile(compiler, fileManager, capability.getInputType(), capability.getOutputType(), capability.getSnippet());
 		
-        // Creating an instance of our compiled class and
-        // running its toString() method
+        // Creating an instance of our compiled class 
         Class<?> clazz = fileManager.getClassLoader(null).loadClass(s.fullName);
         
         Method m = clazz.getMethods()[0];

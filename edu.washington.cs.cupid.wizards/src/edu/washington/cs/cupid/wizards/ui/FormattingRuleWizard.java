@@ -4,6 +4,11 @@ import org.eclipse.jface.wizard.Wizard;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.capability.linear.ILinearCapability;
+import edu.washington.cs.cupid.conditional.FormattingRule;
+import edu.washington.cs.cupid.conditional.FormattingRuleManager;
+import edu.washington.cs.cupid.wizards.ui.SelectCapabilityPage.SelectListener;
+
 public class FormattingRuleWizard extends Wizard {
 
 	private SelectCapabilityPage select;
@@ -15,10 +20,12 @@ public class FormattingRuleWizard extends Wizard {
 	
 	public FormattingRuleWizard(Class<?> clazz){
 		this.select = new SelectCapabilityPage(clazz, TypeToken.of(boolean.class));
-		this.format = new FormatPage();
+		this.format = new FormatPage(clazz);
 		this.setWindowTitle("Apply Formatting Rule");
 		this.addPage(this.select);	
 		this.addPage(this.format);
+		
+		this.select.addSelectListener(new CapabilityListener());
 	}
 	
 	@Override
@@ -34,10 +41,37 @@ public class FormattingRuleWizard extends Wizard {
 	
 	@Override
 	public boolean performFinish() {
+		FormattingRule rule = new FormattingRule(format.getFormatName(),
+				select.getInputType().getRawType().getName(),
+				null /*capability*/,
+				select.getSnippet(),
+				format.getFormat(),
+				true /*active*/);
+	
+		FormattingRuleManager.getInstance().addRule(rule);
+		
 		select.performCleanup();
 		
-		
-		
 		return true;
+	}
+	
+	private void setDefaultFormatName(TypeToken<?> type){
+		format.setFormatName(type.getRawType().getSimpleName() + " formatting");
+	}
+	
+	public class CapabilityListener implements SelectListener{
+
+		@Override
+		public void onSelectType(TypeToken<?> type) {
+			if (!format.hasUserModifiedName()){
+				setDefaultFormatName(type);
+			}
+		}
+
+		@Override
+		public void onSelectCapability(ILinearCapability<?, ?> capability) {
+			// TODO Auto-generated method stub
+			
+		}	
 	}
 }

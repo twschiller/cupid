@@ -38,7 +38,13 @@ public interface ICapability {
 		/**
 		 * The capability depends on external state.
 		 */
-		TRANSIENT
+		TRANSIENT,
+		
+		/**
+		 * The capability is Cupid-generated. Auto-generated capabilities
+		 * are not user-accessible
+		 */
+		AUTO_GENERATED,
 	}
 	
 	/**

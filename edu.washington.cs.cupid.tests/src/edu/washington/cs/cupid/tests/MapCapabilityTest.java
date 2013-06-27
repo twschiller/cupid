@@ -36,7 +36,6 @@ public class MapCapabilityTest extends LinearCapability<ICompilationUnit, Map<IT
 	public MapCapabilityTest(){
 		super(
 				"Method Map",
-				"edu.washington.cs.cupid.tests.maps.methods",
 				"Types and methods for a compilation unit",
 				new TypeToken<ICompilationUnit>(){},
 				new TypeToken<Map<IType,Set<IMethod>>>(){},

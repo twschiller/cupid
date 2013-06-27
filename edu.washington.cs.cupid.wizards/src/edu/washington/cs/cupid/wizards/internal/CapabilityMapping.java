@@ -46,7 +46,6 @@ public class CapabilityMapping<I, K, V> extends AbstractMapping<I, K, V> impleme
 			ISerializableCapability inputGenerator, TypeToken<K> keyType , String keyLink,
 			ISerializableCapability valueGenerator, TypeToken<V> valueType, String valueLink){
 		super(name, description, 
-			  BASE_ID + ".[" + inputType.toString() + "].[" + inputGenerator.getUniqueId() + "].[" + valueGenerator.getUniqueId() + "]",
 			  inputType, keyType, valueType,
 			  CapabilityUtil.mergeFlags(inputGenerator, valueGenerator));
 		

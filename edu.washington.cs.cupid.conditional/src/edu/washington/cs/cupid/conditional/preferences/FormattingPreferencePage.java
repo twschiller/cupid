@@ -12,30 +12,23 @@ package edu.washington.cs.cupid.conditional.preferences;
 
 import java.util.List;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
@@ -56,7 +49,10 @@ import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
+import edu.washington.cs.cupid.conditional.FormattingRuleManager;
 import edu.washington.cs.cupid.conditional.internal.Activator;
+import edu.washington.cs.cupid.conditional.ui.ColorPickerButton;
+import edu.washington.cs.cupid.conditional.ui.FontPickerButton;
 
 /**
  * Preference page for defining and editing conditional formatting rules.
@@ -116,8 +112,6 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		layout.marginHeight  = 5;
 		parent.setLayout(layout);
 		
-		final ColorDialog color = new ColorDialog(Display.getCurrent().getActiveShell());
-		final FontDialog font = new FontDialog(Display.getCurrent().getActiveShell());
 		
 		Label lName = new Label(parent, SWT.NONE);
 		lName.setText("Name:");
@@ -136,30 +130,16 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		Label lBackground = new Label(parent, SWT.NONE);
 		lBackground.setText("Background:");
 		
-		final Button bBackground = new Button(parent, SWT.PUSH);
+		final ColorPickerButton bBackground = new ColorPickerButton(parent, rule.getFormat().getBackground());
 		bBackground.setLayoutData(new GridData(60,30));
-		if (rule.getFormat().getBackground() != null) {
-			setButtonColor(bBackground, rule.getFormat().getBackground());
-		}
-		
-		bBackground.addMouseListener(new MouseListener() {
+	
+		bBackground.addChangeListener(new ChangeListener(){
 			@Override
-			public void mouseDown(final MouseEvent e) {
-				RGB choice = color.open();
-				setButtonColor(bBackground, choice);
-				rule.getFormat().setBackground(choice);
-				item.setBackground(new Color(Display.getDefault(), choice));
-			}
-			@Override
-			public void mouseDoubleClick(final MouseEvent e) {
-				// NO OP
-			}
-			@Override
-			public void mouseUp(final MouseEvent e) {
-				// NO OP
+			public void stateChanged(ChangeEvent e) {
+				rule.getFormat().setBackground(bBackground.getColor());
+				item.setBackground(new Color(Display.getDefault(), bBackground.getColor()));
 			}
 		});
-		
 		
 		Label lCapability = new Label(parent, SWT.NONE);
 		lCapability.setText("Capability:");
@@ -168,56 +148,28 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		Label lForeground = new Label(parent, SWT.NONE);
 		lForeground.setText("Foreground:");
 		
-		final Button bForeground = new Button(parent, SWT.PUSH);
+		final ColorPickerButton bForeground = new ColorPickerButton(parent, rule.getFormat().getForeground());
 		bForeground.setLayoutData(new GridData(60, 30));
-		if (rule.getFormat().getForeground() != null) {
-			setButtonColor(bForeground, rule.getFormat().getForeground());
-		}
-		bForeground.addMouseListener(new MouseListener() {
+		
+		bForeground.addChangeListener(new ChangeListener(){
 			@Override
-			public void mouseDown(final MouseEvent e) {
-				RGB choice = color.open();
-				setButtonColor(bForeground, choice);
-				rule.getFormat().setForeground(choice);
-				item.setForeground(new Color(Display.getDefault(), choice));
-			}
-			@Override
-			public void mouseDoubleClick(final MouseEvent e) {
-				// NO OP
-			}
-			@Override
-			public void mouseUp(final MouseEvent e) {
-				// NO OP
+			public void stateChanged(ChangeEvent e) {
+				rule.getFormat().setForeground(bForeground.getColor());
+				item.setForeground(new Color(Display.getDefault(), bForeground.getColor()));
 			}
 		});
-		
+			
 		Label lFont = new Label(parent, SWT.NONE);
 		lFont.setText("Font:");
 		
-		final Button bFont = new Button(parent, SWT.PUSH);
+		final FontPickerButton bFont = new FontPickerButton(parent, rule.getFormat().getFont());
 		bFont.setText("Select Font");
-		if (rule.getFormat().getFont() != null) {
-			bFont.setFont(new Font(Display.getDefault(), rule.getFormat().getFont()));
-		}
 		
-		bFont.addMouseListener(new MouseListener() {
+		bFont.addChangeListener(new ChangeListener(){
 			@Override
-			public void mouseDown(final MouseEvent e) {
-				if (font.open() != null) {
-					FontData[] choice = font.getFontList();
-					rule.getFormat().setFont(choice);
-					Font font = new Font(Display.getDefault(), choice);
-					bFont.setFont(font);
-					item.setFont(font);
-				}
-			}
-			@Override
-			public void mouseDoubleClick(final MouseEvent e) {
-				// NO OP
-			}
-			@Override
-			public void mouseUp(final MouseEvent e) {
-				// NO OP
+			public void stateChanged(ChangeEvent e) {
+				rule.getFormat().setFont(bFont.getFontData());
+				item.setFont(new Font(Display.getDefault(), bFont.getFontData()));
 			}
 		});
 		
@@ -281,12 +233,12 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 				if (!available.isEmpty()) {
 					if (containsSentinalEntry) {
 						if (cCapability.getSelectionIndex() > 0) {
-							rule.setCapabilityId(available.get(cCapability.getSelectionIndex() - 1).getUniqueId());
+							rule.setCapabilityId(available.get(cCapability.getSelectionIndex() - 1).getName());
 							cCapability.remove(0);
 							containsSentinalEntry = false;
 						}
 					} else {
-						rule.setCapabilityId(available.get(cCapability.getSelectionIndex()).getUniqueId());
+						rule.setCapabilityId(available.get(cCapability.getSelectionIndex()).getName());
 					}
 				}
 			}
@@ -441,7 +393,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		
 		FormattingRule[] rules = new FormattingRule[]{};
 		try {
-			rules = Activator.getDefault().storedRules();
+			rules = FormattingRuleManager.getInstance().storedRules();
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
@@ -517,23 +469,6 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 	}
 	
 	/**
-	 * Set the image of <code>button</code> to a solid <code>color</code> rectangle. Does
-	 * nothing if color is <code>null</code>.
-	 * @param button the button
-	 * @param color the color
-	 */
-	private static void setButtonColor(final Button button, final RGB color) {
-		if (color != null) {
-			Device display = Display.getDefault();
-			Image image = new Image(display, 30, 20);	
-			GC gc = new GC(image);
-			gc.setBackground(new Color(display, color));
-			gc.fillRectangle(image.getBounds());
-			button.setImage(image);
-		}
-	}
-	
-	/**
 	 * Save the formatting rules to the preference store in JSON format.
 	 */
 	private void save() {
@@ -544,7 +479,4 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		}
 		Activator.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_RULES, gson.toJson(rules));
 	}
-
-	
-	
 }

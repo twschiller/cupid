@@ -39,7 +39,6 @@ public final class CompilerMessagesCapability extends LinearCapability<ICompilat
 	 */
 	public CompilerMessagesCapability() {
 		super("Compiler Messages", 
-			  "edu.washington.cs.cupid.jdt.messages", 
 			  "Compiler messages (e.g., warnings and errors)",
 			  TypeToken.of(ICompilationUnit.class), new TypeToken<List<Message>>() {},
 			  Flag.PURE);

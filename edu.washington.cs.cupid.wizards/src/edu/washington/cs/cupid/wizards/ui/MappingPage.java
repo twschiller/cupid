@@ -259,7 +259,7 @@ public class MappingPage extends WizardPage {
 		}else if (selected instanceof ICapability){
 			return new DynamicSerializablePipeline(
 					null, null, 
-					Lists.<Serializable>newArrayList(((ICapability) selected).getUniqueId()),
+					Lists.<Serializable>newArrayList(((ICapability) selected).getName()),
 					Lists.<ICapabilityArguments>newArrayList(CapabilityArguments.NONE));
 		}else if (selected instanceof DerivedCapability){
 			return ((DerivedCapability) selected).toPipeline();

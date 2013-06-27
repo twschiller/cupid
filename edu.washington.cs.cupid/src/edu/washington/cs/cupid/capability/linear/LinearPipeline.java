@@ -57,7 +57,7 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 		
 		for (ILinearCapability<?, ?> capability : capabilities) {
 			if (capability instanceof IDynamicCapability) {
-				throw new IllegalArgumentException("Static pipelines cannot have dynamic dependencies: " + capability.getUniqueId());
+				throw new IllegalArgumentException("Static pipelines cannot have dynamic dependencies: " + capability.getName());
 			}
 			
 			if (!capability.getFlags().contains(Flag.PURE)){
@@ -127,17 +127,6 @@ public final class LinearPipeline<I, V> implements ILinearCapability<I, V> {
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public String getUniqueId() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[pipe:");
-		for (ICapability capability : capabilities) { 
-			builder.append(capability.getUniqueId() + ";");
-		}
-		builder.append("]");
-		return builder.toString();	
 	}
 	
 	@Override

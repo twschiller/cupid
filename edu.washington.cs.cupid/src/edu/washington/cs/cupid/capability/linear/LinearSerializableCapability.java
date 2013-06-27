@@ -14,16 +14,15 @@ import com.google.common.reflect.TypeToken;
 
 public abstract class LinearSerializableCapability<I, V> extends GenericLinearSerializableCapability<I, V> implements ILinearCapability<I, V> {
 	
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 	
 	private TypeToken<I> inputType;
 	private TypeToken<V> outputType;
 	
-	public LinearSerializableCapability(String name, String uniqueId,
-			String description, 
+	public LinearSerializableCapability(String name, String description, 
 			TypeToken<I> inputType, TypeToken<V> outputType,
 			Flag... flags) {
-		super(name, uniqueId, description, flags);
+		super(name, description, flags);
 		
 		this.inputType = inputType;
 		this.outputType = outputType;
@@ -34,7 +33,7 @@ public abstract class LinearSerializableCapability<I, V> extends GenericLinearSe
 			Class<I> inputType, Class<V> outputType,
 			Flag... flags) {
 		
-		this(name, uniqueId, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
+		this(name, description, TypeToken.of(inputType), TypeToken.of(outputType), flags);
 	}
 
 	@Override

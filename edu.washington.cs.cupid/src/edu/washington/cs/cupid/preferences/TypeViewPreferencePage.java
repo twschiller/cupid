@@ -324,7 +324,7 @@ public final class TypeViewPreferencePage extends PreferencePage implements IWor
 			
 			rules.add(new ViewRule(
 					item.getText(1),
-					item.getData() == null ? null : ((ICapability) item.getData()).getUniqueId(),
+					item.getData() == null ? null : ((ICapability) item.getData()).getName(),
 					item.getChecked()));
 		}
 		

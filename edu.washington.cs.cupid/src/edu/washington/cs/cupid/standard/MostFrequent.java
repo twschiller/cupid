@@ -38,7 +38,6 @@ public final class MostFrequent<V> extends GenericLinearCapability<List<V>, V> {
 	public MostFrequent() {
 		super(
 				"Most Frequent", 
-				"edu.washington.cs.cupid.standard.frequent",
 				"Get the most frequent element in a collection",
 				Flag.PURE);
 	}

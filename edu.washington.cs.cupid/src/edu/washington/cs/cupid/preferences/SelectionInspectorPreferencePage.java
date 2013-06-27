@@ -119,7 +119,7 @@ public final class SelectionInspectorPreferencePage extends PreferencePage imple
 			item.setText(capability.getName());
 			item.setText(0, capability.getName());
 
-			if (!hidden.contains(capability.getUniqueId())) {
+			if (!hidden.contains(capability.getName())) {
 				item.setChecked(true);
 			}
 		}
@@ -151,7 +151,7 @@ public final class SelectionInspectorPreferencePage extends PreferencePage imple
 		
 		for (int i = 0; i < table.getItemCount(); i++) {
 			if (!table.getItem(i).getChecked()) {
-				hidden.add(model.get(i).getUniqueId());
+				hidden.add(model.get(i).getName());
 			}
 		}
 		

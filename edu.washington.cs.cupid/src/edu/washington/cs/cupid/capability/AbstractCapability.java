@@ -20,25 +20,17 @@ package edu.washington.cs.cupid.capability;
 public abstract class AbstractCapability implements ICapability {
 
 	private final String name;
-	private final String uniqueId;
 	private final String description;
 	
 	/**
 	 * A standard capability.
 	 * @param name capability name
-	 * @param uniqueId capability unique id
 	 * @param description capability description
 	 * @param flags capability property flags
 	 */
-	public AbstractCapability(final String name, final String uniqueId, final String description) {
+	public AbstractCapability(final String name, final String description) {
 		this.name = name;
-		this.uniqueId = uniqueId;
 		this.description = description;
-	}
-
-	@Override
-	public final String getUniqueId() {
-		return uniqueId;
 	}
 
 	@Override
@@ -50,10 +42,4 @@ public abstract class AbstractCapability implements ICapability {
 	public final String getDescription() {
 		return description;
 	}
-
-	@Override
-	public final String toString() {
-		return getUniqueId();
-	}
-
 }

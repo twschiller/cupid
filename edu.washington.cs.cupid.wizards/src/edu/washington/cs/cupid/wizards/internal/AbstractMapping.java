@@ -21,17 +21,17 @@ import edu.washington.cs.cupid.capability.linear.GenericLinearSerializableCapabi
 
 public abstract class AbstractMapping<I, K, V> extends GenericLinearSerializableCapability<I, Map<K,Set<V>>>  {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	protected final TypeToken<K> keyType;
 	protected final TypeToken<I> inputType;
 	protected final TypeToken<V> valueType;
 	
-	public AbstractMapping(String name, String description, String id,  
+	public AbstractMapping(String name, String description,  
 			TypeToken<I> inputType, TypeToken<K> keyType, TypeToken<V> valueType,
 			EnumSet<Flag> flags){
 		
-		super(name, description, id, flags.toArray(new Flag[]{}));
+		super(name, description, flags.toArray(new Flag[]{}));
 			  
 		this.inputType = inputType;
 		this.keyType = keyType;

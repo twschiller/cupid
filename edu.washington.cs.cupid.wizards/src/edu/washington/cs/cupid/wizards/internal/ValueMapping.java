@@ -32,9 +32,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 public class ValueMapping<I,V> extends AbstractMapping<I,I,V> implements IDynamicCapability {
 
-	private static final long serialVersionUID = 1L;
-	
-	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.mapping.value";
+	private static final long serialVersionUID = 2L;
 		
 	private ISerializableCapability valueGenerator;
 	private String keyLink;
@@ -47,7 +45,6 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> implements IDynami
 			ISerializableCapability valueGenerator, TypeToken<V> valueType, String valueLink){
 	
 		super(name, description, 
-			 BASE_ID + ".[" + inputType.getRawType().getName() + "].[" + valueGenerator.getUniqueId() + "]",
 			 inputType, inputType, valueType,
 			 valueGenerator.getFlags());
 		

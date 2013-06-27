@@ -38,7 +38,6 @@ public final class MylynTaskCapability extends LinearCapability<Void, List<Abstr
 	 */
 	public MylynTaskCapability() {
 		super("Mylyn Tasks",
-			  "edu.washington.cs.cupid.mylyn.tasks",
 			  "All Mylyn tasks",
 			  TypeToken.of(Void.class), new TypeToken<List<AbstractTask>>() {},
 			  Flag.PURE);

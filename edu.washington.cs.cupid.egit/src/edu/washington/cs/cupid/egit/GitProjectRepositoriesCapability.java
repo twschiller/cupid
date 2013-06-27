@@ -38,7 +38,6 @@ public final class GitProjectRepositoriesCapability extends LinearCapability<IPr
 	 */
 	public GitProjectRepositoriesCapability() {
 		super("Git Repositories",
-			  "edu.washington.cs.cupid.egit.repositories",
 			  "Get all Git repositories associated with a project",
 			  TypeToken.of(IProject.class), new TypeToken<Collection<RepositoryMapping>>() {},
 			  Flag.PURE, Flag.TRANSIENT);	

@@ -15,7 +15,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,8 +25,6 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.TreeEvent;
@@ -47,7 +44,6 @@ import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -65,27 +61,20 @@ import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
-import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
-import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 /**
  * Applies conditional formatting rules to workbench items.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class Formatter extends NullPartListener implements IPropertyChangeListener, DisposeListener, IInvalidationListener {
+public class Formatter extends NullPartListener implements DisposeListener, IInvalidationListener {
 
 	// TODO Later rules will override the formatting specified by earlier rule.
 	// TODO Check if a rule was removed before applying it
 	// TODO Stale formatting needs to be cleared when the result is invalidated
 	
-	/**
-	 * Active rules, ordered by precedence.
-	 */
-	private List<FormattingRule> activeRules = Lists.newArrayList();
-
 	/**
 	 * The original format for a workbench item; used to restore formats when recomputing capabilities.
 	 */
@@ -118,7 +107,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		partPaneClazz = Class.forName("org.eclipse.ui.internal.PartPane");
 		getPaneMethod = workbenchPartReferenceClazz.getMethod("getPane");
 		getControlMethod = partPaneClazz.getMethod("getControl");
-		updateRules();
 		
 		CapabilityExecutor.addCacheListener(this);
 	}
@@ -150,55 +138,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			return object;
 		}
 	}
-	
-	private CupidEventBuilder createRuleEvent(String what, FormattingRule rule){
-		CupidEventBuilder event = 
-				new CupidEventBuilder(what, getClass(), Activator.getDefault())
-					.addData("name", rule.getName())
-					.addData("capabilityId", rule.getCapabilityId());
 		
-		try {
-			ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
-			event.addData("capabilityName", capability.getName());
-			event.addData("capabilityId", capability.getUniqueId());
-			event.addData("parameterType", CapabilityUtil.unaryParameter(capability).getType().toString());
-		} catch (NoSuchCapabilityException e) {
-			// NO OP
-		}
-		
-		return event;
-	}
-	
-	/**
-	 * Set {@link Activator#activeRules} to the list of rules that are active
-	 * and have an associated capability.
-	 */
-	private void updateRules() {
-		synchronized (activeRules) {
-			List<FormattingRule> current = Lists.newArrayList();
-			
-			for (FormattingRule rule : Activator.getDefault().storedRules()) {
-				if (rule.isActive() && rule.getCapabilityId() != null) {
-					current.add(rule);
-				}
-			}
-
-			Set<FormattingRule> newSet = Sets.newHashSet(current);
-			Set<FormattingRule> oldSet = Sets.newHashSet(activeRules);
-			
-			for (FormattingRule rule : Sets.difference(newSet, oldSet)) {
-				CupidDataCollector.record(createRuleEvent("enableFormattingRule", rule).create());
-			}
-			
-			for (FormattingRule rule : Sets.difference(oldSet, newSet)) {
-				CupidDataCollector.record(createRuleEvent("disableFormattingRule", rule).create());
-			}
-			
-			activeRules.clear();
-			activeRules.addAll(current);
-		}
-	}
-	
 	@Override
 	public final void partActivated(final IWorkbenchPartReference partRef) {
 		applyFormattingRules(partRef);
@@ -336,7 +276,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			return;
 		}
 		
-		for (final FormattingRule rule : activeRules) {
+		for (final FormattingRule rule : FormattingRuleManager.getInstance().activeRules()) {
 			
 			ICapability capability = null;
 
@@ -371,7 +311,7 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * @param control the control
 	 */
 	private void applyFormattingRules(final Control control) {
-		if (!activeRules.isEmpty()) {
+		if (!FormattingRuleManager.getInstance().activeRules().isEmpty()) {
 			if (control instanceof Tree) {
 				
 				Tree tree = (Tree) control;
@@ -425,13 +365,6 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			if (control != null) {
 				applyFormattingRules(control);
 			}
-		}
-	}
-	
-	@Override
-	public final void propertyChange(final PropertyChangeEvent event) {
-		if (event.getProperty().equals(PreferenceConstants.P_RULES)) {
-			updateRules();
 		}
 	}
 

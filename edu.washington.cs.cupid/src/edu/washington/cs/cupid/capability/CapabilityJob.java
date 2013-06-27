@@ -50,7 +50,7 @@ public abstract class CapabilityJob<T extends ICapability> extends Job {
 	 * @param input the input
 	 */
 	public CapabilityJob(final T capability, final ICapabilityArguments input) {
-		super(capability.getUniqueId());
+		super(capability.getName());
 		this.input = input;
 		this.capability = capability;
 		this.families = Sets.newHashSet((Object) input, CupidActivator.getDefault(), capability);

@@ -47,7 +47,7 @@ public class DerivedCapability{
 	
 	public DynamicSerializablePipeline toPipeline(){
 		List<Serializable> pipeline = Lists.<Serializable>newArrayList(
-				capability.getUniqueId(),
+				capability.getName(),
 				getter);
 		
 		return new DynamicSerializablePipeline(

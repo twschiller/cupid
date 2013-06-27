@@ -240,9 +240,9 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		return clazz.getElementName().substring(0, clazz.getElementName().lastIndexOf('.'));
 	}
 	
-	private ICapability find(final String uniqueId) {
+	private ICapability find(final String name) {
 		for (ICapability capability : dynamic) {
-			if (capability.getUniqueId().equals(uniqueId)) {
+			if (capability.getName().equals(name)) {
 				return capability;
 			}
 		}
@@ -276,7 +276,7 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		
 		ICapability capability = (ICapability) definition.newInstance();
 
-		removeCapability(capability.getUniqueId());
+		removeCapability(capability.getName());
 		
 		dynamic.add(capability);
 

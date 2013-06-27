@@ -31,7 +31,6 @@ public final class Count<V> extends GenericLinearCapability<Collection<V>, Integ
 	public Count() {
 		super(
 				"Count", 
-				"edu.washington.cs.cupid.standard.count",
 				"Count the number of elements in a collection",
 				Flag.PURE);
 	}

@@ -30,7 +30,6 @@ public final class Empty<V> extends GenericLinearCapability<Collection<V>, Boole
 	 */
 	public Empty() {
 		super("Empty", 
-			  "edu.washington.cs.cupid.standard.empty",
 			  "True if the input is empty",
 			  Flag.PURE);
 	}

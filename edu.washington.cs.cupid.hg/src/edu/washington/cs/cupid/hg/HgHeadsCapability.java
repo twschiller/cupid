@@ -37,7 +37,6 @@ public final class HgHeadsCapability extends LinearCapability<IResource, List<Ch
 	 */
 	public HgHeadsCapability() {
 		super("Hg Heads",
-			  "edu.washington.cs.cupid.hg.heads",
 			  "Hg heads for the resource's repository",
 			  TypeToken.of(IResource.class), new TypeToken<List<ChangeSet>>(){}, 
 			  Flag.PURE);

@@ -529,7 +529,7 @@ public class InspectorView extends ViewPart {
 			SortedSet<ICapability> capabilities = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()));
 
 			for (ICapability capability : capabilities) {
-				if (!hidden.contains(capability.getUniqueId())) {
+				if (!hidden.contains(capability.getName())) {
 					
 					if (CapabilityUtil.isGenerator(capability)){
 						rows.add(new CapabilityRow(capability, null));

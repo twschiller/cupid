@@ -152,10 +152,46 @@ public final class JavaProjectManager implements IResourceChangeListener {
 	
 	private static Set<IFile> snippetFiles = Sets.newHashSet();
 	
-	public static IType createSnippetContext(IJavaProject project, String simpleName, TypeToken<?> inputType, TypeToken<?> outputType, String content, IProgressMonitor monitor) throws CoreException{
-		monitor.beginTask("Create Snippet Context", 5);	
+	/**
+	 * Add the JAR providing <tt>inputType</tt> to the Cupid project classpath, if it is not already present
+	 * @param inputType
+	 * @throws JavaModelException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public static void ensureClasspath(TypeToken<?> inputType) throws JavaModelException, IOException, ClassNotFoundException{
+		IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
+		
+		List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
+	
+		Bundle bundle = ClasspathUtil.bundleForClass(inputType.getRawType().getName());
+		
+		if (bundle == null) return; // Java core classes don't have bundles
+		
+		IPath path = ClasspathUtil.bundlePath(bundle);
+	
+		for (IClasspathEntry old : cp){
+			if (old.getPath().equals(path)){
+				return;
+			}
+		}
+		
+		if (path != null) {
+			cp.add(JavaCore.newLibraryEntry(path, null, null));	
+		}
+		
+		project.setRawClasspath(cp.toArray(new IClasspathEntry[]{}), null);
+	}
+	
+	
+	public static IType createSnippetContext(IJavaProject project, String simpleName, TypeToken<?> inputType, TypeToken<?> outputType, String content, IProgressMonitor monitor) 
+			throws CoreException, IOException, ClassNotFoundException{
+		
+		monitor.beginTask("Create Snippet Context", 6);	
 		try{
 			IFile file = project.getProject().getFile("src/" + simpleName + ".java");
+			
+			ensureClasspath(inputType);
 			
 			if (file.exists()){
 				file.setContents(new ByteArrayInputStream(content.getBytes()), IFile.FORCE, new SubProgressMonitor(monitor, 1));

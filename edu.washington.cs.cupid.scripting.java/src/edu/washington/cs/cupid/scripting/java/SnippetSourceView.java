@@ -1,5 +1,6 @@
 package edu.washington.cs.cupid.scripting.java;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.tools.DiagnosticCollector;
@@ -72,6 +73,10 @@ public class SnippetSourceView extends Composite {
 			}
 		});	
 	}
+	
+	public void setContent(String content){
+		fViewer.getDocument().set(content);
+	}
 
 	private void tryCompile(){
 		if (inputType == null || outputType == null) return;
@@ -86,6 +91,13 @@ public class SnippetSourceView extends Composite {
 		}
 	}
 	
+	/**
+	 * Set the input type and expected output type for the code snippet. Unconfigures
+	 * content assistance for the snippet.
+	 * @param inputType the input type
+	 * @param outputType the output type
+	 * @see {@link SnippetSourceView#enableContentAssist()}
+	 */
 	public void setSnippetType(TypeToken<?> inputType, TypeToken<?> outputType){
 		Preconditions.checkNotNull(inputType);
 		Preconditions.checkNotNull(outputType);
@@ -97,6 +109,11 @@ public class SnippetSourceView extends Composite {
 		tryCompile();
 	}
 	
+	/**
+	 * Enables content assistance for the code snippet.
+	 * @throws Exception if an error occurred when enabling content assist
+	 * @see {@link SnippetSourceView#setSnippetType(TypeToken, TypeToken)}
+	 */
 	public void enableContentAssist() throws Exception{
 		this.setupSnippetContext();
 		this.setupContentAssist();		
@@ -120,7 +137,7 @@ public class SnippetSourceView extends Composite {
 		});
 	}
 
-	private void setupSnippetContext() throws CoreException{
+	private void setupSnippetContext() throws CoreException, IOException, ClassNotFoundException{
 		IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
 		String snippetName = "Snippet" + (snippetId++);
 		

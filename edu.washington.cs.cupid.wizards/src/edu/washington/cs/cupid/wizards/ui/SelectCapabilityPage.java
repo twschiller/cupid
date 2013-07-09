@@ -7,6 +7,7 @@ import javax.tools.JavaFileObject;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -18,7 +19,9 @@ import org.eclipse.swt.widgets.Label;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.linear.ILinearCapability;
+import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
+import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.scripting.java.SnippetSourceView;
 import edu.washington.cs.cupid.scripting.java.SnippetSourceView.ModifyListener;
 import edu.washington.cs.cupid.wizards.internal.Activator;
@@ -28,25 +31,36 @@ public class SelectCapabilityPage extends WizardPage {
 
 	public interface SelectListener{
 		public void onSelectType(TypeToken<?> type);
-		public void onSelectCapability(ILinearCapability<?,?> capability);
 	}
 	
-	private TypeToken<?> inputType;
+	private TypeToken<?> inputType = null;
+	private ICapability capability = null;
+	
 	private final TypeToken<?> outputType;
+	
+	private Combo cCapability; 
 	
 	private Composite container = null;
 	private SnippetSourceView fViewer;
 	private Class<?> startType;
 	private final List<SelectListener> listeners = Lists.newArrayList();
 	
+	private boolean suppressEvents = true;
+	
+	/**
+	 * List of currently available predicates for the specified input type.
+	 */
+    private List<ICapability> compatible;
+	
 	protected SelectCapabilityPage(Class<?> startType,  TypeToken<?> outputType) {
-		super("Select");
+		super("Select");	
 		this.setTitle("Define formatting predicate for " + startType.getSimpleName());
 		this.setMessage("Define a predicate for the formatting rule");
 		this.setPageComplete(false);
 		this.startType = startType;
 		this.inputType = TypeToken.of(startType);
 		this.outputType = outputType;
+		this.updateCompatible();
 	}
 	
 	public void addSelectListener(SelectListener listener){
@@ -76,8 +90,21 @@ public class SelectCapabilityPage extends WizardPage {
 		selectCapabilityLbl.setText("Select Capability (Optional):");
 		selectCapabilityLbl.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 		
-		Combo matching = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY); 
-		matching.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		cCapability = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY); 
+		cCapability.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		
+		cCapability.addModifyListener(new org.eclipse.swt.events.ModifyListener() {	
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (!compatible.isEmpty()) {
+					if (cCapability.getSelectionIndex() > 0){
+						setCapability(compatible.get(cCapability.getSelectionIndex() - 1));			
+					}else{
+						setCapability(null);
+					}
+				}
+			}
+		});
 		
 		Label writeRuleLbl = new Label(container, SWT.LEFT);
 		writeRuleLbl.setText("Formatting condition expression:");
@@ -90,9 +117,9 @@ public class SelectCapabilityPage extends WizardPage {
 		
 		enableContentAssist();
 		
-		GridData d = new GridData(SWT.FILL, SWT.FILL, true, true);
-		d.horizontalSpan = 2;
-		fViewer.setLayoutData(d);
+		GridData dViewer = new GridData(SWT.FILL, SWT.FILL, true, true);
+		dViewer.horizontalSpan = 2;
+		fViewer.setLayoutData(dViewer);
 		
 		fViewer.addModifyListener(new SnippetListener());
 		
@@ -107,8 +134,10 @@ public class SelectCapabilityPage extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// NO OP
 			}
-			
 		});
+		
+		updateCapabilityList();
+		suppressEvents = false;
 	}
 	
 	private void enableContentAssist(){
@@ -135,22 +164,77 @@ public class SelectCapabilityPage extends WizardPage {
 		}
 	}
 	
+	/**
+	 * Add an entry to the combo box, and select it.
+	 * @param combo the combo box
+	 * @param text the text to add and select
+	 */
+	private static void addAndSet(final Combo combo, final String text) {
+		combo.add(text);
+		combo.setText(text);
+	}
+	
+	private void updateCapabilityList(){
+		cCapability.removeAll();
+		
+		if (compatible == null || compatible.isEmpty()) {
+			cCapability.add("-- No Available Capabilities --");
+		} else {
+			addAndSet(cCapability, "-- Select Transformer Capability --");
+			
+			for (ICapability c : compatible) {
+				if (this.capability == c) {
+					addAndSet(cCapability, c.getName());
+				} else {
+					cCapability.add(c.getName());
+				}
+			}
+		}
+	}
+	
+	private void updateCompatible(){
+		compatible = Lists.newArrayList();
+		for (ICapability c : CupidPlatform.getCapabilityRegistry().getCapabilities(inputType)){
+			if (!CapabilityUtil.isGenerator(c) && CapabilityUtil.isLinear(c)){
+				compatible.add(c);
+			}
+		}
+	}
+	
 	private void setInputType(String qualifiedName){
 		try {
 			inputType = TypeToken.of(Class.forName(qualifiedName));
 			setTitle("Define formatting predicate for " + inputType.getRawType().getSimpleName());
-			fViewer.setSnippetType(inputType, outputType);
-			
-			for (SelectListener listener : listeners){
-				listener.onSelectType(inputType);
-			}
-			
-			enableContentAssist();
+			updateCompatible();
+			updateCapabilityList();
 		} catch (ClassNotFoundException ex) {
 			Activator.getDefault().logError("Error loading type " + qualifiedName, ex);
 			setErrorMessage("Error loading type " + qualifiedName);
 			setPageComplete(false);
 		}
+	}
+	
+	private void setCapability(ICapability capability){
+		this.capability = capability;
+		
+		if (capability == null){
+			setSnippetInputType(inputType);	
+		}else{
+			TypeToken<?> capabilityOutput = CapabilityUtil.singleOutput(capability).getType();
+			setSnippetInputType(capabilityOutput);
+		}
+	}
+	
+	private void setSnippetInputType(TypeToken<?> type){
+		fViewer.setSnippetType(type, outputType);
+		
+		if (!suppressEvents){
+			for (SelectListener listener : listeners){
+				listener.onSelectType(inputType);
+			}			
+		}
+		
+		enableContentAssist();
 	}
 
 	private static String cleanMsg(String msg){
@@ -167,5 +251,9 @@ public class SelectCapabilityPage extends WizardPage {
 
 	public void performCleanup() {
 		fViewer.performCleanup();
+	}
+	
+	public ICapability getCapability(){
+		return capability;
 	}
 }

@@ -8,6 +8,7 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -21,6 +22,7 @@ import org.eclipse.core.runtime.PlatformObject;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 public class SnippetEvalManager {
@@ -75,6 +77,22 @@ public class SnippetEvalManager {
 		}	
 	}
 	
+	private Set<Class<?>> getDependentClasses(Class<?> clazz){
+		Set<Class<?>> result = Sets.newHashSet();
+		
+		Class<?> current = clazz;
+		
+		while (current != null){
+			result.add(current);
+			for (Class<?> i : clazz.getInterfaces()){
+				result.add(i);
+			}
+			current = current.getSuperclass();
+		}
+		
+		return result;
+	}
+	
 	private CompilationStatus compile(JavaCompiler compiler, JavaFileManager fileManager, TypeToken<?> inputType, TypeToken<?> outputType, String snippet){
 		int id = counter++;
 		
@@ -99,8 +117,10 @@ public class SnippetEvalManager {
         List<JavaFileObject> jfiles = Lists.newArrayList();
         jfiles.add(new CharSequenceJavaFileObject(fullName, src));
 
-        List<String> jars = Lists.newArrayList();
-        jars.add(findJar(inputType.getRawType()));
+        Set<String> jars = Sets.newHashSet();
+        for (Class<?> c : getDependentClasses(inputType.getRawType())){
+        	jars.add(findJar(c));
+        }
         jars.add(findJar(IResource.class));
         jars.add(findJar(PlatformObject.class));
         

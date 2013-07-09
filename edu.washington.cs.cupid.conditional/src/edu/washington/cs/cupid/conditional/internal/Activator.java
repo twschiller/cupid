@@ -133,16 +133,18 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	 * @param rule the formatting rule.
 	 * @return the predicate capability for <code>rule</code>
 	 * @throws NoSuchCapabilityException iff the rule has no associated capability id, or no capability is available with the given id
-	 * @throws MalformedCapabilityException iff the corresponding available capability is not a predicate 
-     * (i.e., does not have a boolean return value)
+	 * @throws MalformedCapabilityException iff the corresponding available capability has a mismatched type
+	 * @throws ClassNotFoundException iff the input type is not found
 	 */
-	public static ICapability findPredicate(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException {
+	public static ICapability findRuleCapability(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException, ClassNotFoundException {
 		Preconditions.checkNotNull(rule.getCapabilityId(), "Formatting rule must be associated with a capability");
 		
+		TypeToken<?> inputType = TypeManager.forName(rule.getQualifiedType());
 		ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 
 		if (CapabilityUtil.isLinear(capability) 
-			&& TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), CapabilityUtil.singleOutput(capability).getType())){
+				&& !CapabilityUtil.isGenerator(capability)
+				&& TypeManager.isJavaCompatible(CapabilityUtil.unaryParameter(capability).getType(), inputType)){
 			
 			return capability;
 		} else {

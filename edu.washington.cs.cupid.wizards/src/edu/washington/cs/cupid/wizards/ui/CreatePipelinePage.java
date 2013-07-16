@@ -504,7 +504,9 @@ public class CreatePipelinePage extends WizardPage{
 	public DynamicSerializablePipeline createPipeline(){
 		List<Serializable> descriptors = Lists.newArrayList();
 		for (Object x : current){
-			if (x instanceof Serializable){
+			if (x instanceof ICapability && CapabilityUtil.isSerializable((ICapability) x)){
+				descriptors.add((Serializable) x);
+			}else if (!(x instanceof ICapability) && x instanceof Serializable){
 				descriptors.add((Serializable) x);
 			}else{
 				descriptors.add(((ICapability)x).getName());

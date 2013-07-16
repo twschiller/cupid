@@ -37,6 +37,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -159,6 +160,11 @@ public class InspectorView extends ViewPart {
 				} else if (row instanceof CapabilityRow) {
 					CapabilityRow x = (CapabilityRow) row;
 					if (x.finished && x.status.getCode() == Status.OK) {
+						
+						if (x.value == null){
+							throw new NullPointerException("Capability '" + x.capability.getName() + "' returned null");
+						}
+						
 						detail.setText(x.value.toString());
 					}
 				}
@@ -353,6 +359,12 @@ public class InspectorView extends ViewPart {
 							finished = true;
 							status = (CapabilityStatus) event.getResult();
 							value = CapabilityUtil.singleOutputValue(capability, status);
+							
+							if (status.isOK() && value == null){
+								value = CapabilityUtil.singleOutputValue(capability, status);
+								throw new RuntimeException("Capability '" + capability.getName() + "' returned null");
+							}
+							
 							updateStatus("Done");
 						}
 					}
@@ -688,10 +700,13 @@ public class InspectorView extends ViewPart {
 	 * @param row the row to update
 	 */
 	private void update(final CapabilityRow row) {
-		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				synchronized (viewer) {
+		Display display = PlatformUI.getWorkbench().getDisplay();
+
+		// does this need synchronization?
+		if (!display.isDisposed()){
+			display.asyncExec(new Runnable() {
+				@Override
+				public void run() {
 					if (!viewer.getTree().isDisposed()) {	
 						if (row.finished) {
 							viewer.refresh(row);
@@ -700,7 +715,8 @@ public class InspectorView extends ViewPart {
 						}
 					}
 				}
-			}
-		});
+			});
+		}	
+
 	}
 }

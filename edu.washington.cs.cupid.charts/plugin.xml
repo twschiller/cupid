@@ -28,5 +28,36 @@
             file="contexts.xml">
       </contexts>
    </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.charts.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.chart.internal.CreateHistogramAction"
+               enablesFor="1"
+               id="edu.washington.cs.cupid.charts.CreateHistogram"
+               label="Create Histogram"
+               menubarPath="cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.chart.internal.CreatePieChartAction"
+               id="edu.washington.cs.cupid.charts.CreatePieChart"
+               label="Create Pie Chart"
+               menubarPath="cupidGroup">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="edu.washington.cs.cupid.chart.internal.IsNumericTester"
+            id="edu.washington.cs.cupid.charts.isNumericTester"
+            namespace="edu.washington.cs.cupid.capability"
+            properties="isNumeric"
+            type="edu.washington.cs.cupid.capability.ICapability">
+      </propertyTester>
+   </extension>
 
 </plugin>

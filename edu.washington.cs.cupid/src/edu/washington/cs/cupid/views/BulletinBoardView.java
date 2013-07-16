@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.views;
 
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -28,6 +30,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 
 import edu.washington.cs.cupid.CupidPlatform;
@@ -213,6 +216,13 @@ public final class BulletinBoardView extends ViewPart {
 				return CapabilityUtil.COMPARE_NAME.compare((ICapability) lhs, (ICapability) rhs);
 			}
 		});
+		
+		MenuManager menuManager = new MenuManager();
+		menuManager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+		viewer.getTable().setMenu(menuManager.createContextMenu(viewer.getTable()));
+		
+		getSite().registerContextMenu(menuManager, viewer);
+		getSite().setSelectionProvider(viewer);
 	}
 	
 	@Override

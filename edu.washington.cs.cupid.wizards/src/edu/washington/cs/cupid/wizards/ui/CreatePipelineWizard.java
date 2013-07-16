@@ -45,7 +45,7 @@ public class CreatePipelineWizard extends Wizard{
 					.addData("length", Integer.toString(page.getPipelineLength()))
 					.create());
      		return true;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			String msg = "Error saving capability " + pipe.getName() + ": " + e.getMessage();
 					
 			ErrorDialog.openError(

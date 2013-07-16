@@ -6,13 +6,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -23,15 +20,12 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
-import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
-import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.select.CupidSelectionService;
 import edu.washington.cs.cupid.select.ICupidSelectionListener;
@@ -69,62 +63,37 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 		Composite inner = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
 		frame = SWT_AWT.new_Frame(inner);
 		
-		refreshCapabilities();
-		
-		CupidPlatform.getCapabilityRegistry().addChangeListener(new ICapabilityChangeListener(){
-			@Override
-			public void onChange(ICapabilityPublisher publisher) {
-				refreshCapabilities();
-			}
-		});
-		
 		setPartName(getName());
-		setContentDescription("Please select a capability.");
+		setContentDescription("No capability provided.");
 	}
+	
+	public void setCapability(ICapability capability) throws IllegalArgumentException{
 
-	/**
-	 * Add the list of available capabilities to the view's menu
-	 */
-	private void refreshCapabilities(){
-		Display.getDefault().asyncExec(new Runnable(){
+		Display.getCurrent().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				synchronized(ChartViewPart.this){
-					//http://wiki.eclipse.org/FAQ_How_do_I_add_actions_to_a_view's_menu_and_toolbar%3F
-					final IActionBars actionBars = getViewSite().getActionBars();
-					final IMenuManager dropDownMenu = actionBars.getMenuManager();
-					
-					dropDownMenu.removeAll();
-					
-					for (final ICapability capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
-						if (CapabilityUtil.isLinear(capability)){
-							TypeToken<?> returnType = CapabilityUtil.singleOutput(capability).getType();
-							
-							for (TypeToken<?> type : accepts()){
-								if (TypeManager.isJavaCompatible(type, returnType)){
-									dropDownMenu.add(new Action(capability.getName()){
-										@Override
-										public void run() {
-											ChartViewPart.this.capability = capability;
-											ChartViewPart.this.setPartName(getName() + ": " + capability.getName());
-											ChartViewPart.this.setContentDescription(capability.getDescription());
-										
-											CupidDataCollector.record(
-													CupidEventBuilder.selectCapabilityEvent(ChartViewPart.this.getClass(), capability, Activator.getDefault())
-													.create());
-										}
-									});
-									break;
-								}
-							}	
-						}
-					}
-					
-					dropDownMenu.markDirty();
-					actionBars.updateActionBars();
-				}
+				frame.removeAll();
 			}
 		});
+		
+		if (CapabilityUtil.isLinear(capability)){
+			boolean ok = false;
+			TypeToken<?> returnType = CapabilityUtil.singleOutput(capability).getType();
+			
+			for (TypeToken<?> type : accepts()){
+				if (TypeManager.isJavaCompatible(type, returnType)){
+					ok = true;
+				}
+			}
+			
+			if (!ok) throw new IllegalArgumentException("Output type " + returnType + " not supported");
+
+			this.capability = capability;		
+			this.setPartName(getName() + ": " + capability.getName());
+			this.setContentDescription(capability.getDescription());
+		}else{
+			throw new IllegalArgumentException("Capability " + capability.getName() + " is not single input/ouput");
+		}
 	}
 	
 	private void show(Object [] all){

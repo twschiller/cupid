@@ -22,7 +22,7 @@ public class HistogramView extends ChartViewPart{
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
-	public static final String ID = "edu.washington.cs.cupid.chart.views.HistogramView";
+	public static final String ID = "edu.washington.cs.cupid.chart.HistogramView";
 	
 	/**
 	 * The constructor.

@@ -163,7 +163,7 @@ public final class CupidSelectionService extends NullPartListener {
 			} 
 			
 			seen = e.time;
-			System.out.println("Part: " + Integer.toHexString(part.hashCode()) + " Detail:" + e.stateMask + " Time:" + e.time);
+			//System.out.println("Part: " + Integer.toHexString(part.hashCode()) + " Detail:" + e.stateMask + " Time:" + e.time);
 			
 			if (e.widget instanceof Table) {
 				Table table = (Table) e.widget;

@@ -36,4 +36,10 @@ public class NoSuchCapabilityException extends Exception {
 	public final String getCapabilityId() {
 		return capabilityId;
 	}
+
+	@Override
+	public String getMessage() {
+		return "No such capability " + capabilityId;
+	}
+	
 }

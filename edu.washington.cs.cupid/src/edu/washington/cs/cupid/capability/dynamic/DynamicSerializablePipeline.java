@@ -11,6 +11,9 @@
 package edu.washington.cs.cupid.capability.dynamic;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +25,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityJob;
@@ -30,6 +34,7 @@ import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.OptionalParameter;
+import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 
@@ -93,11 +98,63 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 				sources.get(0).put(input, copy);
 			}
 			
-			output = CapabilityUtil.singleOutput(bind.get(bind.size()-1));
-		
+			output = calculateOutputType(bind);
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}	
+	}
+	
+	
+	/**
+	 * Returns <tt>inToken</tt> with the type variable instantiated
+	 * @param outToken
+	 * @param inToken
+	 * @return
+	 */
+	private static Type resolveTypeVariable(TypeToken<?> outToken, TypeToken<?> inToken, TypeVariable<?> v){
+		ParameterizedType pIn = (ParameterizedType) inToken.getType();
+		
+		for (TypeToken<?> s : outToken.getTypes()){
+			if (s.getRawType() == inToken.getRawType()){
+				ParameterizedType pOut = (ParameterizedType) s.getType();
+				
+				for (int i = 0; i < pIn.getActualTypeArguments().length; i++){
+					if (pIn.getActualTypeArguments()[i].equals(v)){
+						return (pOut.getActualTypeArguments()[i]);
+					}
+				}
+				
+				throw new RuntimeException("Error locating type variable " + v.getName());
+			}
+		}
+		
+		throw new RuntimeException("Output type " + outToken + " not compatible with input type " + inToken);
+	}
+	
+	private static IOutput<?> calculateOutputType(List<ICapability> pipe){
+		ICapability last = pipe.get(pipe.size()-1);
+		IOutput<?> lastOut = CapabilityUtil.singleOutput(last);
+		IParameter<?> lastIn = CapabilityUtil.unaryParameter(last);
+		Type tLastOut = lastOut.getType().getType();
+		
+		TypeToken<?> resultType = lastOut.getType();
+		
+		if (tLastOut instanceof Class){
+			return lastOut;
+		}else if (tLastOut instanceof TypeVariable){
+			IOutput<?> previous = CapabilityUtil.singleOutput(pipe.get(pipe.size()-2));
+			resultType = TypeToken.of(resolveTypeVariable(previous.getType(), lastIn.getType(), (TypeVariable<?>) tLastOut));
+		}else if (tLastOut instanceof ParameterizedType){
+			for (Type t : ((ParameterizedType) tLastOut).getActualTypeArguments()){
+				if (!(t instanceof Class)){
+					throw new RuntimeException("Support for type variables in final capability output not supported");
+				}
+			}
+		}else{
+			throw new RuntimeException("Unexpected output type for capability " + last.getName());
+		}
+	
+		return new Output(lastOut.getName(), resultType);
 	}
 	
 	private List<ICapability> inorder() throws NoSuchCapabilityException {
@@ -179,7 +236,7 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 						}
 					}
 					return CapabilityStatus.makeOk(
-							CapabilityUtil.packSingleOutputValue(resolved.get(resolved.size()-1), 
+							CapabilityUtil.packSingleOutputValue(DynamicSerializablePipeline.this, 
 							result));
 				} catch (Throwable ex) {
 					return CapabilityStatus.makeError(ex);

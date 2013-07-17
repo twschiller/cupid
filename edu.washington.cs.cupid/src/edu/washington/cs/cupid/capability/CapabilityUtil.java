@@ -57,7 +57,9 @@ public class CapabilityUtil {
 	 * @throws IllegalArgumentException if the capability has either zero or more than one output
 	 */
 	public static IOutput<?> singleOutput(ICapability capability){
-		if (capability.getOutputs().isEmpty()){
+		if (capability == null){
+			throw new NullPointerException("capability cannot be null");
+		} else if (capability.getOutputs().isEmpty()){
 			throw new IllegalArgumentException("Capability has no outputs");
 		} else if (capability.getOutputs().size() > 1) {
 			throw new IllegalArgumentException("Capability has multiple outputs");

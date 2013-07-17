@@ -196,14 +196,18 @@ public class MappingPage extends WizardPage {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				valueSet = selectedCapability(valueTree);
-				valueLinks = links(getElementType(valueSet));
-				
+
 				valueLinkCombo.removeAll();
-				
 				valueLinkCombo.add(VALUE_SENTINAL);
-				for (Method m : valueLinks){
-					valueLinkCombo.add(m.getName());
+				
+				if (valueSet != null){
+					valueLinks = links(getElementType(valueSet));
+
+					for (Method m : valueLinks){
+						valueLinkCombo.add(m.getName());
+					}
 				}
+				
 				valueLinkCombo.setText(VALUE_SENTINAL);
 			}
 		});
@@ -249,6 +253,12 @@ public class MappingPage extends WizardPage {
 		valueTree.refresh();
 	}
 	
+	/**
+	 * Returns the capability selected from the capability listing; returns <tt>null</tt>
+	 * if no element is selected.
+	 * @param viewer the capability viewer
+	 * @return the capability selected from the capability listing, or <tt>null</tt> if no element is selected
+	 */
 	private ISerializableCapability selectedCapability(TreeViewer viewer){
 		Object selected = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 	
@@ -279,6 +289,9 @@ public class MappingPage extends WizardPage {
 	}
 	
 	private TypeToken<?> getElementType(ICapability capability){
+		if (capability == null){
+			throw new NullPointerException("capability cannot be null");
+		}
 		ParameterizedType type = (ParameterizedType) CapabilityUtil.singleOutput(capability).getType().getType();
 		Class<?> param = (Class<?>) type.getActualTypeArguments()[0];
 		return TypeToken.of(param);
@@ -456,12 +469,20 @@ public class MappingPage extends WizardPage {
 		}
 	}
 
+	/**
+	 * Returns <tt>true</tt> iff the given value generator capability is compatible with the currently
+	 * select key object or capability. The capability is valid if it is a generator, or if it has a single
+	 * required input that is compatible with the input type of the key generator.
+	 * @param generator the generator capability
+	 * @return <tt>true</tt> iff the given value generator capability is compatible with the currently
+	 * select key object or capability
+	 */
 	private boolean isValidValue(ICapability generator){
 		if (keyAsType){
 			return CapabilityUtil.isGenerator(generator);
 		}else if (keySet != null){
 			return CapabilityUtil.isGenerator(generator) || 
-				   TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet));
+				   TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet).getType());
 		}else{
 			return true;
 		}

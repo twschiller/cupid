@@ -92,15 +92,15 @@ public class CapabilityMapping<I, K, V> extends AbstractMapping<I, K, V> impleme
 				try{
 					monitor.beginTask(getName(), 30);
 					
-					CapabilityJob<?> keySubtask = inputGenerator.getJob(CapabilityUtil.packUnaryInput(getCapability(), getInput()));
-					CapabilityJob<?> valueSubtask = valueGenerator.getJob(CapabilityUtil.packUnaryInput(getCapability(), getInput()));
+					CapabilityJob<?> keySubtask = inputGenerator.getJob(CapabilityUtil.packUnaryInput(inputGenerator, getInput()));
+					CapabilityJob<?> valueSubtask = valueGenerator.getJob(CapabilityUtil.packUnaryInput(valueGenerator, getInput()));
 
 					monitor.subTask("Generating Keys");
 					keySubtask.schedule();
 					keySubtask.join();
 					
 					CapabilityStatus keyStatus = (CapabilityStatus) keySubtask.getResult();
-					if (!keyStatus.isOK()){
+					if (!keyStatus.isOK() || keyStatus.getException() != null){
 						throw keyStatus.getException();
 					}
 					
@@ -112,7 +112,7 @@ public class CapabilityMapping<I, K, V> extends AbstractMapping<I, K, V> impleme
 					valueSubtask.join();
 					
 					CapabilityStatus status = (CapabilityStatus) valueSubtask.getResult();
-					if (!status.isOK()){
+					if (!status.isOK() || status.getException() != null){
 						throw status.getException();
 					}
 					

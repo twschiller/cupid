@@ -1,4 +1,5 @@
-package edu.washington.cs.cupid.chart.internal;
+package edu.washington.cs.cupid.mapview.internal;
+
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
@@ -12,14 +13,14 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.chart.HistogramView;
+import edu.washington.cs.cupid.mapview.MapView;
 
-public class CreateHistogramAction implements IObjectActionDelegate {
+public class ShowMappingAction implements IObjectActionDelegate {
 
 	private ISelection selection;
 	private Shell shell;
 	
-	public CreateHistogramAction() {
+	public ShowMappingAction() {
 		super();
 	}
 
@@ -40,17 +41,17 @@ public class CreateHistogramAction implements IObjectActionDelegate {
 			if (values.size() == 1){
 				ICapability capability = (ICapability) values.getFirstElement();
 				
-				String msg = "Error creating histogram for capability: " + capability.getName();
+				String msg = "Error creating mapping view for capability: " + capability.getName();
 				
 				try {
-					HistogramView h = (HistogramView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistogramView.ID);
+					MapView h = (MapView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(MapView.ID);
 					h.setCapability(capability); 
 				} catch (IllegalArgumentException e){
-					ErrorDialog.openError(shell, "Error creating histogtam", msg,
+					ErrorDialog.openError(shell, "Error creating mapping view", msg,
 							new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 					Activator.getDefault().logError(msg, e);	
 				} catch (Exception e) {
-					ErrorDialog.openError(shell, "Error creating histogtam", msg,
+					ErrorDialog.openError(shell, "Error creating mapping view", msg,
 							new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 					Activator.getDefault().logError(msg, e);
 				}

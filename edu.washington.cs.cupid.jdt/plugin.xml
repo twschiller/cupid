@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="edu.washington.cs.plse.cupid.preferences"
+            category="edu.washington.cs.cupid.preferences"
             class="edu.washington.cs.cupid.jdt.preferences.JdtPreferencePage"
             id="edu.washington.cs.cupid.jdt.preferences.JdtPreferencePage"
             name="Java (JDT)">

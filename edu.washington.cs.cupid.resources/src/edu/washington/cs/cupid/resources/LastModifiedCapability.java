@@ -31,7 +31,6 @@ public final class LastModifiedCapability extends LinearCapability<IFile, Date> 
 	public LastModifiedCapability() {
 		super(
 				"Last Modified",
-				"edu.washington.cs.cupid.resources.lastmodified",
 				"The file's last modified date",
 				IFile.class, Date.class,
 				Flag.PURE);

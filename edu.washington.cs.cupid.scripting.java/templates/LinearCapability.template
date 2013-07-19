@@ -10,7 +10,6 @@ public final class ${CLASS} extends LinearCapability<${INPUT_TYPE}, ${OUTPUT_TYP
 
         public ${CLASS}() {
                 super("${NAME}",
-                      "${UNIQUE_ID}",
                       "${DESCRIPTION}",
                       ${INPUT_TYPE}.class, ${OUTPUT_TYPE}.class,
                       Flag.PURE);

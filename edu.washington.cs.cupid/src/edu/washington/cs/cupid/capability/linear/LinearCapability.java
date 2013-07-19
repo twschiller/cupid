@@ -26,7 +26,7 @@ public abstract class LinearCapability<I, V> extends GenericLinearCapability<I, 
 		this.outputType = outputType;
 	}
 	
-	public LinearCapability(String name, String uniqueId,
+	public LinearCapability(String name,
 			String description, 
 			Class<I> inputType, Class<V> outputType,
 			Flag... flags) {

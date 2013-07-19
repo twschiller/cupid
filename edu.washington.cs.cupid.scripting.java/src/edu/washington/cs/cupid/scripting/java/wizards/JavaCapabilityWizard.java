@@ -60,13 +60,18 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
 public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	private JavaCapabilityWizardPage page;
 	private ISelection selection;
-
+	
 	/**
 	 * Construct a wizard for creating a new Java script capability.
 	 */
-	public JavaCapabilityWizard() {
+	public JavaCapabilityWizard(ISelection selection) {
 		super();
-		setNeedsProgressMonitor(true);
+		this.selection = selection;
+		this.setNeedsProgressMonitor(true);
+	}
+	
+	public JavaCapabilityWizard(){
+		this(null);
 	}
 	
 	@Override
@@ -83,7 +88,6 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	public boolean performFinish() {
 		final String name = page.getCapabilityName();
 		final String description = page.getCapabilityDescription();
-		final String id = page.getUniqueId();
 		
 		final Class<?> parameterType;
 		final Class<?> returnType;
@@ -101,7 +105,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		IRunnableWithProgress op = new IRunnableWithProgress() {
 			public void run(final IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					doFinish(name, id, description, parameterType, returnType, classpath,  monitor);
+					doFinish(name, description, parameterType, returnType, classpath,  monitor);
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {
@@ -137,12 +141,11 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	 * the editor on the newly created file.
 	 * @throws IOException 
 	 */
-	private void doFinish(final String name, final String id, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
+	private void doFinish(final String name, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
 			
 		CupidEventBuilder event = 
 				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), CupidScriptingPlugin.getDefault())
 				.addData("name", name)
-				.addData("id", id)
 				.addData("parameterType", parameterType.getName())
 				.addData("returnType", returnType.getName());
 		CupidDataCollector.record(event.create());
@@ -156,7 +159,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		final IFile file = cupid.getFolder("src").getFile(new Path(className + ".java"));
 		
-		file.create(openContents(name, id, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
+		file.create(openContents(name, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
 	
 		IJavaProject proj = JavaCore.create(cupid);
 		List<IClasspathEntry> cp = Lists.newArrayList(proj.getRawClasspath());
@@ -184,7 +187,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		monitor.done();
 	}
 	
-	private InputStream openContents(final String name, final String id, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
+	private InputStream openContents(final String name, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
 		String separator = System.getProperty("line.separator");
 		
 		Bundle bundle = CupidScriptingPlugin.getDefault().getBundle();
@@ -198,7 +201,6 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		model.put("CLASS", formClassName(name));
 		model.put("NAME", name);
-		model.put("UNIQUE_ID", id);
 		model.put("DESCRIPTION", description);
 		model.put("INPUT_TYPE", paramType.getSimpleName());
 		model.put("OUTPUT_TYPE", returnType.getSimpleName());

@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.hg"
       label="Cupid MercurialEclipse Capabilities"
-      version="1.0.3"
+      version="1.1.0"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"

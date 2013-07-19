@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.core"
       label="Cupid for Eclipse"
-      version="1.0.7"
+      version="1.1.0"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"
@@ -249,6 +249,14 @@ its rights to a jury trial in any resulting litigation.
 
    <includes
          id="edu.washington.cs.cupid.license"
+         version="0.0.0"/>
+
+   <includes
+         id="edu.washington.cs.cupid.scripting.java"
+         version="0.0.0"/>
+
+   <includes
+         id="edu.washington.cs.cupid.conditional"
          version="0.0.0"/>
 
    <requires>

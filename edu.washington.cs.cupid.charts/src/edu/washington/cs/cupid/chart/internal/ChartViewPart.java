@@ -8,8 +8,14 @@ import java.util.concurrent.ConcurrentMap;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -36,10 +42,14 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
 public abstract class ChartViewPart extends ViewPart implements ICupidSelectionListener {
 
 	protected ICapability capability;
+	protected ICapability.IOutput<?> output;
 	
 	protected ConcurrentMap<Object, Object> results;
 	
 	protected Frame frame;
+	
+	private Composite cSelectOutput;
+	private Combo cOutput;
 	
 	protected abstract void buildChart();
 	
@@ -60,8 +70,42 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 	public void createPartControl(Composite parent) {
 		CupidSelectionService.addListener(this);
 		
-		Composite inner = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
-		frame = SWT_AWT.new_Frame(inner);
+		parent.setLayout(new GridLayout());
+		
+		Composite inner = new Composite(parent, SWT.NONE);
+		inner.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		inner.setLayout(new GridLayout());
+		
+		cSelectOutput = new Composite(inner, SWT.NONE);
+		GridLayout lSelectOutput = new GridLayout();
+		lSelectOutput.numColumns = 2;
+		cSelectOutput.setLayout(lSelectOutput);
+		
+		Label lOutput = new Label(cSelectOutput, SWT.LEFT);
+		lOutput.setText("Select Output:");
+		cOutput = new Combo(cSelectOutput, SWT.DROP_DOWN | SWT.READ_ONLY);
+		cOutput.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+	
+		cOutput.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (capability != null){
+					try{
+						output = CapabilityUtil.findOutput(capability, cOutput.getText());
+					}catch(Exception ex){
+						// NO OP
+					}
+				}
+			}
+		});
+		
+		cSelectOutput.setVisible(false);
+		
+		Composite cFrame = new Composite(inner, SWT.EMBEDDED | SWT.NO_BACKGROUND);
+		cFrame.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		frame = SWT_AWT.new_Frame(cFrame);
+			
+		parent.pack();
 		
 		setPartName(getName());
 		setContentDescription("No capability provided.");
@@ -76,23 +120,42 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 			}
 		});
 		
-		if (CapabilityUtil.isLinear(capability)){
-			boolean ok = false;
-			TypeToken<?> returnType = CapabilityUtil.singleOutput(capability).getType();
+		if (CapabilityUtil.isUnary(capability)){
 			
-			for (TypeToken<?> type : accepts()){
-				if (TypeManager.isJavaCompatible(type, returnType)){
-					ok = true;
+			List<ICapability.IOutput<?>> compatible = Lists.newArrayList();
+			
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
+				for (TypeToken<?> type : accepts()){
+					if (TypeManager.isJavaCompatible(type, output.getType())){
+						compatible.add(output);
+					}
 				}
 			}
 			
-			if (!ok) throw new IllegalArgumentException("Output type " + returnType + " not supported");
-
-			this.capability = capability;		
+			if (compatible.isEmpty()){
+				throw new IllegalArgumentException("Capability '" + capability.getName() + "' has no compatible outputs");
+			}
+			
+			this.capability = capability;	
+			this.output = compatible.get(0);
+			
+			if (compatible.size() == 1){
+				this.cSelectOutput.setVisible(false);
+			}else{
+				this.cSelectOutput.setVisible(true);
+			}
+			
+			this.cOutput.removeAll();
+			for (ICapability.IOutput<?> o : compatible){
+				this.cOutput.add(o.getName());
+			}
+			this.cOutput.select(0);
+			
 			this.setPartName(getName() + ": " + capability.getName());
 			this.setContentDescription(capability.getDescription());
+			
 		}else{
-			throw new IllegalArgumentException("Capability " + capability.getName() + " is not single input/ouput");
+			throw new IllegalArgumentException("Capability " + capability.getName() + " is not single input");
 		}
 	}
 	
@@ -119,8 +182,8 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 					public void done(IJobChangeEvent event) {
 						CapabilityStatus status = (CapabilityStatus) event.getResult();
 						
-						Object result = status.value() != null 
-								? CapabilityUtil.singleOutputValue(capability, status) 
+						Object result = status.value() != null
+								? status.value().getOutput(output)
 								: status.getException();
 						
 						results.put(x, result);

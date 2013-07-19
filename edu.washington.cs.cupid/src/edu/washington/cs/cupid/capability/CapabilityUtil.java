@@ -77,6 +77,15 @@ public class CapabilityUtil {
 		return capability.getOutputs().size() == 1;
 	}
 	
+	public static IOutput<?> findOutput(ICapability capability, String outputName){
+		for (IOutput<?> output : capability.getOutputs()){
+			if (outputName.equals(output.getName())){
+				return output;
+			}
+		}
+		throw new RuntimeException("Output '" + outputName + "' not found for capability '" + capability.getName() + "'");
+	}
+	
 	/**
 	 * Returns an {@link ICapabilityOutputs} containing the {@code value} for the capability's
 	 * only output.

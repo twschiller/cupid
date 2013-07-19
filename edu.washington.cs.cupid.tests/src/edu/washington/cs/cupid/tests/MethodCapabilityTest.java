@@ -21,7 +21,6 @@ public class MethodCapabilityTest extends LinearCapability<IMethod, Boolean> {
 	public MethodCapabilityTest(){
 		super(
 				"Method is foo",
-				"edu.washington.cs.cupid.tests.methods.foo",
 				"true iff the method is called foo",
 				IMethod.class,
 				Boolean.class,

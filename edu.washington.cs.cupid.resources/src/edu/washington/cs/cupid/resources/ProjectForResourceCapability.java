@@ -30,7 +30,6 @@ public final class ProjectForResourceCapability extends LinearCapability<IResour
 	public ProjectForResourceCapability() {
 		super(
 				"Containing Project",
-				"edu.washington.cs.cupid.resources.project",
 				"The project that contains the resource",
 				IResource.class, IProject.class,
 				Flag.PURE);

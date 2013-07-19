@@ -26,7 +26,6 @@ public class ExceptionCapability extends LinearCapability<IResource, IResource> 
 	public ExceptionCapability(){
 		super(
 				"Exception",
-				"edu.washington.cs.cupid.tests.exception",
 				"Throws an exception",
 				IResource.class, IResource.class,
 				Flag.PURE, Flag.TRANSIENT);

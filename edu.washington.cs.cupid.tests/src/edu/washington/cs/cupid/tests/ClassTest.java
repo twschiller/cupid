@@ -19,7 +19,6 @@ public class ClassTest extends LinearCapability<Object, String>  {
 	public ClassTest(){
 		super(
 				"Qualified Name",
-				"edu.washington.cs.cupid.tests.class",
 				"Returns the qualified name of an object",
 				Object.class, String.class,
 				Flag.PURE);

@@ -18,7 +18,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
- * The identity capability that returns after {@link #RUNTIME_IN_MINUTES} minutes.
+ * The identity capability that returns after {@link #RUNTIME_IN_SECONDS} minutes.
  * Updates the progress monitor every minute.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
@@ -26,11 +26,9 @@ public class LongRunningCapability extends LinearCapability<IResource, IResource
 	
 	public static final int RUNTIME_IN_SECONDS = 300;
 	
-
 	public LongRunningCapability(){
 		super(
 				"Long Running",
-				"edu.washington.cs.cupid.tests.longrunning",
 				"Runs for a long time",
 				IResource.class, IResource.class,
 				Flag.PURE);

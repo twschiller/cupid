@@ -22,7 +22,6 @@ public final class CompilationUnit extends LinearCapability<IJavaElement, ICompi
 
 	public CompilationUnit(){
 		super("Compilation Unit", 
-			  "edu.washington.cs.cupid.jdt.compilationunit", 
 			  "Get the compilation unit associated with a Java element",
 			  IJavaElement.class, ICompilationUnit.class,
 			  Flag.PURE);

@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.wizards;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -17,6 +19,7 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -30,6 +33,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SelectionDialog;
+
+import com.google.common.collect.Lists;
+
+import edu.washington.cs.cupid.TypeManager;
 
 /**
  * A wizard page for configuring a new Java capability script.
@@ -47,7 +54,7 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 	private IPath parameterTypeReference;
 	private IPath outputTypeReference;
 	
-	private Text idText;
+	private Class<?> startType;
 	
 	/**
 	 * Construct a wizard page for configuring a new Java capability script.
@@ -57,6 +64,27 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 		super("wizardPage");
 		setTitle("New Cupid Capability");
 		setDescription("Create a new Java Cupid Capability");
+		
+		
+		if (selection == null || selection.isEmpty()) {
+			// NO OP
+		} else if (selection instanceof IStructuredSelection) {
+			
+			IStructuredSelection values = (IStructuredSelection) selection;
+			
+			if (values.size() == 1){
+				this.startType = values.getFirstElement().getClass();
+			} else {
+				List<Class<?>> classes = Lists.newArrayList();
+				for (Object value : values.toList()){
+					classes.add(value.getClass());
+				}
+				
+				List<Class<?>> common = TypeManager.commonSuperClass(classes.toArray(new Class[]{}));
+				
+				this.startType = common.isEmpty() ? null : common.get(0);
+			}
+		}
 	}
 	
 	@Override
@@ -81,12 +109,9 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 		descriptionText = new Text(container, SWT.BORDER | SWT.SINGLE);
 		initText(descriptionText, 2);
 		
-		addLabel(container, "&Unique Id:");
-		idText = new Text(container, SWT.BORDER | SWT.SINGLE);
-		initText(idText, 2);
-		
 		addLabel(container, "&Parameter Type:");
 		parameterType = new Text(container, SWT.BORDER | SWT.SINGLE);
+	
 		final Button inputSelect = new Button(container, SWT.PUSH);
 		
 		inputSelect.addMouseListener(new MouseListener() {
@@ -186,8 +211,7 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 	private void initialize() {
 		nameText.setText("MyCapability");
 		descriptionText.setText("My Capability Description");
-		idText.setText("edu.washington.cs.cupid.custom.mycapability");
-		parameterType.setText(DEFAULT_TYPE);
+		parameterType.setText(startType != null ? startType.getName() : DEFAULT_TYPE);		
 		outputType.setText(DEFAULT_TYPE);
 	}
 
@@ -195,18 +219,12 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 
 		String name = getCapabilityName();
 		String description = getCapabilityDescription();
-		String id = getUniqueId();
-
+		
 		if (name.isEmpty()) {
 			updateStatus("Capability name must be specified");
 			return;
 		}
-		
-		if (id.isEmpty()) {
-			updateStatus("Unique id must be specified");
-			return;
-		}
-		
+			
 		if (description.isEmpty()) {
 			updateStatus("Capability description must be specified");
 			return;
@@ -277,14 +295,6 @@ public final class JavaCapabilityWizardPage extends WizardPage {
 	 */
 	public IPath getOutputTypeReference() {
 		return outputTypeReference;
-	}
-
-	/**
-	 * Returns the unique id for the new capability.
-	 * @return the unique id for the new capability
-	 */
-	public String getUniqueId() {
-		return idText.getText();
 	}
 	
 	/**

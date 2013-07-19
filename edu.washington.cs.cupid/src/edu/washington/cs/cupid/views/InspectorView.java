@@ -15,6 +15,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.RoundingMode;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -59,6 +61,7 @@ import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.internal.CupidActivator;
 import edu.washington.cs.cupid.jobs.JobFamily;
@@ -135,6 +138,8 @@ public class InspectorView extends ViewPart {
 		viewer.setContentProvider(contentProvider);
 		viewer.setLabelProvider(new ViewLabelProvider());
 		
+		
+		
 		selectionModel = new SelectionModel();
 		CupidSelectionService.addListener(selectionModel);
 		
@@ -177,6 +182,59 @@ public class InspectorView extends ViewPart {
 		Row[] getChildren();
 		Row getParent();
 	    String getColumnText(final Object element, final int columnIndex);
+	}
+	
+	private final class OutputRow implements Row{
+		private final CapabilityRow parent;
+		private final ICapability.IOutput<?> output;
+		private final Object value;
+		
+		public OutputRow(CapabilityRow parent, IOutput<?> output, Object value) {
+			super();
+			this.parent = parent;
+			this.output = output;
+			this.value = value;
+		}
+
+		@Override
+		public boolean hasChildren() {
+			return valueHasChildren(value);
+		}
+
+		@Override
+		public Row[] getChildren() {
+			if (value instanceof List) {
+				return generateListRows(this, output.getName(), (List<?>) value, 0, ((List<?>) value).size());
+			} else if (value.getClass().isArray()) {
+				return generateArrayRows(this, output.getName(), value, 0, Array.getLength(value));
+			} else {
+				return generateRows(this, value);
+			}		
+		}
+
+		@Override
+		public Row getParent() {
+			return parent;
+		}
+
+		@Override
+		public String getColumnText(Object element, int columnIndex) {
+			switch(columnIndex) {
+			case 0:
+				return output.getName();
+			case 1:
+				if (value == null) {
+					return "null";
+				} else if (value instanceof Exception){
+					String msg = ((Exception) value).getLocalizedMessage();
+					return msg == null ? "<error>" : ("<error:" + msg + ">");  
+				} else {
+					return value.toString();
+				}
+			default:
+				throw new IllegalArgumentException("Invalid column index");
+			}
+		}
 	}
 	
 	private final class ClassRow implements Row {
@@ -358,11 +416,11 @@ public class InspectorView extends ViewPart {
 						synchronized(CapabilityRow.this){
 							finished = true;
 							status = (CapabilityStatus) event.getResult();
-							value = CapabilityUtil.singleOutputValue(capability, status);
-							
-							if (status.isOK() && value == null){
-								value = CapabilityUtil.singleOutputValue(capability, status);
-								throw new RuntimeException("Capability '" + capability.getName() + "' returned null");
+						
+							if (CapabilityUtil.hasSingleOutput(capability)){
+								value = CapabilityUtil.singleOutputValue(capability, status);		
+							}else{
+								value = status.value();
 							}
 							
 							updateStatus("Done");
@@ -402,13 +460,19 @@ public class InspectorView extends ViewPart {
 		@Override
 		public synchronized Row[] getChildren() {
 			if (finished && status.getCode() == Status.OK) {
-				if (value instanceof List) {
-					return generateListRows(this, capability.getName(), (List<?>) value, 0, ((List<?>) value).size());
-				} else if (value.getClass().isArray()) {
-					return generateArrayRows(this, capability.getName(), value, 0, Array.getLength(value));
-				} else {
-					return generateRows(this, value);
+				
+				if (CapabilityUtil.hasSingleOutput(capability)){
+					if (value instanceof List) {
+						return generateListRows(this, capability.getName(), (List<?>) value, 0, ((List<?>) value).size());
+					} else if (value.getClass().isArray()) {
+						return generateArrayRows(this, capability.getName(), value, 0, Array.getLength(value));
+					} else {
+						return generateRows(this, value);
+					}		
+				}else{
+					return generateOutputRows(this, status);
 				}
+				
 			} else {
 				return new Row[]{};
 			}
@@ -419,7 +483,7 @@ public class InspectorView extends ViewPart {
 		public Row getParent() {
 			return null;
 		}
-
+		
 		@Override
 		public synchronized String getColumnText(final Object element, final int columnIndex) {
 
@@ -433,7 +497,11 @@ public class InspectorView extends ViewPart {
 					switch (status.getCode()) {
 					case Status.OK:
 						if (value != null){
-							return value.toString();		
+							if (capability.getOutputs().size() > 1){
+								return "<Multiple Outputs>"; 
+							}else{
+								return value.toString();			
+							}
 						} else {
 							return null;
 						}
@@ -488,6 +556,8 @@ public class InspectorView extends ViewPart {
 				throw new IllegalArgumentException("Illegal table entry");
 			}
 		}	
+		
+		
 	}
 	
 	private final class SelectionModel implements ICupidSelectionListener {
@@ -590,6 +660,26 @@ public class InspectorView extends ViewPart {
 			|| value.getClass().isPrimitive() 
 			|| value instanceof String 
 			|| value instanceof Number);
+	}
+	
+	private Row[] generateOutputRows(final CapabilityRow parent, final CapabilityStatus status){
+		
+		List<IOutput<?>> outputs = Lists.newArrayList(status.value().getOutputs().keySet());
+		
+		Collections.sort(outputs, new Comparator<IOutput<?>>() {
+			@Override
+			public int compare(IOutput<?> o1, IOutput<?> o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+		
+		List<Row> result = Lists.newArrayList();
+		
+		for (IOutput<?> output : outputs){
+			result.add(new OutputRow(parent, output, status.value().getOutput(output)));
+		}
+		
+		return result.toArray(new Row[]{});
 	}
 	
 	private Row[] generateArrayRows(final Row parent, final String rootName, final Object array, final int offset, final int length) {

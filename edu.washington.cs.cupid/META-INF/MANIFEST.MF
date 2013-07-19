@@ -15,7 +15,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jface.text,
  org.eclipse.ui.editors,
  org.eclipse.debug.ui;bundle-version="3.7.102",
- edu.washington.cs.cupid.usage;bundle-version="1.0.0"
+ edu.washington.cs.cupid.usage;bundle-version="1.0.0",
+ org.eclipse.jface
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Vendor: University of Washington PLSE

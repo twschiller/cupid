@@ -44,7 +44,7 @@ public class Activator implements BundleActivator, ICapabilityPublisher {
 				new MultipleOutputTest(),
 				//new LongList(),
 				//new LongArray(),
-				new MapCapabilityTest(),
+				new MultiInputTest(),
 				new ClassTest(),
 				SnippetTest.RETURNS_TRUE,
 		};

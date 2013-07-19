@@ -587,7 +587,20 @@ public class MappingPage extends WizardPage {
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof ICapability){
-				return DerivedCapability.derivedProjections((ICapability) parentElement).toArray();
+				ICapability c = (ICapability) parentElement;
+				
+				if (CapabilityUtil.hasSingleOutput(c)){
+					return DerivedCapability.derivedProjections(c, CapabilityUtil.singleOutput(c)).toArray();
+				}else{
+					return DerivedCapability.derived((ICapability) parentElement).toArray();			
+				}
+				
+			}else if (parentElement instanceof DerivedCapability){
+				DerivedCapability c = (DerivedCapability) parentElement;
+				
+				return c.getGetter() == null ?
+						DerivedCapability.derivedProjections(c.getCapability(), c.getOutput()).toArray() :
+						new Object[]{};
 			}else{
 				return new Object[]{};
 			}
@@ -604,11 +617,8 @@ public class MappingPage extends WizardPage {
 
 		@Override
 		public boolean hasChildren(Object element) {
-			if (element instanceof ICapability){
-				return !DerivedCapability.derivedProjections((ICapability) element).isEmpty();
-			}else{
-				return false;
-			}
+			// TODO: make efficient
+			return getChildren(element).length > 0;
 		}
 	}
 	

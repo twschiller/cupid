@@ -23,10 +23,10 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.TypeManager;
-import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IOutput;
+import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 
 /**
@@ -35,24 +35,42 @@ import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
  */
 public class DerivedCapability{
 	private final ICapability capability;
+	private final IOutput<?> output;
 	private final IExtractCapability<?,? > getter;
 	
 	private static final Set<String> FILTER = Sets.newHashSet( 
 			"hashCode" , "getClass" , "toString", "iterator", "listIterator", "toArray");
 	
-	public DerivedCapability(ICapability capability, IExtractCapability<?, ?> getter) {
+	public DerivedCapability(ICapability capability, IOutput<?> output) {
+		this(capability, output, null);
+	}
+	
+	public DerivedCapability(ICapability capability, IOutput<?> output, IExtractCapability<?, ?> getter) {
 		this.capability = capability;
+		this.output = output;
 		this.getter = getter;
 	}
 	
 	public DynamicSerializablePipeline toPipeline(){
-		List<Serializable> pipeline = Lists.<Serializable>newArrayList(
-				capability.getName(),
-				getter);
+		
+		List<Serializable> pipeline;
+		String name;
+		
+		if (CapabilityUtil.hasSingleOutput(capability)){
+			pipeline = Lists.<Serializable>newArrayList(capability.getName(), getter);
+			name = capability.getName() + " + " + getter.getName();
+		}else{
+			pipeline = Lists.<Serializable>newArrayList(new OutputSelector(capability, output));
+			
+			if (getter != null){
+				pipeline.add(getter);
+			}
+			
+			name = capability.getName();
+		}
 		
 		return new DynamicSerializablePipeline(
-				capability.getName() + " + " + getter.getName(), 
-				capability.getName() + " + " + getter.getName(), 
+				name, name,
 				pipeline,
 				CapabilityUtil.noArgs(pipeline.size()));
 	}
@@ -74,83 +92,86 @@ public class DerivedCapability{
 	
 	public static List<DerivedCapability> derived(ICapability capability){
 		List<DerivedCapability> result = Lists.newLinkedList();
-		result.addAll(derivedFields(capability));
-		result.addAll(derivedProjections(capability));
+		for (IOutput<?> output : capability.getOutputs()){
+			result.add(new DerivedCapability(capability, output));
+		}	
 		return result;
 	}
 	
-	public static List<DerivedCapability> derivedFields(ICapability capability){
+	public static List<DerivedCapability> derived(ICapability capability, IOutput<?> output){
+		List<DerivedCapability> result = Lists.newLinkedList();
+		result.addAll(derivedFields(capability, output));
+		result.addAll(derivedProjections(capability, output));
+		return result;
+	}
+	
+	public static List<DerivedCapability> derivedFields(ICapability capability, IOutput<?> output){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
-		if (capability.getOutputs().size() == 1){
-			IOutput<?> output = CapabilityUtil.singleOutput(capability);
-			Class<?> clazz = output.getType().getRawType();
-			
-			for (Method method : clazz.getMethods()){
-				if (isGetter(method)){
-					Getter<?, ?> getter = new Getter(
-							method.getName(), 
-							TypeToken.of(clazz), 
-							TypeManager.boxType(TypeToken.of(method.getReturnType())));
-					
-					result.add(new DerivedCapability(capability, getter));
-				}
+		Class<?> clazz = output.getType().getRawType();
+
+		for (Method method : clazz.getMethods()){
+			if (isGetter(method)){
+				Getter<?, ?> getter = new Getter(
+						method.getName(), 
+						TypeToken.of(clazz), 
+						TypeManager.boxType(TypeToken.of(method.getReturnType())));
+
+				result.add(new DerivedCapability(capability, output, getter));
 			}
-		} else {
-			throw new UnsupportedOperationException("Derived fields not supported for capabilities with multiple outputs");
 		}
 		
 		return result;	
 	}
 	
-	public static List<DerivedCapability> derivedProjections(ICapability capability){
+	public static List<DerivedCapability> derivedProjections(ICapability capability, IOutput<?> output){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
-		if (CapabilityUtil.hasSingleOutput(capability)){
-			IOutput<?> output = CapabilityUtil.singleOutput(capability);
-			Class<?> clazz = output.getType().getRawType();
-		
-			// TODO refactor
-			
-			if (List.class.isAssignableFrom(clazz)){
-				ParameterizedType outputType = (ParameterizedType) output.getType().getType();
-				Type elementType = outputType.getActualTypeArguments()[0];
-				
-				if (elementType instanceof Class){
-					Class<?> elementClass = (Class<?>) elementType;
-					for (Method method : elementClass.getMethods()){
-						if (isGetter(method)){
-							ListGetter<?, ?> getter = new ListGetter(
-									method.getName(), 
-									TypeToken.of(elementClass), 
-									TypeManager.boxType(TypeToken.of(method.getReturnType())));
-							
-							result.add(new DerivedCapability(capability, getter));
-						}
-					}
-				}
-			}else if (Set.class.isAssignableFrom(clazz)){
-				ParameterizedType outputType = (ParameterizedType) output.getType().getType();
-				Type elementType = outputType.getActualTypeArguments()[0];
-				
-				if (elementType instanceof Class){
-					Class<?> elementClass = (Class<?>) outputType.getActualTypeArguments()[0];
-					for (Method method : elementClass.getMethods()){
-						if (isGetter(method)){
-							SetGetter<?, ?> getter = new SetGetter(
-									method.getName(), 
-									TypeToken.of(elementClass), 
-									TypeManager.boxType(TypeToken.of(method.getReturnType())));
-							result.add(new DerivedCapability(capability, getter));
-						}
+		Class<?> clazz = output.getType().getRawType();
+
+		// TODO refactor
+
+		if (List.class.isAssignableFrom(clazz)){
+			ParameterizedType outputType = (ParameterizedType) output.getType().getType();
+			Type elementType = outputType.getActualTypeArguments()[0];
+
+			if (elementType instanceof Class){
+				Class<?> elementClass = (Class<?>) elementType;
+				for (Method method : elementClass.getMethods()){
+					if (isGetter(method)){
+						ListGetter<?, ?> getter = new ListGetter(
+								method.getName(), 
+								TypeToken.of(elementClass), 
+								TypeManager.boxType(TypeToken.of(method.getReturnType())));
+
+						result.add(new DerivedCapability(capability, output, getter));
 					}
 				}
 			}
-		} else {
-			throw new UnsupportedOperationException("Derived fields not supported for capabilities with multiple outputs");
+		}else if (Set.class.isAssignableFrom(clazz)){
+			ParameterizedType outputType = (ParameterizedType) output.getType().getType();
+			Type elementType = outputType.getActualTypeArguments()[0];
+
+			if (elementType instanceof Class){
+				Class<?> elementClass = (Class<?>) outputType.getActualTypeArguments()[0];
+				for (Method method : elementClass.getMethods()){
+					if (isGetter(method)){
+						SetGetter<?, ?> getter = new SetGetter(
+								method.getName(), 
+								TypeToken.of(elementClass), 
+								TypeManager.boxType(TypeToken.of(method.getReturnType())));
+						result.add(new DerivedCapability(capability, output, getter));
+					}
+				}
+			}
 		}
-		
+
+
 		return result;
+	}
+
+	public IOutput<?> getOutput() {
+		return output;
 	}
 	
 }

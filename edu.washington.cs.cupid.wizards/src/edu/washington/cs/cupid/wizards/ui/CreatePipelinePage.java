@@ -153,6 +153,10 @@ public class CreatePipelinePage extends WizardPage{
 				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
 				
 				if (selected instanceof ICapability){
+					if (!CapabilityUtil.hasSingleOutput((ICapability) selected)){
+						return;
+					}
+					
 					current.add((ICapability) selected);
 				}else if (selected instanceof DerivedCapability){
 					current.add(((DerivedCapability) selected).toPipeline());

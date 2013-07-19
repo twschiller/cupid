@@ -364,7 +364,10 @@ public class CreatePipelinePage extends WizardPage{
 				return capability.getName() + ": " + capability.getDescription();
 			}else if (element instanceof DerivedCapability){
 				DerivedCapability capability = (DerivedCapability) element;
-				return capability.getGetter().getName();
+				
+				return capability.getGetter() == null ? 
+						capability.getOutput().getName() :
+						capability.getGetter().getName();
 			}else{
 				throw new RuntimeException("Unexpected tree element of type " + element.getClass());
 			}
@@ -438,14 +441,42 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof ICapability){
-				List<DerivedCapability> xs = DerivedCapability.derived((ICapability) parentElement);
-				Collections.sort(xs, new Comparator<DerivedCapability>(){
-					@Override
-					public int compare(DerivedCapability lhs, DerivedCapability rhs) {
-						return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
-					}
-				});
-				return xs.toArray();
+				ICapability c = (ICapability) parentElement;
+				
+				if (CapabilityUtil.hasSingleOutput(c)){
+					List<DerivedCapability> xs = DerivedCapability.derived(c, CapabilityUtil.singleOutput(c));
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
+						}
+					});
+					return xs.toArray();		
+				}else{
+					List<DerivedCapability> xs = DerivedCapability.derived(c);
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getOutput().getName().compareTo(lhs.getOutput().getName());
+						}
+					});
+					return xs.toArray();
+				}
+			}else if (parentElement instanceof DerivedCapability){
+				DerivedCapability c = (DerivedCapability) parentElement;
+				
+				if (c.getGetter() == null){
+					List<DerivedCapability> xs = DerivedCapability.derived(c.getCapability(), c.getOutput());
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
+						}
+					});
+					return xs.toArray();
+				}else{
+					return new Object[]{};
+				}
 			}else{
 				return new Object[]{};
 			}
@@ -454,7 +485,14 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public Object getParent(Object element) {
 			if (element instanceof DerivedCapability){
-				return ((DerivedCapability) element).getCapability();
+				DerivedCapability c = (DerivedCapability) element;
+				
+				if (c.getGetter() == null || CapabilityUtil.hasSingleOutput(c.getCapability())){
+					return c.getCapability();
+				}else{
+					// TODO: track parent for getters of capabilities with multiple outputs
+					return null;
+				}
 			}else{
 				return null;
 			}
@@ -462,11 +500,8 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public boolean hasChildren(Object element) {
-			if (element instanceof ICapability){
-				return !DerivedCapability.derived((ICapability) element).isEmpty();
-			}else{
-				return false;
-			}
+			// TODO make efficient
+			return getChildren(element).length != 0;
 		}
 	}
 	
@@ -537,14 +572,14 @@ public class CreatePipelinePage extends WizardPage{
 		column.setWidth(300);
 		column.setText("Capability");
 		
-		SortedSet<ICapability> linear = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
+		SortedSet<ICapability> unary = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
 			@Override
 			public boolean apply(ICapability capability) {
-				return CapabilityUtil.isLinear(capability);
+				return CapabilityUtil.isUnary(capability);
 			}
 		});
 		
-		capabilityTree.setInput(Lists.newArrayList(linear));
+		capabilityTree.setInput(Lists.newArrayList(unary));
 	}
 	
 	private void buildPipelineTable(Composite composite){

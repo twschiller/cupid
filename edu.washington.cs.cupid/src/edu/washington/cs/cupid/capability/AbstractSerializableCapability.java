@@ -14,8 +14,6 @@ package edu.washington.cs.cupid.capability;
 /**
  * An Eclipse capability (i.e., service).
  * @author Todd Schiller (tws@cs.washington.edu)
- * @param <I> the input type
- * @param <V> the output type
  */
 public abstract class AbstractSerializableCapability implements ISerializableCapability {
 

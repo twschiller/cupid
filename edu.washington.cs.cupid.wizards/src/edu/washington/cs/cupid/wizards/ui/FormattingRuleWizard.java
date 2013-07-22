@@ -44,6 +44,7 @@ public class FormattingRuleWizard extends Wizard {
 		FormattingRule rule = new FormattingRule(format.getFormatName(),
 				select.getInputType().getRawType().getName(),
 				select.getCapability() != null ? select.getCapability().getName() : null,
+				select.getCapabilityOutput() != null ? select.getCapabilityOutput().getName() : null,
 				select.getSnippet(),
 				format.getFormat(),
 				true /*active*/);

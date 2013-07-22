@@ -12,15 +12,20 @@ package edu.washington.cs.cupid.conditional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
+
 /**
  * A conditional capability-based formatting rule.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class FormattingRule {
+public class FormattingRule implements Serializable{
+
+	private static final long serialVersionUID = 3L;
 
 	private String name;
 	private String qualifiedType;
 	private String capabilityId;
+	private String capabilityOutput;
 	private String snippet;
 	private Format format = new Format();
 	private boolean active;
@@ -40,10 +45,11 @@ public class FormattingRule {
 	 * @param format the format
 	 * @param active <code>true</code> iff the rule is active
 	 */
-	public FormattingRule(final String name, final String qualifiedType, final String capabilityId, final String snippet, final Format format, final boolean active) {
+	public FormattingRule(final String name, final String qualifiedType, final String capabilityId, final String capabilityOutput, final String snippet, final Format format, final boolean active) {
 		this(name);
 		this.qualifiedType = qualifiedType;
 		this.capabilityId = capabilityId;
+		this.capabilityOutput = capabilityOutput;
 		this.snippet = snippet;
 		this.format = format;
 		this.active = active;
@@ -54,7 +60,7 @@ public class FormattingRule {
 	 * @return a <i>shallow</i> copy of the formatting rule
 	 */
 	public final FormattingRule copy() {
-		return new FormattingRule(this.name, this.qualifiedType, this.capabilityId, this.snippet, this.format, this.active);
+		return new FormattingRule(this.name, this.qualifiedType, this.capabilityId, this.capabilityOutput, this.snippet, this.format, this.active);
 	}
 
 	/**
@@ -129,5 +135,13 @@ public class FormattingRule {
 
 	public void setSnippet(String snippet) {
 		this.snippet = snippet;
+	}
+
+	public String getCapabilityOutput() {
+		return capabilityOutput;
+	}
+
+	public void setCapabilityOutput(String capabilityOutput) {
+		this.capabilityOutput = capabilityOutput;
 	}
 }

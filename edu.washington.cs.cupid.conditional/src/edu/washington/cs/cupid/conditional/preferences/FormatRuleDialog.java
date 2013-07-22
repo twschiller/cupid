@@ -40,6 +40,8 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.internal.Activator;
 import edu.washington.cs.cupid.conditional.ui.ColorPickerButton;
@@ -65,6 +67,7 @@ public class FormatRuleDialog extends TitleAreaDialog {
 	
 	private SnippetSourceView vSnippet;
 	private Combo cCapability;
+	private Combo cCapabilityOutput;
 	
 	private String errorMsg = null;
 	private String snippetErrorMsg = null;
@@ -274,11 +277,20 @@ public class FormatRuleDialog extends TitleAreaDialog {
 	
 	private void buildPredicateEditor(){
 		GridLayout lPredicate = new GridLayout();
-		lPredicate.numColumns = 1;
+		lPredicate.numColumns = 2;
 		cPredicate.setLayout(lPredicate);
+		
+		Label lCapability = new Label(cPredicate, SWT.LEFT);
+		lCapability.setText("Capability (Optional):");
 		
 		cCapability = new Combo(cPredicate, SWT.READ_ONLY | SWT.DROP_DOWN);
 		cCapability.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		
+		Label lCapabilityOutput = new Label(cPredicate, SWT.LEFT);
+		lCapabilityOutput.setText("Capability Output:");
+	
+		cCapabilityOutput = new Combo(cPredicate, SWT.READ_ONLY | SWT.DROP_DOWN);
+		cCapabilityOutput.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		
 		updateCapabilityList();
 		
@@ -307,8 +319,18 @@ public class FormatRuleDialog extends TitleAreaDialog {
 			}
 		});
 		
+		cCapabilityOutput.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				setCapabilityOutput(cCapabilityOutput.getText());
+			}
+		});
+		
 		vSnippet = new SnippetSourceView(cPredicate, SWT.NONE);
-		vSnippet.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		GridData gSnippet = new GridData(SWT.FILL, SWT.FILL, true, true);
+		gSnippet.horizontalSpan = 2;
+		vSnippet.setLayoutData(gSnippet);
 		
 		TypeToken<?> snippetInput = null;
 		
@@ -322,7 +344,8 @@ public class FormatRuleDialog extends TitleAreaDialog {
 			}
 		}else{
 			try {
-				snippetInput = CapabilityUtil.singleOutput(Activator.findRuleCapability(rule)).getType();
+				ICapability c = Activator.findRuleCapability(rule);
+				snippetInput = CapabilityUtil.findOutput(c, rule.getCapabilityOutput()).getType();
 			} catch (Exception e) {
 				// capability does not exist
 			}
@@ -350,12 +373,38 @@ public class FormatRuleDialog extends TitleAreaDialog {
 		if (capability == null){
 			rule.setCapabilityId(null);
 			setSnippetInput(inputType);	
+			setCapabilityOutput(null);
+			cCapabilityOutput.removeAll();
+			cCapabilityOutput.setEnabled(false);
 		}else{
 			rule.setCapabilityId(capability.getName());
-			TypeToken<?> capabilityOutput = CapabilityUtil.singleOutput(capability).getType();
-			setSnippetInput(capabilityOutput);
+			
+			cCapabilityOutput.removeAll();
+			
+			for (ICapability.IOutput<?> o : capability.getOutputs()){
+				cCapabilityOutput.add(o.getName());
+			}
+			
+			cCapabilityOutput.select(0);
+			cCapabilityOutput.setEnabled(capability.getOutputs().size() > 1);
 		}
 		checkModel();			
+	}
+	
+	private void setCapabilityOutput(String outputName){
+		if (outputName != null){
+			ICapability c;
+			try {
+				c = Activator.findRuleCapability(rule);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			ICapability.IOutput<?> o = CapabilityUtil.findOutput(c, outputName);
+			rule.setCapabilityOutput(outputName);
+			setSnippetInput(o.getType());
+		}else{
+			rule.setCapabilityOutput(null);
+		}
 	}
 	
 	private class SnippetHandler implements SnippetSourceView.ModifyListener{
@@ -400,6 +449,18 @@ public class FormatRuleDialog extends TitleAreaDialog {
 			for (ICapability capability : compatible) {
 				if (forRule == capability) {
 					addAndSet(cCapability, capability.getName());
+					
+					cCapabilityOutput.removeAll();
+					for (ICapability.IOutput<?> o : capability.getOutputs()){
+						cCapabilityOutput.add(o.getName());
+					}
+					
+					if (rule.getCapabilityOutput() != null){
+						cCapabilityOutput.setText(rule.getCapabilityOutput());
+					}else{
+						cCapabilityOutput.select(0);
+					}
+					
 				} else {
 					cCapability.add(capability.getName());
 				}

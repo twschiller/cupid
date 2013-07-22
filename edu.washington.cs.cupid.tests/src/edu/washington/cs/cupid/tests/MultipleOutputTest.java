@@ -31,9 +31,9 @@ public class MultipleOutputTest extends AbstractBaseCapability {
 	public static final Output<Integer> OUT_INTEGER = new Output<Integer>("Integer", TypeToken.of(Integer.class));
 
 	@Override
-	public CapabilityJob<? extends ICapability> getJob(ICapabilityArguments input) {
+	public CapabilityJob<MultipleOutputTest> getJob(ICapabilityArguments input) {
 	
-		return new CapabilityJob<AbstractBaseCapability> (this, input){
+		return new CapabilityJob<MultipleOutputTest> (this, input){
 			@Override
 			protected CapabilityStatus run(final IProgressMonitor monitor) {
 				

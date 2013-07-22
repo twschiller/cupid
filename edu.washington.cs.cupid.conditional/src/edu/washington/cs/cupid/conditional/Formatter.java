@@ -62,6 +62,7 @@ import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.capability.snippet.SnippetCapability;
@@ -281,8 +282,9 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		TypeToken<?> inputType = TypeManager.forName(rule.getQualifiedType());
 		
 		ICapability c = rule.getCapabilityId() == null ? null : CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
+		ICapability.IOutput<?> o = (c == null) ? null : CapabilityUtil.findOutput(c, rule.getCapabilityOutput());
 		
-		TypeToken<?> snippetInputType = (c == null) ? inputType : CapabilityUtil.unaryParameter(c).getType();
+		TypeToken<?> snippetInputType = (o == null) ? inputType : o.getType();
 				
 		@SuppressWarnings({ "rawtypes", "unchecked" }) // checked when the snippet is written, and dynamically at runtime
 		SnippetCapability s = rule.getSnippet() == null ? null :
@@ -298,12 +300,12 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			result = new DynamicSerializablePipeline(
 					rule.getName() + " capability",
 					"Capability for formatting rule " + rule.getName(),
-					Lists.<Serializable>newArrayList(s,c.getName()),
+					Lists.<Serializable>newArrayList(new OutputSelector(c, o), s),
 					Lists.<ICapabilityArguments>newArrayList());
 		}else if (s != null){
 			result = s;
 		}else if (c != null){
-			result = c;
+			result = new OutputSelector(c, o);
 		}else{
 			throw new IllegalArgumentException("Formatting rule has no capability or predicate snippet");
 		}

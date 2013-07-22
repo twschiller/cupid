@@ -120,7 +120,8 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 			return false;
 		} catch (InvocationTargetException e) {
 			Throwable realException = e.getTargetException();
-			MessageDialog.openError(getShell(), "Error", realException.getMessage());
+			MessageDialog.openError(getShell(), "Error", "Error creating Cupid Script; see log for more details.");
+			CupidScriptingPlugin.getDefault().logError("Error creating Cupid script", realException);
 			return false;
 		}
 		return true;

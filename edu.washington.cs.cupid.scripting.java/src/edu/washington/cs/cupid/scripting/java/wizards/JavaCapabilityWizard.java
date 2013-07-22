@@ -11,9 +11,9 @@
 package edu.washington.cs.cupid.scripting.java.wizards;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -44,9 +43,8 @@ import org.eclipse.ui.ide.IDE;
 import org.osgi.framework.Bundle;
 
 import com.floreysoft.jmte.Engine;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import com.google.common.io.CharStreams;
 
 import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
@@ -189,14 +187,11 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	}
 	
 	private InputStream openContents(final String name, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
-		String separator = System.getProperty("line.separator");
-		
 		Bundle bundle = CupidScriptingPlugin.getDefault().getBundle();
 		URL fileURL = bundle.getEntry("templates/LinearCapability.template");
-		File file = new File(FileLocator.resolve(fileURL).toURI());
 		
-		String template = Joiner.on(separator).join(Files.readLines(file, Charset.defaultCharset()));
-	
+		String template = CharStreams.toString( new InputStreamReader(fileURL.openStream(), Charset.forName("UTF-8")) );
+		
 		Engine engine = new Engine();
 		Map<String, Object> model = new HashMap<String, Object>();
 		

@@ -301,7 +301,7 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 					rule.getName() + " capability",
 					"Capability for formatting rule " + rule.getName(),
 					Lists.<Serializable>newArrayList(new OutputSelector(c, o), s),
-					Lists.<ICapabilityArguments>newArrayList());
+					CapabilityUtil.noArgs(2));
 		}else if (s != null){
 			result = s;
 		}else if (c != null){

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Conditional Formatting with Cupid
 Bundle-SymbolicName: edu.washington.cs.cupid.conditional;singleton:=true
-Bundle-Version: 1.1.20130721
+Bundle-Version: 1.1.20130722
 Bundle-Activator: edu.washington.cs.cupid.conditional.internal.Activator
 Bundle-Vendor: University of Washington PLSE
 Require-Bundle: org.eclipse.ui,

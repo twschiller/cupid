@@ -251,14 +251,6 @@ its rights to a jury trial in any resulting litigation.
          id="edu.washington.cs.cupid.license"
          version="0.0.0"/>
 
-   <includes
-         id="edu.washington.cs.cupid.scripting.java"
-         version="0.0.0"/>
-
-   <includes
-         id="edu.washington.cs.cupid.conditional"
-         version="0.0.0"/>
-
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
@@ -313,6 +305,20 @@ its rights to a jury trial in any resulting litigation.
 
    <plugin
          id="edu.washington.cs.cupid.usage"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.conditional"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="edu.washington.cs.cupid.scripting.java"
          download-size="0"
          install-size="0"
          version="0.0.0"

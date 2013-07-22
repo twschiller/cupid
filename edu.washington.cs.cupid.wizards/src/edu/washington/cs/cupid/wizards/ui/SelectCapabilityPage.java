@@ -35,10 +35,12 @@ public class SelectCapabilityPage extends WizardPage {
 	
 	private TypeToken<?> inputType = null;
 	private ICapability capability = null;
+	private ICapability.IOutput<?> capabilityOutput = null;
 	
 	private final TypeToken<?> outputType;
 	
 	private Combo cCapability; 
+	private Combo cCapabilityOutput;
 	
 	private Composite container = null;
 	private SnippetSourceView fViewer;
@@ -93,6 +95,13 @@ public class SelectCapabilityPage extends WizardPage {
 		cCapability = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY); 
 		cCapability.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		
+		Label lCapabilityOutput = new Label(container, SWT.LEFT);
+		lCapabilityOutput.setText("Capability Output:");
+		lCapabilityOutput.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+	
+		cCapabilityOutput = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
+		cCapabilityOutput.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		
 		cCapability.addModifyListener(new org.eclipse.swt.events.ModifyListener() {	
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -103,6 +112,13 @@ public class SelectCapabilityPage extends WizardPage {
 						setCapability(null);
 					}
 				}
+			}
+		});
+		
+		cCapabilityOutput.addModifyListener(new org.eclipse.swt.events.ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				setCapabilityOutput(cCapabilityOutput.getText());
 			}
 		});
 		
@@ -195,7 +211,7 @@ public class SelectCapabilityPage extends WizardPage {
 	private void updateCompatible(){
 		compatible = Lists.newArrayList();
 		for (ICapability c : CupidPlatform.getCapabilityRegistry().getCapabilities(inputType)){
-			if (!CapabilityUtil.isGenerator(c) && CapabilityUtil.isLinear(c)){
+			if (!CapabilityUtil.isGenerator(c) && CapabilityUtil.isUnary(c)){
 				compatible.add(c);
 			}
 		}
@@ -219,9 +235,26 @@ public class SelectCapabilityPage extends WizardPage {
 		
 		if (capability == null){
 			setSnippetInputType(inputType);	
+			
+			capabilityOutput = null;
+			cCapabilityOutput.removeAll();
+			cCapabilityOutput.setEnabled(false);
 		}else{
-			TypeToken<?> capabilityOutput = CapabilityUtil.singleOutput(capability).getType();
-			setSnippetInputType(capabilityOutput);
+			cCapabilityOutput.removeAll();
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
+				cCapabilityOutput.add(output.getName());
+			}
+			cCapabilityOutput.select(0);
+			cCapabilityOutput.setEnabled(capability.getOutputs().size() > 1);
+		}
+	}
+	
+	private void setCapabilityOutput(String outputName){
+		if (capability == null || outputName == null){
+			setSnippetInputType(inputType);
+		}else{
+			capabilityOutput = CapabilityUtil.findOutput(capability, outputName);
+			setSnippetInputType(capabilityOutput.getType()); // TODO: resolve type variables
 		}
 	}
 	
@@ -255,5 +288,9 @@ public class SelectCapabilityPage extends WizardPage {
 	
 	public ICapability getCapability(){
 		return capability;
+	}
+
+	public ICapability.IOutput<?> getCapabilityOutput() {
+		return capabilityOutput;
 	}
 }

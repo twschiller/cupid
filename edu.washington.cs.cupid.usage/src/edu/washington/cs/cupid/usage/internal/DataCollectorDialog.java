@@ -11,6 +11,8 @@
 package edu.washington.cs.cupid.usage.internal;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
@@ -29,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.osgi.framework.Bundle;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
 /**
@@ -79,9 +82,8 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 		try {
 			Bundle bundle = Activator.getDefault().getBundle();
 			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
-			File file = new File(FileLocator.resolve(fileURL).toURI());
-		
-			String content = Joiner.on(System.getProperty("line.separator")).join(Files.readLines(file, Charset.defaultCharset()));
+			InputStream inputStream = fileURL.openConnection().getInputStream();
+			String content = CharStreams.toString( new InputStreamReader( inputStream, Charset.forName("UTF-8")) );
 			consentText.setText(content);
 		} catch (Exception ex) {
 			consentText.setText("Error loading consent form: " + ex.getLocalizedMessage());

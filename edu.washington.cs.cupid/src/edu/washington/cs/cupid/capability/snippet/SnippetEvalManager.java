@@ -110,7 +110,11 @@ public class SnippetEvalManager {
         src.append("import " + inputType.getRawType().getName() + ";\n");
         src.append("public class " + simpleName + " {\n");
         src.append("    public static " + outputClass + " " + METHOD_NAME + "(" + inputClass + " " + VALUE_NAME + ") {\n");
+        src.append("       try{\n");
         src.append("        " + snippet + "\n");
+        src.append("       }catch(Exception xx__){\n");
+        src.append("          throw new RuntimeException(xx__);\n");
+        src.append("       }\n");
         src.append("    }\n");
         src.append("}\n");
         

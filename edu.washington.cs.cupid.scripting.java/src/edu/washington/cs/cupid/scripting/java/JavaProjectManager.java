@@ -162,7 +162,6 @@ public final class JavaProjectManager implements IResourceChangeListener {
 	public static void ensureClasspath(TypeToken<?> inputType) throws JavaModelException, IOException, ClassNotFoundException{
 		IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
 		
-		List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
 	
 		Bundle bundle = ClasspathUtil.bundleForClass(inputType.getRawType().getName());
 		
@@ -170,6 +169,12 @@ public final class JavaProjectManager implements IResourceChangeListener {
 		
 		IPath path = ClasspathUtil.bundlePath(bundle);
 	
+		if (!path.toFile().exists()){
+			CupidScriptingPlugin.getDefault().logInformation("Bundle path for " + bundle.getSymbolicName() + " does not exist: " + path);
+			return;
+		}
+	
+		List<IClasspathEntry> cp = Lists.newArrayList(project.getRawClasspath());
 		for (IClasspathEntry old : cp){
 			if (old.getPath().equals(path)){
 				return;
@@ -213,7 +218,6 @@ public final class JavaProjectManager implements IResourceChangeListener {
 				unit.createImport(outputType.getRawType().getName(), null, new SubProgressMonitor(monitor, 1));
 			}
 			
-			//IType type = unit.createType(content, null, true, new SubProgressMonitor(monitor, 1));
 			return  unit.getTypes()[0];
 		}finally{
 			monitor.done();

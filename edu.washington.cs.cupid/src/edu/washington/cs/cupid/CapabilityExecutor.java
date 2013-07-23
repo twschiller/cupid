@@ -397,9 +397,8 @@ public final class CapabilityExecutor implements IResourceChangeListener, IPrope
 		public void done(final IJobChangeEvent event) {
 			synchronized (running) {
 				synchronized (canceling) {
-					CapabilityStatus result = (CapabilityStatus) event.getResult();
 					CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
-					running.remove(job.getInputs(), result.value());
+					running.remove(job.getInputs(), job.getCapability());
 					canceling.add(job);
 				}
 			}

@@ -188,7 +188,12 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	
 	private InputStream openContents(final String name, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
 		Bundle bundle = CupidScriptingPlugin.getDefault().getBundle();
+		
 		URL fileURL = bundle.getEntry("templates/LinearCapability.template");
+		
+		if (fileURL == null){
+			throw new IOException("Error locating linear capability script template");
+		}
 		
 		String template = CharStreams.toString( new InputStreamReader(fileURL.openStream(), Charset.forName("UTF-8")) );
 		

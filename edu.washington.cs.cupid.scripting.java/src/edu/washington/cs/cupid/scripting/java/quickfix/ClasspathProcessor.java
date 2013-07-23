@@ -58,7 +58,6 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 			IResource resource = unit.getCorrespondingResource();
 			if (resource.getProject() == CupidScriptingPlugin.getDefault().getCupidProject()) {
 				return problemId == IProblem.UndefinedType
-						|| problemId == IProblem.UndefinedType
 						|| problemId == IProblem.IsClassPathCorrect
 						|| problemId == IProblem.MissingTypeInMethod;
 			} else {

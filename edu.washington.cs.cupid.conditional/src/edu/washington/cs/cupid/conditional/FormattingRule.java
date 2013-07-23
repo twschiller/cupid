@@ -18,9 +18,7 @@ import java.io.Serializable;
  * A conditional capability-based formatting rule.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
-public class FormattingRule implements Serializable{
-
-	private static final long serialVersionUID = 3L;
+public class FormattingRule {
 
 	private String name;
 	private String qualifiedType;

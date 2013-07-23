@@ -564,16 +564,18 @@ public class InspectorView extends ViewPart {
 		
 		@Override
 		public void selectionChanged(final IWorkbenchPart part, final Object[] data) {
-			synchronized (viewer) {
-				if (!part.equals(InspectorView.this)) {
-					// TODO handle multiple data case
-					cancelOldJobs();
-					
-					CupidDataCollector.record(
-							CupidEventBuilder.contextEvent(getClass(), part, data, CupidActivator.getDefault())
-							.create());
-					
-					viewer.setInput(data[0]);
+			if (data != null && data.length > 0){
+				synchronized (viewer) {
+					if (!part.equals(InspectorView.this)) {
+						// TODO handle multiple data case
+						cancelOldJobs();
+
+						CupidDataCollector.record(
+								CupidEventBuilder.contextEvent(getClass(), part, data, CupidActivator.getDefault())
+								.create());
+
+						viewer.setInput(data[0]);
+					}
 				}
 			}
 		}
@@ -607,6 +609,8 @@ public class InspectorView extends ViewPart {
 			}
 
 			List<Object> rows = Lists.newArrayList();
+			
+			rows.add(new ClassRow(null, "Selected Object", argument));
 			
 			SortedSet<ICapability> capabilities = CupidPlatform.getCapabilityRegistry().getCapabilities(TypeToken.of(argument.getClass()));
 

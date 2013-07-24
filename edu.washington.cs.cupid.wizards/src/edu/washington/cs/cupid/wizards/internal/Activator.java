@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
@@ -23,8 +24,10 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
@@ -35,7 +38,7 @@ import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 public final class Activator extends AbstractUIPlugin implements ICapabilityPublisher {
 
 	private static final String CAPABILITY_EXTENSION = ".arrow";
-
+	
 	/**
 	 *  The plug-in ID for the Cupid wizards plug-in.
 	 */
@@ -45,7 +48,11 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	
 	private static ILog pluginLog;
 	
-	private HydrationService hydrate = new HydrationService();
+	private final HydrationService hydrate = new HydrationService();
+
+	private final Map<ICapability, File> loaded = Maps.newHashMap();	
+	
+	private final ChangeNotifier notifier = new ChangeNotifier();
 	
 	/**
 	 * Construct the activator class for the Cupid wizards plug-in.
@@ -90,12 +97,12 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 	@Override
 	public void addChangeListener(final ICapabilityChangeListener listener) {
-		// NO OP
+		plugin.notifier.addChangeListener(listener);
 	}
 
 	@Override
 	public void removeChangeListener(final ICapabilityChangeListener listener) {
-		// NO OP
+		plugin.notifier.removeChangeListener(listener);
 	}
 	
 	@Override
@@ -110,12 +117,16 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 			}
 		};
 		
+		plugin.loaded.clear();
+		
 		List<ICapability> result = Lists.newArrayList();
 		
 		if (dir.isDirectory()) {
 			for (File file : dir.listFiles(filter)) {
 				try {
-					result.add(hydrate.hydrate(file));
+					ICapability c = hydrate.hydrate(file); 
+					plugin.loaded.put(c, file);
+					result.add(c);
 				} catch (Exception e) {
 					logError("Error hydrating capability " + file.getAbsolutePath(), e);
 				}
@@ -136,4 +147,24 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 		pluginLog.log(new Status(Status.ERROR, PLUGIN_ID, Status.ERROR, msg, e));			
 	}
 	
+	public void deleteCapability(ICapability capability) throws IOException{
+
+		if (loaded.containsKey(capability)){
+			File f = loaded.get(capability);
+			if (!f.delete()){
+				throw new IOException("Unable to delete capability " + capability.getName());		
+			}
+			
+			loaded.remove(capability);
+			
+			plugin.notifier.onCapabilityRemoved(capability);
+		}else{
+			throw new IllegalArgumentException("Capability " + capability.getName() + " is not user-created");
+		}
+	}
+	
+	public void registerCapability(ICapability capability, File file){
+		plugin.loaded.put(capability, file);
+		notifier.onCapabilityAdded(capability);
+	}
 }

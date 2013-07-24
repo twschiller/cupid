@@ -28,7 +28,7 @@ import edu.washington.cs.cupid.capability.ISerializableCapability;
  * @author Todd Schiller
  */
 public class HydrationService {
-
+	
 	public HydrationService() {
 		super();
 	}
@@ -53,14 +53,25 @@ public class HydrationService {
 	}
 	
 	public ISerializableCapability hydrate(File file) throws NotSerializableException, FileNotFoundException, IOException, ClassNotFoundException{
-		ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
-		return (ISerializableCapability) fileIn.readObject();
+		ObjectInputStream fileIn = null;
+		
+		try{
+			fileIn = new ObjectInputStream(new FileInputStream(file));
+			return (ISerializableCapability) fileIn.readObject();
+		}finally{
+			try{
+				fileIn.close();
+			}catch(IOException ex){
+				// NO OP
+			}
+		}
 	}
 	
-	public void store(ISerializableCapability capability) throws IOException {
+	public File store(ISerializableCapability capability) throws IOException {
 		File file = new File(CupidPlatform.getPipelineDirectory(), cleanName(capability) + ".arrow");
 		ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(file));
 		writer.writeObject(capability);
 		writer.close();
+		return file;
 	}
 }

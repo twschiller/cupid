@@ -230,7 +230,6 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 
 				return Status.OK_STATUS;
 			} finally {
-				notifier.onChange(CupidScriptingPlugin.this);
 				monitor.done();
 			}
 		}
@@ -249,10 +248,15 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		return null;
 	}
 	
-	private void removeCapability(final String uniqueId) {
-		ICapability capability = find(uniqueId);
+	/**
+	 * Remove and unregister the capability with the given name
+	 * @param name the name of the capability
+	 */
+	private void removeCapability(final String name) {
+		ICapability capability = find(name);
 		if (capability != null) {
 			dynamic.remove(capability);
+			notifier.onCapabilityRemoved(capability);
 		}
 	}
 
@@ -281,7 +285,7 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		dynamic.add(capability);
 
 		if (notify) {
-			notifier.onChange(this);
+			notifier.onCapabilityAdded(capability);
 		}
 	}
 	

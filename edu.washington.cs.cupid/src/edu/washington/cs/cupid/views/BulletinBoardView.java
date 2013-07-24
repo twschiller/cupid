@@ -81,18 +81,6 @@ public final class BulletinBoardView extends ViewPart {
 		}
 		
 		@Override
-		public void onChange(final ICapabilityPublisher notifier) {
-			Display.getDefault().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					if (!viewer.getTree().isDisposed()) {
-						viewer.setInput(getViewSite());
-					}
-				}
-			});
-		}
-
-		@Override
 		public void dispose() {
 			// NO OP
 		}
@@ -144,6 +132,28 @@ public final class BulletinBoardView extends ViewPart {
 			}else{
 				return false;
 			}
+		}
+
+		@Override
+		public void onCapabilityAdded(ICapability capability) {
+			reload();
+		}
+
+		@Override
+		public void onCapabilityRemoved(ICapability capability) {
+			reload();
+		}
+		
+		private void reload(){
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					if (!viewer.getTree().isDisposed()) {
+						viewer.setInput(getViewSite());
+						viewer.getTree().layout();
+					}
+				}
+			});
 		}
 	}
 	
@@ -216,9 +226,9 @@ public final class BulletinBoardView extends ViewPart {
 			}
 		});
 		
-		viewer = new TreeViewer(panel, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer = new TreeViewer(panel, SWT.SINGLE | SWT.V_SCROLL);
 		viewer.setContentProvider(provider);
-		viewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		viewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		final TreeViewerColumn nameColumn = createColumn("Name", 100, 0);
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {
@@ -315,7 +325,6 @@ public final class BulletinBoardView extends ViewPart {
 		layout.addColumnData(new ColumnWeightData(1));
 		layout.addColumnData(new ColumnWeightData(1));
 		viewer.getTree().setLayout(layout);
-		
 		viewer.getTree().setHeaderVisible(true);
 		viewer.getTree().setLinesVisible(true);
 		viewer.setInput(getViewSite());

@@ -10,13 +10,14 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.ui;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
@@ -43,15 +44,15 @@ public class MappingWizard extends Wizard{
 		try {
 			if (page.hasKeyAsType()){
 				ValueMapping<?, ?> pipe = page.getValueMapping();
-				Activator.getDefault().getHydrationService().store(pipe);
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+				File file = Activator.getDefault().getHydrationService().store(pipe);
+				Activator.getDefault().registerCapability(pipe, file);
 				
 				CupidDataCollector.record(
 						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());
 			}else{
 				CapabilityMapping<?,?,?> pipe = page.getCapabilityMapping();
-				Activator.getDefault().getHydrationService().store(pipe);
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+				File file = Activator.getDefault().getHydrationService().store(pipe);
+				Activator.getDefault().registerCapability(pipe, file);
 				
 				CupidDataCollector.record(
 						CupidEventBuilder.createCapabilityEvent(MappingWizard.class, pipe, Activator.getDefault()).create());

@@ -10,13 +10,12 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.ui;
 
-import java.io.IOException;
+import java.io.File;
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
@@ -38,8 +37,8 @@ public class CreatePipelineWizard extends Wizard{
 	public boolean performFinish() {
 		DynamicSerializablePipeline pipe = page.createPipeline();
 		try {
-			Activator.getDefault().getHydrationService().store(pipe);
-			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+			File file = Activator.getDefault().getHydrationService().store(pipe);
+			Activator.getDefault().registerCapability(pipe, file);
 			CupidDataCollector.record(
 					CupidEventBuilder.createCapabilityEvent(CreatePipelineWizard.class, pipe, Activator.getDefault())
 					.addData("length", Integer.toString(page.getPipelineLength()))

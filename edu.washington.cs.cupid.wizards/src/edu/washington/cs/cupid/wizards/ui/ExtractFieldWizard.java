@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.ui;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
@@ -51,8 +53,9 @@ public class ExtractFieldWizard extends Wizard{
 	public boolean performFinish() {
 		try {
 			Getter<?, ?> pipe = page.getGetter();
-			Activator.getDefault().getHydrationService().store(pipe);
-			CupidPlatform.getCapabilityRegistry().registerStaticCapability(pipe);
+			File file = Activator.getDefault().getHydrationService().store(pipe);
+			
+			Activator.getDefault().registerCapability(pipe, file);
 			
 			CupidEvent event = CupidEventBuilder
 					.createCapabilityEvent(ExtractFieldWizard.class, pipe, Activator.getDefault())

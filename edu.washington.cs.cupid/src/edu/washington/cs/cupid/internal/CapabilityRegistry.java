@@ -10,12 +10,10 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.internal;
 
-import java.util.HashMap;
 import java.util.Set;
 import java.util.SortedSet;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
@@ -35,11 +33,6 @@ import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 public final class CapabilityRegistry implements ICapabilityRegistry {
 
 	/**
-	 * Set of available capabilities, organized by contributing publisher.
-	 */
-	private final HashMap<ICapabilityPublisher, Set<ICapability>> capabilityMap = Maps.newHashMap();
-
-	/**
 	 * Set of available capabilities.
 	 */
 	private final Set<ICapability> capabilities = Sets.newIdentityHashSet();
@@ -50,34 +43,17 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	private final ChangeNotifier notifier = new ChangeNotifier();
 	
 	@Override
-	public synchronized void onChange(final ICapabilityPublisher publisher) {
-		Set<ICapability> available = Sets.newHashSet();
-		
-		for (ICapability published : publisher.publish()){
-			if (published == null){
-				CupidActivator.getDefault().logError(
-						"Publisher published null capability: " + publisher.getClass().getName(), 
-						new NullPointerException());
-			} else if (published.getName() == null || published.getName().trim().isEmpty()){ 
-				CupidActivator.getDefault().logError(
-						"Publisher published capability without name: " + publisher.getClass().getName(), 
-						new IllegalArgumentException());
-			} else {
-				available.add(published);
-			}
-		}
-		
-		if (capabilityMap.containsKey(publisher)) {
-			Set<ICapability> old = capabilityMap.get(publisher);	
-			Set<ICapability> removed = Sets.difference(old, available);
-			capabilities.removeAll(removed);
-		}
-		
-		capabilityMap.put(publisher, available);
-		capabilities.addAll(available);
-		
-		notifier.onChange(this);
+	public void onCapabilityAdded(ICapability capability) {
+		capabilities.add(capability);
+		notifier.onCapabilityAdded(capability);
 	}
+
+	@Override
+	public void onCapabilityRemoved(ICapability capability) {
+		capabilities.remove(capability);
+		notifier.onCapabilityRemoved(capability);
+	}
+
 	
 	@Override
 	public synchronized ICapability[] publish() {
@@ -189,7 +165,21 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 	@Override
 	public synchronized void registerPublisher(final ICapabilityPublisher publisher) {
 		publisher.addChangeListener(this);
-		onChange(publisher);
+		
+		for (ICapability published : publisher.publish()){
+			if (published == null){
+				CupidActivator.getDefault().logError(
+						"Publisher published null capability: " + publisher.getClass().getName(), 
+						new NullPointerException());
+			} else if (published.getName() == null || published.getName().trim().isEmpty()){ 
+				CupidActivator.getDefault().logError(
+						"Publisher published capability without name: " + publisher.getClass().getName(), 
+						new IllegalArgumentException());
+			} else {
+				capabilities.add(published);
+				notifier.onCapabilityAdded(published);
+			}
+		}
 	}
 	
 	@Override
@@ -198,7 +188,7 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 			CupidActivator.getDefault().logError("Plug-in tried to register null capability", new NullPointerException());
 		} else {
 			capabilities.add(capability);
-			notifier.onChange(this);
+			notifier.onCapabilityAdded(capability);
 		}
 	}
 
@@ -226,5 +216,4 @@ public final class CapabilityRegistry implements ICapabilityRegistry {
 //		}
 //		return null;
 	}
-
 }

@@ -46,7 +46,7 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="edu.washington.cs.cupid.wizards.contribution1"
+            id="edu.washington.cs.cupid.wizards.objectContribution"
             objectClass="java.lang.Object">
          <menu
                id="edu.washington.cs.cupid.wizards.menu"
@@ -76,6 +76,16 @@
                id="edu.washington.cs.cupid.wizards.conditional.format"
                label="Create &amp;Formatting Rule"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.wizards.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.DeleteCapabilityAction"
+               id="edu.washington.cs.cupid.wizards.deleteCapability"
+               label="Delete Capability">
          </action>
       </objectContribution>
    </extension>

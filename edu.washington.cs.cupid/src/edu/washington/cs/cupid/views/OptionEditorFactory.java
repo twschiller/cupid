@@ -84,7 +84,8 @@ public final class OptionEditorFactory {
 	 * @param option the option
 	 * @return an editor for the given capability and option.
 	 */
-	public static OptionEditor<?> getEditor(final ICapability capability, final IParameter option) {
+	@SuppressWarnings({ "unchecked" })
+	public static OptionEditor<?> getEditor(final ICapability capability, @SuppressWarnings("rawtypes") final IParameter option) {
 		if (option.getType().equals(TypeToken.of(Integer.class))) {
 			return new IntegerInput(capability, option);
 		} else if (option.getType().equals(TypeToken.of(Boolean.class))) {

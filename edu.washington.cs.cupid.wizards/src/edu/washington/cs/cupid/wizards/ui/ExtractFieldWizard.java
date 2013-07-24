@@ -18,7 +18,6 @@ import org.eclipse.jface.wizard.Wizard;
 
 import com.google.common.base.Joiner;
 
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEvent;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;

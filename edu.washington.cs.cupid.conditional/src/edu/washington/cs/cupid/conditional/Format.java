@@ -10,8 +10,6 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.conditional;
 
-import java.io.Serializable;
-
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 

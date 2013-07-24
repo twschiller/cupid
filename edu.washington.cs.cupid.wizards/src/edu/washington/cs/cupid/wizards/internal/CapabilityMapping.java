@@ -31,9 +31,8 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 public class CapabilityMapping<I, K, V> extends AbstractMapping<I, K, V> implements IDynamicCapability {
 
-	private static final long serialVersionUID = 1L;
-	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.mapping.capability";
-
+	private static final long serialVersionUID = 20130724;
+	
 	private ISerializableCapability inputGenerator;
 	private ISerializableCapability valueGenerator;
 	private String keyLink;

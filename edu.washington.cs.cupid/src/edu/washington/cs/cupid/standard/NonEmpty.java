@@ -36,7 +36,7 @@ public final class NonEmpty<V> extends GenericLinearCapability<Collection<V>, Bo
 	}
 
 	@Override
-	public LinearJob getJob(final Collection<V> input) {
+	public LinearJob<Collection<V>, Boolean> getJob(final Collection<V> input) {
 		return new ImmediateJob<Collection<V>, Boolean>(this, input, !input.isEmpty());
 	}
 

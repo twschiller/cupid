@@ -20,9 +20,6 @@ import org.eclipse.egit.core.project.RepositoryMapping;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
@@ -31,6 +28,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Searches for existing Git repositories associated with a project's files.
  * @author Todd Schiller
  */
+@SuppressWarnings("restriction")
 public final class GitProjectRepositoriesCapability extends LinearCapability<IProject, Collection<RepositoryMapping>> {
 
 	/**

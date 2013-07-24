@@ -38,7 +38,6 @@ public class HistogramView extends ChartViewPart{
 		
 		double[] values = new double[results.values().size()];
 		
-		@SuppressWarnings("unchecked")
 		Number[] arr = (Number[]) results.values().toArray(new Number[]{});
 		
 		for (int i = 0; i < values.length; i++){

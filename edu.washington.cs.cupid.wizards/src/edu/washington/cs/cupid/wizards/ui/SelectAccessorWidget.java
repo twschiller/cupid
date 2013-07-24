@@ -137,6 +137,9 @@ public class SelectAccessorWidget extends Composite {
 				// NO OP
 			}
 		});
+		
+		methodTree.setInput(type.getText());
+		methodTree.refresh();
 	}
 	
 	private void onModify(){

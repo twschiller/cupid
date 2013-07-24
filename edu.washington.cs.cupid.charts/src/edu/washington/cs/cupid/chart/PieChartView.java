@@ -38,7 +38,6 @@ public class PieChartView extends ChartViewPart{
 		// determine relative frequencies
 		DefaultPieDataset dataset = new DefaultPieDataset();
 		
-		@SuppressWarnings("unchecked")
 		Set<?> unique = Sets.newHashSet(results.values());
 		
 		for (Object result : unique){

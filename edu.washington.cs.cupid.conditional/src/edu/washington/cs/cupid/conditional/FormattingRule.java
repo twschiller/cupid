@@ -12,8 +12,6 @@ package edu.washington.cs.cupid.conditional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.Serializable;
-
 /**
  * A conditional capability-based formatting rule.
  * @author Todd Schiller (tws@cs.washington.edu)

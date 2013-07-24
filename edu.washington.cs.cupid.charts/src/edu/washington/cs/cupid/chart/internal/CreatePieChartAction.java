@@ -10,7 +10,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.chart.HistogramView;
 import edu.washington.cs.cupid.chart.PieChartView;
 
 public class CreatePieChartAction implements IObjectActionDelegate {

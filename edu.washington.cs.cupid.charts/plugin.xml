@@ -49,15 +49,6 @@
          </action>
       </objectContribution>
    </extension>
-   <extension
-         point="org.eclipse.core.expressions.propertyTesters">
-      <propertyTester
-            class="edu.washington.cs.cupid.chart.internal.IsNumericTester"
-            id="edu.washington.cs.cupid.charts.isNumericTester"
-            namespace="edu.washington.cs.cupid.capability"
-            properties="isNumeric"
-            type="edu.washington.cs.cupid.capability.ICapability">
-      </propertyTester>
-   </extension>
+   
 
 </plugin>

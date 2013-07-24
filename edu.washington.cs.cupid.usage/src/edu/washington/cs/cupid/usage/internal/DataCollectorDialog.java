@@ -10,13 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.usage.internal;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -30,9 +28,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.osgi.framework.Bundle;
 
-import com.google.common.base.Joiner;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 
 /**
  * Dialog to prompt user to report usage data.

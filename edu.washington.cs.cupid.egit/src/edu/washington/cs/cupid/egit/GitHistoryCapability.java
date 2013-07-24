@@ -23,9 +23,6 @@ import org.eclipse.team.core.history.IFileRevision;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;

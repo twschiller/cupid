@@ -28,7 +28,6 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Capability that returns all Mylyn tasks.
  * @author Todd Schiller
  */
-@SuppressWarnings("restriction")
 public final class MylynTaskCapability extends LinearCapability<Void, List<AbstractTask>> {
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view

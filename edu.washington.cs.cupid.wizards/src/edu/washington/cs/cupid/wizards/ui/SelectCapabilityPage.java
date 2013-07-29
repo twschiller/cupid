@@ -2,6 +2,7 @@ package edu.washington.cs.cupid.wizards.ui;
 
 import java.util.List;
 
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 
@@ -20,10 +21,12 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.scripting.java.SnippetSourceView;
 import edu.washington.cs.cupid.scripting.java.SnippetSourceView.ModifyListener;
+import edu.washington.cs.cupid.types.ITypeAdapter;
 import edu.washington.cs.cupid.wizards.internal.Activator;
 import edu.washington.cs.cupid.wizards.internal.TypeSelection;
 
@@ -86,6 +89,12 @@ public class SelectCapabilityPage extends WizardPage {
 		for (Class<?> c : TypeSelection.getSuperTypes(TypeToken.of(startType))){
 			selectType.add(c.getName());
 		}
+		
+		// TODO: this should probably be done when determining the common type of all the selections
+		for (ITypeAdapter<?, ?> adapter : TypeManager.getTypeAdapterRegistry().getTypeAdapters(TypeToken.of(startType))){
+			selectType.add(adapter.getOutputType().getRawType().getName());
+		}
+		
 		selectType.select(0);
 		
 		Label selectCapabilityLbl = new Label(container, SWT.LEFT);
@@ -168,14 +177,21 @@ public class SelectCapabilityPage extends WizardPage {
 	private class SnippetListener implements ModifyListener{
 		@Override
 		public void onModify(String snippet, DiagnosticCollector<JavaFileObject> msgs) {
-			if (msgs.getDiagnostics().isEmpty()){
+			List<Diagnostic<?>> errors = Lists.newArrayList();
+			for (Diagnostic<?> d : msgs.getDiagnostics()){
+				if (d.getKind() == Diagnostic.Kind.ERROR){
+					errors.add(d);
+				}
+			}
+			
+			if (errors.isEmpty()){
 				setPageComplete(true);
 				setErrorMessage(null);
 				setMessage("Expression is valid", WizardPage.INFORMATION);
 			}else{
 				setPageComplete(false);
 				setMessage(null);
-				setErrorMessage(cleanMsg(msgs.getDiagnostics().get(0).getMessage(null)));
+				setErrorMessage(cleanMsg(errors.get(0).getMessage(null)));
 			}
 		}
 	}

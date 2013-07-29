@@ -1,6 +1,8 @@
 package edu.washington.cs.cupid.chart.internal;
 
 import java.awt.Frame;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -43,6 +45,9 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 
 	protected ICapability capability;
 	protected ICapability.IOutput<?> output;
+	protected Method outputMethod;
+	
+	protected List<Object> comboModel = Lists.newArrayList();
 	
 	protected ConcurrentMap<Object, Object> results;
 	
@@ -91,7 +96,17 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 			public void modifyText(ModifyEvent e) {
 				if (capability != null){
 					try{
-						output = CapabilityUtil.findOutput(capability, cOutput.getText());
+						Object selected = comboModel.get(cOutput.getSelectionIndex());
+						
+						if (selected instanceof ICapability.IOutput){
+							output = (ICapability.IOutput<?>) selected;
+							outputMethod = null;
+						}else if (selected instanceof Method){
+							output = CapabilityUtil.singleOutput(capability);
+							outputMethod = (Method) selected;
+						}else{
+							throw new RuntimeException("Unexpected output model entry of type " + selected.getClass().getName());
+						}
 					}catch(Exception ex){
 						// NO OP
 					}
@@ -123,6 +138,7 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 		if (CapabilityUtil.isUnary(capability)){
 			
 			List<ICapability.IOutput<?>> compatible = Lists.newArrayList();
+			List<Method> compatibleMethods = Lists.newArrayList();
 			
 			for (ICapability.IOutput<?> output : capability.getOutputs()){
 				for (TypeToken<?> type : accepts()){
@@ -132,23 +148,48 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 				}
 			}
 			
-			if (compatible.isEmpty()){
+			if (CapabilityUtil.hasSingleOutput(capability)){
+				ICapability.IOutput<?> output = CapabilityUtil.singleOutput(capability);
+				
+				Type t = output.getType().getType();
+				if (t instanceof Class){
+					for (Method m : ((Class<?>) t).getMethods()){
+						if (m.getParameterTypes().length == 0 && m.getName().startsWith("get")){
+							for (TypeToken<?> type : accepts()){
+								if (TypeManager.isJavaCompatible(type, TypeManager.boxType(TypeToken.of(m.getReturnType())))){
+									compatibleMethods.add(m);
+								}
+							}	
+						}
+					}
+				}
+			}
+			
+			if (compatible.isEmpty() && compatibleMethods.isEmpty()){
 				throw new IllegalArgumentException("Capability '" + capability.getName() + "' has no compatible outputs");
 			}
 			
-			this.capability = capability;	
-			this.output = compatible.get(0);
+			this.capability = capability;
+			this.output = !compatible.isEmpty() ? compatible.get(0) : null;	
+			this.outputMethod = compatible.isEmpty() ? compatibleMethods.get(0) : null;
 			
-			if (compatible.size() == 1){
+			if (compatible.size() + compatibleMethods.size() <= 1){
 				this.cSelectOutput.setVisible(false);
 			}else{
 				this.cSelectOutput.setVisible(true);
 			}
 			
 			this.cOutput.removeAll();
+			this.comboModel.clear();
 			for (ICapability.IOutput<?> o : compatible){
 				this.cOutput.add(o.getName());
+				this.comboModel.add(o);
 			}
+			for (Method m : compatibleMethods){
+				this.cOutput.add(m.getName());
+				this.comboModel.add(m);
+			}
+			
 			this.cOutput.select(0);
 			
 			this.setPartName(getName() + ": " + capability.getName());
@@ -183,9 +224,19 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 						CapabilityStatus status = (CapabilityStatus) event.getResult();
 						
 						Object result = status.value() != null
-								? status.value().getOutput(output)
-								: status.getException();
+									? status.value().getOutput(output)
+									: status.getException();
 						
+						if (outputMethod != null){
+							try {
+								result = outputMethod.invoke(result);
+							} catch (IllegalArgumentException e) {
+								throw new RuntimeException("Incompatible output of type " + result.getClass() + " for method " + outputMethod.getName());
+							} catch (Exception e) {
+								result = e;
+							}
+						}
+								
 						results.put(x, result);
 						
 						if (results.size() == compatible.size()){

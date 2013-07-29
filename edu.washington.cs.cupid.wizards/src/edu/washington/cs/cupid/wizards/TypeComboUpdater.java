@@ -20,6 +20,11 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.ui.progress.UIJob;
 
+import com.google.common.collect.Lists;
+
+import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.types.ITypeAdapter;
+
 /**
  * Updates the supertype list for the associated {@link Combo}.
  * @author Todd Schiller
@@ -58,6 +63,13 @@ public class TypeComboUpdater {
 
 					final java.util.List<IType> xs = TypeUtil.fetchTypes(type);
 
+					final java.util.List<String> adapted = Lists.newArrayList();
+					
+					for (ITypeAdapter<?,?> adapter : TypeManager.getTypeAdapterRegistry().getTypeAdapters(TypeManager.forName(type))){
+						String typeName = adapter.getOutputType().getRawType().getName();
+						adapted.add(typeName);
+					}
+					
 					updateList = new UIJob("Update Supertype List"){
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor) {
@@ -80,6 +92,11 @@ public class TypeComboUpdater {
 										combo.add(s.getFullyQualifiedName());
 									}
 								}
+								
+								for (String t : adapted){
+									combo.add(t);
+								}
+								
 							}
 							return Status.OK_STATUS;
 						}

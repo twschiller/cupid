@@ -39,6 +39,10 @@
       <adapter
             class="edu.washington.cs.cupid.jdt.types.ProjectAdapter">
       </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.CompilationUnitAdapter"
+            name="CompilationUnitFileAdapter">
+      </adapter>
    </extension>
 
 </plugin>

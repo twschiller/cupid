@@ -36,6 +36,14 @@ public class CapabilityArguments implements ICapabilityArguments {
 		arguments.put(parameter, argument);
 	}
 	
+	public void add(IParameter<?> parameter, ICapability capability){
+		if (!CapabilityUtil.isSerializable(capability)){
+			throw new IllegalArgumentException("Capability argument must be serializable; capability: " + capability.getName());
+		}
+		
+		arguments.put(parameter, capability);
+	}
+	
 	@Override
 	public <T> T getValueArgument(IParameter<T> parameter){
 		
@@ -54,9 +62,33 @@ public class CapabilityArguments implements ICapabilityArguments {
 		}	
 	}
 	
+	public boolean hasValueArgument(IParameter<?> parameter){
+		if (arguments.containsKey(parameter)) {
+			return !(arguments.get(parameter) instanceof ICapability);
+		}else if (parameter.hasDefault()) {
+			return true;
+		} else {
+			throw new IllegalArgumentException("No argument supplied for parameter: " + parameter);
+		}	
+	}
+	
 	@Override
 	public Map<IParameter<?>, Object> getArguments() {
 		return Collections.unmodifiableMap(arguments);
+	}
+
+	@Override
+	public <T> ICapability getCapabilityArgument(IParameter<T> parameter) {
+		if (arguments.containsKey(parameter)) {
+			Object result = arguments.get(parameter);
+			if (result instanceof ICapability){
+				return (ICapability) result;
+			} else {
+				throw new IllegalArgumentException("Parameter has constant argument");
+			}
+		} else {
+			throw new IllegalArgumentException("No argument supplied for parameter: " + parameter);
+		}	
 	}
 
 }

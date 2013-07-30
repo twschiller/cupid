@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.core"
       label="Cupid for Eclipse"
-      version="1.3.2.v20130730-1140"
+      version="1.3.2.v20130730-1300"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"
@@ -254,25 +254,31 @@ its rights to a jury trial in any resulting litigation.
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.core.resources" version="3.7.101" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.ui" version="3.7.2" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.ide" version="3.7.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.expressions" version="3.4.300" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.7.3" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.filesystem" version="1.3.100" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jface.text"/>
       <import plugin="org.eclipse.ui.editors"/>
-      <import plugin="org.eclipse.pde.core"/>
       <import plugin="org.eclipse.jdt.launching"/>
+      <import plugin="org.eclipse.pde.core"/>
       <import plugin="org.eclipse.pde.ui"/>
-      <import plugin="org.eclipse.jdt" version="3.7.2" match="greaterOrEqual"/>
       <import plugin="edu.washington.cs.cupid" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.junit" version="3.7.0" match="greaterOrEqual"/>
-      <import plugin="org.junit" version="4.8.2" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.debug.core" version="3.7.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.debug.ui" version="3.7.102" match="greaterOrEqual"/>
-      <import plugin="edu.washington.cs.cupid.markers" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.junit.core"/>
+      <import plugin="org.eclipse.core.resources" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.ui" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.debug.ui" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="edu.washington.cs.cupid.usage" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jface"/>
+      <import plugin="org.eclipse.jface.text" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="edu.washington.cs.cupid.scripting.java" version="1.0.4" match="greaterOrEqual"/>
+      <import plugin="edu.washington.cs.cupid.conditional" version="1.0.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.debug.core" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.debug"/>
+      <import plugin="org.eclipse.jdt.launching" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.debug" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.debug.ui" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.editors" version="3.7.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

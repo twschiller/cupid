@@ -21,6 +21,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
 
@@ -75,7 +76,7 @@ public final class OptionEditorFactory {
 		 * Creates the editor in <code>parent</code> assuming a {@link GridLayout}.
 		 * @param parent the parent composite
 		 */
-		void create(Composite parent, T initialValue);
+		Control create(Composite parent, T initialValue);
 	}
 	
 	/**
@@ -166,7 +167,7 @@ public final class OptionEditorFactory {
 		}
 
 		@Override
-		public void create(final Composite parent, Integer initialValue) {
+		public Control create(final Composite parent, Integer initialValue) {
 			field = new Text(parent, SWT.BORDER);
 			field.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
@@ -182,6 +183,8 @@ public final class OptionEditorFactory {
 					alert();
 				}
 			});
+			
+			return field;
 		}
 	}
 	
@@ -207,7 +210,7 @@ public final class OptionEditorFactory {
 		}
 
 		@Override
-		public void create(final Composite parent, Double initialValue) {
+		public Control create(final Composite parent, Double initialValue) {
 			field = new Text(parent, SWT.BORDER);
 			field.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
@@ -223,6 +226,8 @@ public final class OptionEditorFactory {
 					alert();
 				}
 			});
+			
+			return field;
 		}
 	}
 
@@ -244,7 +249,7 @@ public final class OptionEditorFactory {
 		}
 
 		@Override
-		public void create(final Composite parent, String initialValue) {
+		public Control create(final Composite parent, String initialValue) {
 			field = new Text(parent, SWT.BORDER);
 			field.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
@@ -260,6 +265,8 @@ public final class OptionEditorFactory {
 					alert();
 				}
 			});
+			
+			return field;
 		}
 	}
 		
@@ -282,7 +289,7 @@ public final class OptionEditorFactory {
 		}
 
 		@Override
-		public void create(final Composite parent, Boolean initialValue) {
+		public Control create(final Composite parent, Boolean initialValue) {
 			composite = new Composite(parent, SWT.NONE);
 			composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
@@ -314,6 +321,8 @@ public final class OptionEditorFactory {
 					// NO OP
 				}
 			});
+			
+			return composite;
 		}
 	}	
 }

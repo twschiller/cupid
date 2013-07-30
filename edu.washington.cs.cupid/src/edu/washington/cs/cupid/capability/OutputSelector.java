@@ -35,7 +35,7 @@ public class OutputSelector extends AbstractSerializableCapability{
 		this.outputName = output.getName();
 	}
 	
-	private ICapability bind() throws NoSuchCapabilityException{
+	public ICapability getCapability() throws NoSuchCapabilityException{
 		if (capability instanceof ICapability) {
 			return (ICapability) capability;
 		} else if (capability instanceof String) {
@@ -45,10 +45,14 @@ public class OutputSelector extends AbstractSerializableCapability{
 		}
 	}
 	
+	public ICapability.IOutput<?> getOutput() throws NoSuchCapabilityException{
+		return CapabilityUtil.findOutput(getCapability(), outputName);
+	}
+	
 	@Override
 	public Set<? extends IParameter<?>> getParameters() {
 		try {
-			return bind().getParameters();
+			return getCapability().getParameters();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -59,7 +63,7 @@ public class OutputSelector extends AbstractSerializableCapability{
 		ICapability c;
 		Set<? extends IOutput<?>> os = null;
 		try {
-			c = bind();
+			c = getCapability();
 			
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
@@ -80,7 +84,7 @@ public class OutputSelector extends AbstractSerializableCapability{
 	public CapabilityJob<? extends ICapability> getJob(ICapabilityArguments input) {
 		ICapability c = null;
 		try {
-			c = bind();
+			c = getCapability();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}
@@ -124,7 +128,7 @@ public class OutputSelector extends AbstractSerializableCapability{
 	@Override
 	public EnumSet<Flag> getFlags() {
 		try {
-			return bind().getFlags();
+			return getCapability().getFlags();
 		} catch (NoSuchCapabilityException e) {
 			throw new DynamicBindingException(e);
 		}

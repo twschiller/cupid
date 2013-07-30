@@ -18,5 +18,5 @@ public interface ICapabilityArguments {
 
 	Map<IParameter<?>, Object> getArguments();
 	<T> T getValueArgument(IParameter<T> parameter);
-	
+	<T> ICapability getCapabilityArgument(IParameter<T> parameter);
 }

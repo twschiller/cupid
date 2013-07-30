@@ -36,6 +36,8 @@ import com.google.common.io.CharStreams;
  */
 public final class DataCollectorDialog extends TitleAreaDialog {
 	
+	private static final String CONSENT_AGREEMENT_PATH = "/documents/consent-agreement.html"; //$NON-NLS-1$
+	
 	/**
 	 * Construct dialog to prompt user to report usage data.
 	 * @param parentShell the parent SWT shell
@@ -77,8 +79,13 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 		
 		try {
 			Bundle bundle = Activator.getDefault().getBundle();
-			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
-			InputStream inputStream = fileURL.openConnection().getInputStream();
+			URL fileURL = bundle.getEntry(CONSENT_AGREEMENT_PATH);
+			
+			if (fileURL == null){
+				throw new RuntimeException("Unable to locate consent agreement at " + CONSENT_AGREEMENT_PATH);
+			}
+			
+			InputStream inputStream = fileURL.openStream();
 			String content = CharStreams.toString(new InputStreamReader(inputStream, Charset.forName("UTF-8")) );
 			consentText.setText(content);
 		} catch (Exception ex) {

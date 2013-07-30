@@ -646,7 +646,7 @@ public class CreatePipelinePage extends WizardPage{
 
 		optionGroup.setLayout(new GridLayout());
 		
-		optionContainer = new ScrolledComposite(optionGroup, SWT.V_SCROLL);
+		optionContainer = new ScrolledComposite(optionGroup, SWT.V_SCROLL | SWT.H_SCROLL);
 		optionContainer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		optionContainer.setLayout(new FillLayout());	
 		 

@@ -47,10 +47,10 @@ import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapability {
 	// TODO handle concurrent modifications to capability bindings
 	
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 20130729L;
 	
 	private final List<Serializable> capabilities;
-	private final List<Map<IParameter<?>, IParameter<?>>> sources;
+	private final List<Map<IParameter<?>, Serializable>> sources;
 	private final Set<IParameter<?>> parameters;
 	private final IOutput<?> output;
 	
@@ -75,20 +75,30 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 		try {
 			List<ICapability> bind = inorder();
 	
+			// create options
+			
 			for (int i = 0; i < bind.size(); i++){
 				ICapability capability = bind.get(i);
 				ICapabilityArguments capabilityOptions = options.get(i);
 				
-				Map<IParameter<?>, IParameter<?>> capabilitySources = Maps.newHashMap();
+				Map<IParameter<?>, Serializable> capabilitySources = Maps.newHashMap();
 				
 				for (IParameter<?> option : CapabilityUtil.options(capability)){
-					IParameter<?> copy = new OptionalParameter(option.getName(), option.getType(), (Serializable) capabilityOptions.getValueArgument(option));
-					parameters.add(copy);
-					capabilitySources.put(option, copy);
+					
+					if (capabilityOptions.hasValueArgument(option)){
+						IParameter<?> copy = new OptionalParameter(option.getName(), option.getType(), (Serializable) capabilityOptions.getValueArgument(option));
+						parameters.add(copy);
+						capabilitySources.put(option, copy);
+					}else{
+						ICapability optionCapability = capabilityOptions.getCapabilityArgument(option);
+						capabilitySources.put(option, (Serializable) optionCapability);	
+					}
 				}
 				
 				sources.add(capabilitySources);
 			}
+			
+			// create initial parameter
 			
 			ICapability first = bind.get(0);
 			if (CapabilityUtil.isUnary(first)){
@@ -175,8 +185,9 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 	}
 	
 	private ICapabilityArguments formArguments(
+			final Object mainInput, 
 			final ICapability capability, 
-			final Map<IParameter<?>, IParameter<?>> capabilitySources, 
+			final Map<IParameter<?>, Serializable> capabilitySources, 
 			final ICapabilityArguments options, 
 			final Object input){
 		
@@ -187,8 +198,32 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 		}
 		
 		for (final IParameter option : CapabilityUtil.options(capability)){
-			IParameter<?> source = capabilitySources.get(option);
-			args.add(option, options.getValueArgument(source));
+			Serializable source = capabilitySources.get(option);
+			
+			if (source instanceof ICapability){
+				ICapability optionCapability = (ICapability) source;
+				CapabilityJob<?> job = optionCapability.getJob(CapabilityUtil.packUnaryInput(optionCapability, mainInput));
+				
+				job.schedule();
+				try {
+					job.join();
+				} catch (InterruptedException e) {
+					throw new RuntimeException("Error running option capability " + optionCapability.getName(), e);
+				}
+				
+				CapabilityStatus status = (CapabilityStatus) job.getResult();
+
+				if (status.getCode() == Status.OK) {
+					args.add(option, CapabilityUtil.singleOutputValue(optionCapability, status));
+				} else {
+					throw new RuntimeException("Error running option capability " + optionCapability.getName(), status.getException());
+				}
+				
+			}else if (source instanceof IParameter){
+				args.add(option, options.getValueArgument((IParameter<?>) source));		
+			}else{
+				throw new IllegalArgumentException("Unexpected argument of type " + source.getClass().getName());
+			}
 		}
 		
 		return args;
@@ -204,19 +239,21 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 
 					List<ICapability> resolved = inorder();
 					
-					Object result = getInputs().getValueArgument(CapabilityUtil.unaryParameter(getCapability()));
+					final Object mainInput = getInputs().getValueArgument(CapabilityUtil.unaryParameter(getCapability()));
+					
+					Object result = mainInput;
 					List<Object> intermediateResults = Lists.newArrayList();
 					intermediateResults.add(result);
 
 					for (int i = 0; i < resolved.size(); i++){
 						ICapability capability = resolved.get(i);
-						Map<IParameter<?>, IParameter<?>> capabilitySources = sources.get(i);
+						Map<IParameter<?>, Serializable> capabilitySources = sources.get(i);
 						
 						if (monitor.isCanceled()) {
 							return CapabilityStatus.makeCancelled();
 						}
 
-						CapabilityJob<?> subtask = capability.getJob(formArguments(capability, capabilitySources, getInputs(), result));
+						CapabilityJob<?> subtask = capability.getJob(formArguments(mainInput, capability, capabilitySources, getInputs(), result));
 
 						if (subtask == null) {
 							throw new RuntimeException("Capability " + capability.getName() + " produced null job");

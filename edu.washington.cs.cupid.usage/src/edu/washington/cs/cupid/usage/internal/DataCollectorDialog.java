@@ -79,9 +79,10 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 			Bundle bundle = Activator.getDefault().getBundle();
 			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
 			InputStream inputStream = fileURL.openConnection().getInputStream();
-			String content = CharStreams.toString( new InputStreamReader( inputStream, Charset.forName("UTF-8")) );
+			String content = CharStreams.toString(new InputStreamReader(inputStream, Charset.forName("UTF-8")) );
 			consentText.setText(content);
 		} catch (Exception ex) {
+			Activator.getDefault().logError("Error loading consent form: " + ex.getLocalizedMessage(), ex);
 			consentText.setText("Error loading consent form: " + ex.getLocalizedMessage());
 		}
 		
@@ -92,5 +93,4 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 		
 		return parent;
 	}
-	
 }

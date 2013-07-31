@@ -29,10 +29,10 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.google.gson.Gson;
 
-import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
 import edu.washington.cs.cupid.conditional.FormattingRuleManager;
 import edu.washington.cs.cupid.conditional.internal.Activator;
+import edu.washington.cs.cupid.conditional.internal.FormatUtil;
 
 /**
  * Preference page for defining and editing conditional formatting rules.
@@ -121,7 +121,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 					FormattingRule modified = dEdit.getRule();
 					item.setData(modified);
 					item.setText(modified.getName());
-					Formatter.applyFormat(item, modified.getFormat());	
+					FormatUtil.setFormat(null, item, modified.getFormat());	
 				}
 			}
 			
@@ -276,7 +276,7 @@ public final class FormattingPreferencePage extends PreferencePage implements IW
 		item.setChecked(rule.isActive());
 		item.setData(rule);
 		
-		Formatter.applyFormat(item, rule.getFormat());	
+		FormatUtil.setFormat(null, item, rule.getFormat());	
 		
 		return item;
 	}

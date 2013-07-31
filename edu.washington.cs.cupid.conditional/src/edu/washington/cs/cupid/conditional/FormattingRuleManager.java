@@ -22,8 +22,13 @@ import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 public class FormattingRuleManager implements IPropertyChangeListener {
 
-	private static FormattingRuleManager instance = new FormattingRuleManager();
+	public interface RuleChangeListener{
+		void ruleActivated(FormattingRule rule);
+		void ruleDeactivated(FormattingRule rule);
+	}
 	
+	private static FormattingRuleManager instance = new FormattingRuleManager();
+
 	private FormattingRuleManager(){
 		updateRules();
 	}
@@ -36,6 +41,8 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 	 * Active rules, ordered by precedence.
 	 */
 	private List<FormattingRule> activeRules = Lists.newArrayList();
+	
+	private List<RuleChangeListener> listeners = Lists.newArrayList();
 	
 	/**
 	 * @return the formatting rules in the preference store
@@ -57,6 +64,10 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 		}
 	}
 	
+	public void addRuleChangeListener(RuleChangeListener listener){
+		listeners.add(listener);
+	}
+	
 	/**
 	 * Set {@link Activator#activeRules} to the list of rules that are active
 	 * and have an associated capability.
@@ -76,10 +87,18 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 			
 			for (FormattingRule rule : Sets.difference(newSet, oldSet)) {
 				CupidDataCollector.record(createRuleEvent("enableFormattingRule", rule).create());
+			
+				for (RuleChangeListener listener : listeners){
+					listener.ruleActivated(rule);
+				}
 			}
 			
 			for (FormattingRule rule : Sets.difference(oldSet, newSet)) {
 				CupidDataCollector.record(createRuleEvent("disableFormattingRule", rule).create());
+				
+				for (RuleChangeListener listener : listeners){
+					listener.ruleDeactivated(rule);
+				}
 			}
 			
 			activeRules.clear();

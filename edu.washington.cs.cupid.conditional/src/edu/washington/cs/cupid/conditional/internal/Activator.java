@@ -11,16 +11,15 @@
 package edu.washington.cs.cupid.conditional.internal;
 
 import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IStartup;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.progress.WorkbenchJob;
 import org.osgi.framework.BundleContext;
 
 import com.google.common.base.Preconditions;
@@ -62,7 +61,6 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	 * Applies conditional formatting rules to views when they are activated.
 	 */
 	private Formatter formatter;
-	
 	private FormattingRuleManager ruleManager;
 
 	@Override
@@ -70,49 +68,39 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 		super.start(context);
 		plugin = this;
 		
-		formatter = new Formatter();
+		IWorkbench workbench = PlatformUI.getWorkbench();
+		
 		ruleManager = FormattingRuleManager.getInstance();
+		formatter = new Formatter(workbench, ruleManager);
 		
 		getPreferenceStore().addPropertyChangeListener(ruleManager);
 		
-		final IWorkbench workbench = PlatformUI.getWorkbench();
-		
-		workbench.getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-				
-				for (IWorkbenchPage page : window.getPages()) {
-					for (IViewReference view : page.getViewReferences()) {
-						formatter.applyFormattingRules(view);
-					}
-					
-					page.addPartListener(formatter);
-				}
-				
-				window.addPageListener(new IPageListener() {
-					@Override
-					public void pageActivated(final IWorkbenchPage page) {
-						page.addPartListener(formatter);
-					}
-					@Override
-					public void pageClosed(final IWorkbenchPage page) {
-						page.removePartListener(formatter);
-					}
-					@Override
-					public void pageOpened(final IWorkbenchPage page) {
-						page.addPartListener(formatter);
-					}
-				});
-			}
-		});
-		
 		pluginLog = Platform.getLog(context.getBundle());
+	
+		new FormatWorkbenchJob().schedule();
 	}
+	
+	public class FormatWorkbenchJob extends WorkbenchJob{
+		public FormatWorkbenchJob() {
+			super("Format Workbench");
+		
+		}
+
+		@Override
+		public IStatus runInUIThread(IProgressMonitor monitor) {
+			try{
+				formatter.formatActiveWindow();
+				return Status.OK_STATUS;
+			}finally{
+				monitor.done();
+			}
+		}
+	}
+	
 	
 	@Override
 	public void earlyStartup() {
-		// NO OP?	
+		// NOP	
 	}
 
 	@Override

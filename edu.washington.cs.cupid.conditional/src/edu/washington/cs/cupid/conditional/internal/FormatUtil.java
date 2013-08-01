@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
 import java.util.WeakHashMap;
 
 import org.eclipse.swt.graphics.Color;
@@ -44,6 +45,16 @@ public final class FormatUtil {
 
 	private FormatUtil(){
 		// NOP
+	}
+	
+	public static Format merge(List<Format> formats){
+		Format result = new Format();
+		for (Format format : formats){
+			if (format.getBackground() != null) result.setBackground(format.getBackground());
+			if (format.getForeground() != null) result.setForeground(format.getForeground());
+			if (format.getFont() != null) result.setFont(format.getFont());
+		}
+		return result;
 	}
 	
 	/**

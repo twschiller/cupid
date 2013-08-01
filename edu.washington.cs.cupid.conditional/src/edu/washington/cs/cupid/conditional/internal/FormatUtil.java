@@ -163,15 +163,6 @@ public final class FormatUtil {
 		Display display = Display.getDefault();
 		Class<?> clazz = widget.getClass();
 		
-		System.out.println("Applied format to object " + widget);
-		
-		widget.addListener(SWT.Paint | SWT.Paint, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				System.out.println("Widget was repainted");
-			}
-		});
-		
 		if (format.getBackground() != null) {
 			Color bg = new Color(display, format.getBackground());
 			

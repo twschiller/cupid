@@ -12,7 +12,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources,
  edu.washington.cs.cupid.usage;bundle-version="1.0.0",
  edu.washington.cs.cupid.scripting.java,
- org.eclipse.jdt.ui
+ org.eclipse.jdt.ui,
+ org.eclipse.jface
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/gson-2.2.2.jar,

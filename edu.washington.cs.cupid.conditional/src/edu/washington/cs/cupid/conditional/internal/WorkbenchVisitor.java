@@ -28,34 +28,36 @@ public class WorkbenchVisitor {
 		this.getControlMethod = partPaneClazz.getMethod("getControl");
 	}
 	
-	public boolean visit(final Tree tree){
+	public void visit(final Tree tree){
 		for (final TreeItem item : tree.getItems()) {
 			visit(tree, item);
 		}
-		return true;
 	}
 	
-	public boolean visit(final Tree tree, final TreeItem item){
-		return true;
+	public void visit(final Tree tree, final TreeItem item){
+		for (final TreeItem child : item.getItems()){
+			visit(tree, child);
+		}
 	}
 	
-	public boolean visit(final Table table, final TableItem item){
-		return true;
+	public void visit(final Table table, final TableItem item){
+		// NOP
 	}
 	
-	public boolean visit(final Composite composite){
-		return true;
+	public void visit(final Composite composite){
+		for (Control child : composite.getChildren()){
+			dispatch(child);
+		}
 	}
 	
-	public boolean visit(final Table table){
+	public void visit(final Table table){
 		for (final TableItem item : table.getItems()) {
 			visit(table, item);
 		}
-		return true;
 	}
 	
-	public boolean visit(final Control control){
-		return true;
+	public void visit(final Control control){
+		// NOP
 	}
 	
 	private void dispatch(final Control control){
@@ -70,26 +72,23 @@ public class WorkbenchVisitor {
 		}
 	}
 	
-	public boolean visit(final IWorkbenchWindow window){
+	public void visit(final IWorkbenchWindow window){
 		for (IWorkbenchPage page: window.getPages()){
 			visit(page);
 		}
-		return true;
 	}
 	
-	public boolean visit(final IWorkbench workbench){
+	public void visit(final IWorkbench workbench){
 		for (IWorkbenchWindow window: workbench.getWorkbenchWindows()){
 			visit(window);
 		}
-		return true;
 	}
 	
-	public boolean visit(final IWorkbenchPage page){
+	public void visit(final IWorkbenchPage page){
 		visit(page.getActivePartReference());
-		return true;
 	}
 	
-	public boolean visit(final IWorkbenchPartReference partRef) {
+	public void visit(final IWorkbenchPartReference partRef) {
 		Control control = null;
 		
 		if (partRef instanceof IViewReference) {
@@ -104,7 +103,5 @@ public class WorkbenchVisitor {
 				dispatch(control);
 			}
 		}
-		
-		return true;
 	}
 }

@@ -84,8 +84,8 @@ public class SnippetEvalManager {
 		
 		while (current != null){
 			result.add(current);
-			for (Class<?> i : clazz.getInterfaces()){
-				result.add(i);
+			for (Class<?> i : current.getInterfaces()){
+				result.addAll(getDependentClasses(i));
 			}
 			current = current.getSuperclass();
 		}

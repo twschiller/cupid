@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -85,23 +86,28 @@ public class WorkbenchVisitor {
 	}
 	
 	public void visit(final IWorkbenchPage page){
-		visit(page.getActivePartReference());
+		for (IViewReference viewRef : page.getViewReferences()){
+			visit(viewRef);
+		}
+	}
+	
+	public void visit(final IViewReference viewRef){
+		Control control = null;
+		try {
+			Object pane = getPaneMethod.invoke(viewRef);
+			control = (Control) getControlMethod.invoke(pane);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		if (control != null) {
+			dispatch(control);
+		}
 	}
 	
 	public void visit(final IWorkbenchPartReference partRef) {
-		Control control = null;
-		
 		if (partRef instanceof IViewReference) {
-			try {
-				Object pane = getPaneMethod.invoke(partRef);
-				control = (Control) getControlMethod.invoke(pane);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-
-			if (control != null) {
-				dispatch(control);
-			}
+			visit((IViewReference) partRef);
 		}
 	}
 }

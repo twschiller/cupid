@@ -215,12 +215,10 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 				SubMonitor loopProgress = progress.newChild(70).setWorkRemaining(classes.size());
 		          
 				for (ICompilationUnit clazz : classes) {		
-					logInformation("Loading dynamic capability " + simpleName(clazz));
-
 					try {
 						loadDynamicCapability(clazz, false);
 					} catch (Exception e) {
-						logError("Error loading dynamic capability " + simpleName(clazz), e);
+						logError("Error loading class from file " + simpleName(clazz), e);
 					} catch (Error e) {
 						// expected when there are compilation errors
 					} finally {
@@ -277,6 +275,8 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		Class<?> definition = loader.loadClass(simpleName(element));
 		
 		if (!ICapability.class.isAssignableFrom(definition)) return;
+		
+		logInformation("Loaded dynamic capability " + definition.getSimpleName() + " from " + simpleName(element));
 		
 		ICapability capability = (ICapability) definition.newInstance();
 

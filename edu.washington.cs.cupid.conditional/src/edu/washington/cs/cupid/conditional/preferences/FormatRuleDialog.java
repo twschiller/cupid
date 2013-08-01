@@ -420,6 +420,12 @@ public class FormatRuleDialog extends TitleAreaDialog {
 		}
 	}
 	
+	@Override
+	protected void okPressed() {
+		rule.setSnippet(vSnippet.getSnippet());
+		super.okPressed();
+	}
+
 	/**
 	 * Update the list of compatible capabilities
 	 */

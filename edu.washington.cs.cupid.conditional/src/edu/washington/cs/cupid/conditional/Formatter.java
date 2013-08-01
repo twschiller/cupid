@@ -10,21 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.conditional;
 
-import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.LabelProviderChangedEvent;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.TreeEvent;
@@ -36,20 +26,19 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.IDecoratorManager;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.decorators.DecoratorManager;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
-import edu.washington.cs.cupid.IInvalidationListener;
+import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
@@ -59,7 +48,6 @@ import edu.washington.cs.cupid.conditional.internal.FormatUtil;
 import edu.washington.cs.cupid.conditional.internal.FormatUtil.RuleCapabilityPair;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
 import edu.washington.cs.cupid.conditional.internal.WorkbenchVisitor;
-import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 
 /**
@@ -73,40 +61,29 @@ import edu.washington.cs.cupid.jobs.NullJobListener;
  * @author Todd Schiller (tws@cs.washington.edu)
  * @see {@link FormatUtil} Utility methods for performing formatting
  */
-public class Formatter extends NullPartListener implements DisposeListener, IInvalidationListener, FormattingRuleManager.RuleChangeListener {
+public class Formatter extends NullPartListener implements DisposeListener, FormattingRuleManager.RuleChangeListener {
 
 	// TODO Later rules will override the formatting specified by earlier rule.
-	// TODO Check if a rule was removed before applying it
 	// TODO Stale formatting needs to be cleared when the result is invalidated
 	
 	/**
 	 * The original format for a workbench item; used to restore formats when recomputing capabilities.
+	 * Items are removed from the map when they are disposed, or the conditional formatting is cleared.
 	 */
-	private final Map<Item, Format> originalFormats = Maps.newIdentityHashMap();
+	private final Map<Item, Format> originalItemFormats = Maps.newIdentityHashMap();
+	
+	private final Map<Item, Format> toReapply = Maps.newIdentityHashMap();
 	
 	/**
-	 * The set of inputs and their associated display items.
+	 * Mapping from each item to the {@link Table} or {@link Tree} containing the 
+	 * item. Items are removed from the map when they are disposed.
 	 */
-	private final Multimap<Object, Item> activeObjects = HashMultimap.create();
+	private final Map<Item, Control> itemContainers = Maps.newIdentityHashMap();
 	
-	/**
-	 * The set of items with conditional formatting, and their associated inputs. Guarded by monitor lock for {@link Formatter#activeObjects}. 
-	 * XXX what if the associated input changes?
-	 */
-	private final IdentityHashMap<Item, Object> activeItems = Maps.newIdentityHashMap();
-	
-	private final WeakHashMap<Item, Format> activeFormats = new WeakHashMap<Item, Format>();
-	
-	private final ISchedulingRuleRegistry scheduler = CapabilityExecutor.getSchedulingRuleRegistry();
-	
-	private final FormattingRuleManager ruleManager;
+	private final Object formatLock = new Object();
 	
 	private final IWorkbench workbench;
-	
-	private final WorkbenchFormatter formatVisitor;
-	private final WorkbenchRegister registerVisitor;
-	
-	private final PageListener pageListener = new PageListener();
+	private final FormattingRuleManager ruleManager;
 	
 	/**
 	 * Construct a listener that applies conditional formatting rules to workbench items.
@@ -117,35 +94,42 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		this.ruleManager = ruleManager;
 		this.formatVisitor = new WorkbenchFormatter();
 		this.registerVisitor = new WorkbenchRegister();
-		
-		CapabilityExecutor.addCacheListener(this);
 		this.ruleManager.addRuleChangeListener(this);
-		
-		final IDecoratorManager decorationManager = workbench.getDecoratorManager();
-		decorationManager.addListener(new ReapplyFormatListener());
-		
-		registerVisitor.visit(workbench);
 	}
 	
+	/**
+	 * Registers the formatter with the workbench.
+	 * <b>Must be run from the UI thread</b>
+	 */
+	public void initialize(){
+		registerVisitor.visit(workbench);
+		Job.getJobManager().addJobChangeListener(new DecorationManager());
+	}
+	
+	/**
+	 * <b>Must be run from the UI thread</b>
+	 */
 	public void formatActiveWindow(){
 		formatVisitor.visit(workbench.getActiveWorkbenchWindow());
 	}
 	
 	private void asyncConditionalFormat(final Control owner, final Item item){
-		Object input = FormatUtil.data(item);
+		Object data = FormatUtil.data(item);
 		
-		for (RuleCapabilityPair rule : FormatUtil.rules(input)){
-			asyncConditionalFormat(owner, item, rule.rule, rule.capability, input);
+		for (RuleCapabilityPair rule : FormatUtil.rules(data)){
+			final Object arg = TypeManager.getCompatible(CapabilityUtil.unaryParameter(rule.capability), data);
+			asyncConditionalFormat(owner, item, rule.rule, rule.capability, arg);
 		}
 	}
 		
 	private void asyncConditionalFormat(final Control owner, final Item item, final FormattingRule rule, final ICapability capability, final Object input) {
-		synchronized (activeObjects) {
-			activeObjects.put(input, item);
-			activeItems.put(item, input);
+		if (input == null) return;
+		
+		synchronized (formatLock) {
+			itemContainers.put(item, owner);
 			item.addDisposeListener(this);
 		}
-	
+		
 		ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, input);
 		
 		CapabilityExecutor.asyncExec(capability, packed, Formatter.this, new NullJobListener() {
@@ -156,49 +140,58 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			
 				if (status.getCode() == Status.OK) {
 					if ((Boolean) CapabilityUtil.singleOutputValue(capability, status)) {
-						asyncFormat(owner, item, rule);
+						asyncFormat(owner, item, rule.getFormat());
+					}
+				}else{
+//					System.out.println(
+//							"Got error code for " + capability.getName() + ": " + 
+//							status.getException().getMessage());
+				}
+			}
+		});
+	}
+	
+	private void asyncFormat(final Control owner, final Item item, final Format format){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (originalItemFormats) {
+					if (!item.isDisposed()) {
+						if (!originalItemFormats.containsKey(item)) {
+							originalItemFormats.put(item, FormatUtil.getFormat(item));
+						}
+						FormatUtil.setFormat(owner, item, format);
+						toReapply.put(item, format);
 					}
 				}
 			}
 		});
 	}
 	
-	private void asyncFormat(final Control owner, final Item item, final FormattingRule rule){
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				synchronized (originalFormats) {
-					if (!item.isDisposed()) {
-						if (!originalFormats.containsKey(item)) {
-							originalFormats.put(item, FormatUtil.getFormat(item));
-						}
-						FormatUtil.setFormat(owner, item, rule.getFormat());
-					}
-				}
-			}
-		});
-	}
+	private final WorkbenchRegister registerVisitor;
 	
 	private class WorkbenchRegister extends WorkbenchVisitor{
 		public WorkbenchRegister() throws Exception {
 			super();
 		}
 		@Override
-		public boolean visit(Tree tree) {
+		public void visit(Tree tree) {
 			tree.addTreeListener(new TreeExpandFormatter(tree));
-			return true;
+			super.visit(tree);
 		}
 		@Override
-		public boolean visit(IWorkbenchWindow window) {
+		public void visit(IWorkbenchWindow window) {
 			window.addPageListener(pageListener);
-			return true;
+			super.visit(window);
 		}
 		@Override
-		public boolean visit(IWorkbenchPage page) {
+		public void visit(IWorkbenchPage page) {
 			page.addPartListener(Formatter.this);
-			return true;
+			super.visit(page);
 		}
 	}
+	
+	private final WorkbenchFormatter formatVisitor;
 	
 	private class WorkbenchFormatter extends WorkbenchVisitor{
 		public WorkbenchFormatter() throws Exception {
@@ -206,85 +199,44 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		}
 
 		@Override
-		public boolean visit(Tree tree, TreeItem item) {
+		public void visit(Tree tree, TreeItem item) {
 			asyncConditionalFormat(tree, item);
-			return true;
+			super.visit(tree, item);
 		}
 
 		@Override
-		public boolean visit(Table table, TableItem item) {
+		public void visit(Table table, TableItem item) {
 			asyncConditionalFormat(table, item);
-			return true;
+			super.visit(table, item);
 		}
 	}
 	
 	/**
-	 * Walks a resource delta to invalidate cache lines.
-	 * @author Todd Schiller (tws@cs.washington.edu)
+	 * Spawn a UI job to restore the original formatting for <tt>item</tt> and
+	 * then re-run the formatting rules.
+	 * @param item the tree or table item
 	 */
-	private class InvalidationVisitor implements IResourceDeltaVisitor {
-		@Override
-		public boolean visit(final IResourceDelta delta) throws CoreException {
-			if (delta.getAffectedChildren().length == 0) {
-				IResource resource = delta.getResource();
-				if (resource != null && interesting(delta)) {
-
-					Set<Object> inputs = Sets.newHashSet(activeObjects.keySet());
-
-					for (Object input : inputs) {
+	private void clearFormatting(final Item item){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (formatLock) {
+					if (!item.isDisposed()){
+						Control container = itemContainers.get(item);
 						
-						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
-							
-							Collection<Item> items = activeObjects.get(input);
-// TODO: track owner?
-//							for (final Item item : items) {
-//								if (!item.isDisposed()) {
-//									Display.getDefault().asyncExec(new Runnable() {
-//										@Override
-//										public void run() {
-//											synchronized (originalFormats) {
-//												if (!item.isDisposed()) {
-//													if (originalFormats.containsKey(item)) {
-//														applyFormat(item, originalFormats.get(item));
-//													}
-//												}
-//											}
-//										}
-//									});
-//									
-//									applyFormattingRules(item);
-//								}
-//								
-//							}
-						}
+						// Restore original Eclipse formatting
+						asyncFormat(container, item, originalItemFormats.get(item));
+						itemContainers.remove(item);
+						
+						// Reformat using current set of formatting rules
+						asyncConditionalFormat(container, item);
 					}
-
 				}
 			}
-			return true;
-		}
-		
-		/**
-		 * @param delta the delta
-		 * @return <code>true</code> iff the delta causes resources to be invalidated
-		 */
-		private boolean interesting(final IResourceDelta delta) {
-			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
-		}
+		});
 	}
-
-	@Override
-	public final void onResourceChange(final Set<Object> invalidated, final IResourceChangeEvent event) {
-		if (event.getDelta() != null) {
-			synchronized (activeObjects) {
-				try {
-					event.getDelta().accept(new InvalidationVisitor());
-				} catch (CoreException e) {
-					throw new RuntimeException("Error invalidating conditional formats", e);
-				}
-			}
-		}
-	}
+	
+	private final PageListener pageListener = new PageListener();
 
 	private class PageListener implements IPageListener{
 		@Override
@@ -306,33 +258,26 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 	private final class TreeExpandFormatter implements TreeListener{
 		private final Tree tree;
 		
-		private TreeExpandFormatter(Tree tree) {
+		private TreeExpandFormatter(final Tree tree) {
 			this.tree = tree;
 		}
 
 		@Override
-		public void treeCollapsed(TreeEvent e) {
+		public void treeCollapsed(final TreeEvent e) {
 			// NOP
 		}
 
 		@Override
-		public void treeExpanded(TreeEvent e) {
-			formatVisitor.visit(tree, (TreeItem) e.item);
-		}
-	}
-	
-	private class ReapplyFormatListener implements ILabelProviderListener{
-		@Override
-		public void labelProviderChanged(LabelProviderChangedEvent event) {
-			if (event.getElement() != null){
-				Format f = activeFormats.get(event.getElement());
-				if (f != null){
-					// XXX
+		public void treeExpanded(final TreeEvent e) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					formatVisitor.visit(tree, (TreeItem) e.item);
 				}
-			}
+			});
 		}
 	}
-	
+		
 	/**
 	 * When an {@link Item} is disposed, remove it from the set of active items. If
 	 * the item was the last item for an object, remove the object from the set of
@@ -344,33 +289,60 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		if (e.getSource() instanceof Item) {
 			Item item = (Item) e.getSource();
 			
-			synchronized (activeObjects) {
-				Object input = activeItems.get(item);	
-				activeObjects.remove(input, item);
-				activeItems.remove(item);
+			synchronized (formatLock) {
+				originalItemFormats.remove(item);
+				itemContainers.remove(item);
 			}
 		}
 	}
 	
 	@Override
-	public void ruleActivated(FormattingRule rule) {
-		// TODO Auto-generated method stub
-		
+	public void ruleActivated(final FormattingRule rule) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
 	}
 
 	@Override
-	public void ruleDeactivated(FormattingRule rule) {
-		// TODO Auto-generated method stub
-		
+	public void ruleDeactivated(final FormattingRule rule) {
+		synchronized (formatLock){
+			// Re-apply formatting rules to all formatted items
+			// XXX replace with faster code
+			for (final Item item : Sets.newHashSet(itemContainers.keySet())){
+				clearFormatting(item);
+			}
+		}
 	}
 	
 	@Override
 	public final void partActivated(final IWorkbenchPartReference partRef) {
-		formatVisitor.visit(partRef);
+		// NOP
 	}
 
 	@Override
 	public final void partVisible(final IWorkbenchPartReference partRef) {
-		formatVisitor.visit(partRef);
+		// NOP
+	}
+	
+	/**
+	 * Whenever a decoration job completes, re-applies formatting.
+	 * @author Todd Schiller
+	 */
+	private class DecorationManager extends NullJobListener{
+		@Override
+		public void done(IJobChangeEvent event) {
+			if (event.getJob().belongsTo(DecoratorManager.FAMILY_DECORATE)){
+				synchronized(formatLock){
+					for (final Map.Entry<Item, Format> x : toReapply.entrySet()){
+						Item item = (Item) x.getKey();
+						asyncFormat(itemContainers.get(item), item, x.getValue());
+					}
+					toReapply.clear();
+				}
+			}
+		}
 	}
 }

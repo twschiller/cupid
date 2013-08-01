@@ -82,13 +82,15 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	
 	public class FormatWorkbenchJob extends WorkbenchJob{
 		public FormatWorkbenchJob() {
-			super("Format Workbench");
-		
+			super("Initialize Conditional Formatting");
 		}
 
 		@Override
 		public IStatus runInUIThread(IProgressMonitor monitor) {
 			try{
+				monitor.beginTask("Initialize Conditional Formatter", 2);
+				formatter.initialize();
+				monitor.worked(1);
 				formatter.formatActiveWindow();
 				return Status.OK_STATUS;
 			}finally{

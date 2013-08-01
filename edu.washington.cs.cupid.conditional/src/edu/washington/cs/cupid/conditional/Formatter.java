@@ -152,6 +152,8 @@ public class Formatter extends NullPartListener implements DisposeListener, Form
 	}
 	
 	private void asyncFormat(final Control owner, final Item item, final Format format){
+		Preconditions.checkNotNull(format);
+		
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
@@ -187,6 +189,7 @@ public class Formatter extends NullPartListener implements DisposeListener, Form
 		@Override
 		public void visit(IWorkbenchPage page) {
 			page.addPartListener(Formatter.this);
+			System.out.println("Register for " + page.getLabel());
 			super.visit(page);
 		}
 	}
@@ -240,18 +243,28 @@ public class Formatter extends NullPartListener implements DisposeListener, Form
 
 	private class PageListener implements IPageListener{
 		@Override
-		public void pageActivated(IWorkbenchPage page) {
+		public void pageActivated(final IWorkbenchPage page) {
 			page.addPartListener(Formatter.this);
 		}
 
 		@Override
-		public void pageClosed(IWorkbenchPage page) {
-			page.addPartListener(Formatter.this);
+		public void pageClosed(final IWorkbenchPage page) {
+			// NOP
 		}
 
 		@Override
-		public void pageOpened(IWorkbenchPage page) {
+		public void pageOpened(final IWorkbenchPage page) {
 			page.addPartListener(Formatter.this);
+			
+			System.out.println("Page opened: " + page.getLabel());
+			
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					registerVisitor.visit(page);
+					formatVisitor.visit(page);
+				}
+			});
 		}
 	}
 	

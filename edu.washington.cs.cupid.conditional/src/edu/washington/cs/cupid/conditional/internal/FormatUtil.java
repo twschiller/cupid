@@ -1,20 +1,18 @@
 package edu.washington.cs.cupid.conditional.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.WeakHashMap;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
@@ -29,8 +27,8 @@ import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.capability.snippet.SnippetCapability;
@@ -159,6 +157,7 @@ public final class FormatUtil {
 	 */
 	public static void setFormat(final Control owner, final Widget widget, final Format format) {
 		checkArgument(!widget.isDisposed(), "widget is disposed");
+		checkNotNull(format);
 		
 		Display display = Display.getDefault();
 		Class<?> clazz = widget.getClass();

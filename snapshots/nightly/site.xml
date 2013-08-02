@@ -6,9 +6,6 @@
    <feature url="features/edu.washington.cs.cupid.egit_1.3.0.v20130724-1340.jar" id="edu.washington.cs.cupid.egit" version="1.3.0.v20130724-1340">
       <category name="edu.washington.cs.cupid.discover"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.mapview_1.3.0.v20130724-1340.jar" id="edu.washington.cs.cupid.mapview" version="1.3.0.v20130724-1340">
-      <category name="edu.washington.cs.cupid.visualize"/>
-   </feature>
    <feature url="features/edu.washington.cs.cupid.mylyn_1.3.0.v20130724-1720.jar" id="edu.washington.cs.cupid.mylyn" version="1.3.0.v20130724-1720">
       <category name="edu.washington.cs.cupid.discover"/>
    </feature>
@@ -23,6 +20,9 @@
    </feature>
    <feature url="features/edu.washington.cs.cupid.core_1.3.2.v20130801-2120.jar" id="edu.washington.cs.cupid.core" version="1.3.2.v20130801-2120">
       <category name="edu.washington.cs.cupid.core"/>
+   </feature>
+   <feature url="features/edu.washington.cs.cupid.mapview_1.3.0.v20130801-2140.jar" id="edu.washington.cs.cupid.mapview" version="1.3.0.v20130801-2140">
+      <category name="edu.washington.cs.cupid.visualize"/>
    </feature>
    <category-def name="edu.washington.cs.cupid.core" label="Core Features">
       <description>

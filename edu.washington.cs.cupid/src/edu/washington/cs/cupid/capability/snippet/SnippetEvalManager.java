@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
@@ -24,6 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
+
+import edu.washington.cs.cupid.capability.exception.InvalidSnippetException;
 
 public class SnippetEvalManager {
 
@@ -154,8 +157,9 @@ public class SnippetEvalManager {
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws ClassNotFoundException
+	 * @throws InvalidSnippetException 
 	 */
-	private void compile(SnippetCapability<?,?> capability) throws InstantiationException, IllegalAccessException, ClassNotFoundException{
+	private void compile(SnippetCapability<?,?> capability) throws InstantiationException, IllegalAccessException, ClassNotFoundException, InvalidSnippetException{
 		// We get an instance of JavaCompiler. Then
         // we create a file manager
         // (our custom implementation of it)
@@ -167,6 +171,12 @@ public class SnippetEvalManager {
 		            		compiler.getStandardFileManager(null, null, null));
         
 		CompilationStatus s = compile(compiler, fileManager, capability.getInputType(), capability.getOutputType(), capability.getSnippet());
+		
+		for (Diagnostic<?> d : s.msgs.getDiagnostics()){
+			if (d.getKind() == Diagnostic.Kind.ERROR){
+				throw new InvalidSnippetException(capability.getInputType(), capability.getOutputType(), capability.getSnippet(), s.msgs);
+			}
+		}
 		
         // Creating an instance of our compiled class 
         Class<?> clazz = fileManager.getClassLoader(null).loadClass(s.fullName);

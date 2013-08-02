@@ -239,6 +239,11 @@ public class SelectCapabilityPage extends WizardPage {
 			setTitle("Define formatting predicate for " + inputType.getRawType().getSimpleName());
 			updateCompatible();
 			updateCapabilityList();
+			
+			if (capability == null){
+				setSnippetInputType(inputType);
+			}
+			
 		} catch (ClassNotFoundException ex) {
 			Activator.getDefault().logError("Error loading type " + qualifiedName, ex);
 			setErrorMessage("Error loading type " + qualifiedName);

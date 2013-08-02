@@ -1,5 +1,7 @@
 package edu.washington.cs.cupid.capability.exception;
 
+import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.DiagnosticCollector;
 
 import com.google.common.reflect.TypeToken;
@@ -11,7 +13,7 @@ public class InvalidSnippetException extends Exception {
 	private String snippet;
 	private DiagnosticCollector<?> diagnostics;
 	
-	private static final long serialVersionUID = 1L; 
+	private static final long serialVersionUID = 2L; 
 	
 	public InvalidSnippetException(final TypeToken<?> inputType, final TypeToken<?> outputType, 
 			String snippet,
@@ -37,4 +39,16 @@ public class InvalidSnippetException extends Exception {
 	public String getSnippet() {
 		return snippet;
 	}
+
+	@Override
+	public String getMessage() {
+		for (Diagnostic<?> x : this.diagnostics.getDiagnostics()){
+			if (x.getKind() == Kind.ERROR){
+				return x.getMessage(null);
+			}
+		}
+		return "Unknown compilation error";
+	}
+	
+	
 }

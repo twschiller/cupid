@@ -38,7 +38,6 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.decorators.DecoratorManager;
 
@@ -149,9 +148,13 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 
 					Queue<RuleCapabilityPair> ruleQueue = Lists.newLinkedList(FormatUtil.rules(data));
 					if (!ruleQueue.isEmpty()){
+						// Apply new formatting
 						asyncConditionalFormat(owner, item, ruleQueue, data);
 					}else if (originalFormats.containsKey(item)){
+						// Restore original formatting
 						FormatUtil.setFormat(owner, item, originalFormats.get(item));
+					}else{
+						// NOP
 					}
 				}
 			}
@@ -163,7 +166,6 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		
 		synchronized (formatLock) {
 			if (pending.contains(item)){
-				System.out.println("Skipping pending item: " + item);
 				return;
 			}
 			
@@ -216,6 +218,8 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 				if ((Boolean) CapabilityUtil.singleOutputValue(current.capability, status)) {
 					resultQueue.add(current.rule.getFormat());
 				}
+			} else {
+				status.getException().printStackTrace();
 			}
 			
 			if (!ruleQueue.isEmpty()){
@@ -227,9 +231,20 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 					resultQueue.add(0, originalFormats.get(item));
 				}
 				asyncFormat(owner, item, FormatUtil.merge(resultQueue));
-			}else if (originalFormats.containsKey(item)){
+			}else {
 				// clear the formatting
-				asyncFormat(owner, item, originalFormats.get(item));	
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						synchronized (formatLock) {
+							if (!item.isDisposed() && originalFormats.containsKey(item)) {
+								FormatUtil.setFormat(owner, item, originalFormats.get(item));
+							}
+							pending.remove(item);
+							conditionalFormats.remove(item);
+						}
+					}
+				});			
 			}
 		}
 	}
@@ -242,14 +257,9 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			public void run() {
 				synchronized (formatLock) {
 					if (!item.isDisposed()) {
-						if (!originalFormats.containsKey(item)) {
-							originalFormats.put(item, FormatUtil.getFormat(item));
-						}
 						FormatUtil.setFormat(owner, item, format);
 						conditionalFormats.put(item, format);
 						pending.remove(item);
-					
-						System.out.println("Formatted item " + item);
 					}
 				}
 			}
@@ -436,17 +446,7 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
 		}
 	}
-	
-	@Override
-	public final void partActivated(final IWorkbenchPartReference partRef) {
-		// NOP
-	}
-
-	@Override
-	public final void partVisible(final IWorkbenchPartReference partRef) {
-		// NOP
-	}
-	
+		
 	/**
 	 * Whenever a decoration job completes, re-applies the current conditional formatting
 	 * and then kicks of a new conditional formatting job.

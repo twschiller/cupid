@@ -11,8 +11,6 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 
 public class WorkbenchVisitor {
@@ -99,15 +97,11 @@ public class WorkbenchVisitor {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		if (control != null) {
 			dispatch(control);
-		}
-	}
-	
-	public void visit(final IWorkbenchPartReference partRef) {
-		if (partRef instanceof IViewReference) {
-			visit((IViewReference) partRef);
+		}else{
+			// NOP
 		}
 	}
 }

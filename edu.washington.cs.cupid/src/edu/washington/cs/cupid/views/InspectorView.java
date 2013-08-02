@@ -84,7 +84,8 @@ public class InspectorView extends ViewPart {
 	
 	private static final int COLLECTION_PARTITION_SIZE = 10;
 
-
+	private static final int MAX_LINE_LENGTH = 80;
+	
 	private static final boolean INCLUDE_NULL_OUTPUT = false;
 	
 	/**
@@ -229,7 +230,7 @@ public class InspectorView extends ViewPart {
 					String msg = ((Exception) value).getLocalizedMessage();
 					return msg == null ? "<error>" : ("<error:" + msg + ">");  
 				} else {
-					return value.toString();
+					return valueText(value);
 				}
 			default:
 				throw new IllegalArgumentException("Invalid column index");
@@ -281,7 +282,7 @@ public class InspectorView extends ViewPart {
 					String msg = ((Exception) value).getLocalizedMessage();
 					return msg == null ? "<error>" : ("<error:" + msg + ">");  
 				} else {
-					return value.toString();
+					return valueText(value);
 				}
 			default:
 				throw new IllegalArgumentException("Invalid column index");
@@ -500,7 +501,7 @@ public class InspectorView extends ViewPart {
 							if (capability.getOutputs().size() > 1){
 								return "<Multiple Outputs>"; 
 							}else{
-								return value.toString();			
+								return valueText(value);			
 							}
 						} else {
 							return null;
@@ -811,6 +812,15 @@ public class InspectorView extends ViewPart {
 				}
 			});
 		}	
-
+	}
+	
+	public static String valueText(Object obj){
+		String lines[] = obj.toString().split("\\r?\\n", 2);
+		
+		if (lines[0].length() > MAX_LINE_LENGTH){
+			return lines[0].substring(0, MAX_LINE_LENGTH) + " ...";
+		}else{
+			return lines.length == 1 ? lines[0] : (lines[0] + " ...");
+		}
 	}
 }

@@ -154,7 +154,7 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 						// Restore original formatting
 						FormatUtil.setFormat(owner, item, originalFormats.get(item));
 					}else{
-						// NOP
+						FormatUtil.setFormat(owner, item, new Format());
 					}
 				}
 			}
@@ -257,6 +257,10 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 			public void run() {
 				synchronized (formatLock) {
 					if (!item.isDisposed()) {
+						if (!originalFormats.containsKey(item)){
+							originalFormats.put(item, FormatUtil.getFormat(item));
+						}
+						
 						FormatUtil.setFormat(owner, item, format);
 						conditionalFormats.put(item, format);
 						pending.remove(item);
@@ -395,8 +399,7 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 	public void ruleDeactivated(final FormattingRule rule) {
 		synchronized (formatLock){
 			// Re-apply formatting rules to all formatted items
-			// XXX replace with faster code
-			for (final Item item : Sets.newHashSet(itemContainers.keySet())){
+			for (final Item item : Sets.newHashSet(conditionalFormats.keySet())){
 				asyncConditionalFormat(itemContainers.get(item), item);
 			}
 		}

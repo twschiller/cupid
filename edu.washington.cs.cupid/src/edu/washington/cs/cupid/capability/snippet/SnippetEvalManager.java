@@ -48,7 +48,7 @@ public class SnippetEvalManager {
 	
 	public <I,V> V run(SnippetCapability<I,V> capability, I input) throws Exception {
 		if (!snippets.containsKey(capability)){
-			compile(capability);
+			snippets.put(capability, compile(capability));
 		}
 		
 		Method m = snippets.get(capability);
@@ -159,7 +159,7 @@ public class SnippetEvalManager {
 	 * @throws ClassNotFoundException
 	 * @throws InvalidSnippetException 
 	 */
-	private void compile(SnippetCapability<?,?> capability) throws InstantiationException, IllegalAccessException, ClassNotFoundException, InvalidSnippetException{
+	private Method compile(SnippetCapability<?,?> capability) throws InstantiationException, IllegalAccessException, ClassNotFoundException, InvalidSnippetException{
 		// We get an instance of JavaCompiler. Then
         // we create a file manager
         // (our custom implementation of it)
@@ -183,6 +183,6 @@ public class SnippetEvalManager {
         
         Method m = clazz.getMethods()[0];
         
-        snippets.put(capability, m);
+        return m;
 	}
 }

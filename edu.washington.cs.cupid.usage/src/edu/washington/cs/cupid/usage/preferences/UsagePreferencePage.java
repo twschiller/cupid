@@ -10,11 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.usage.preferences;
 
-import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
@@ -34,13 +34,14 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.framework.Bundle;
 
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import com.google.common.io.CharStreams;
 
 import edu.washington.cs.cupid.usage.internal.Activator;
 
 public class UsagePreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
+	private static final String CONSENT_AGREEMENT_PATH = "/documents/consent-agreement.html"; //$NON-NLS-1$
+	
 	private TabFolder tabs;
 	private TabItem consentTab;
 	private TabItem dataTab;
@@ -113,10 +114,15 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		
 		try{
 			Bundle bundle = Activator.getDefault().getBundle();
-			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
-			File file = new File(FileLocator.resolve(fileURL).toURI());
-		
-			String content = Joiner.on(System.getProperty("line.separator")).join(Files.readLines(file, Charset.defaultCharset()));
+			URL fileURL = bundle.getEntry(CONSENT_AGREEMENT_PATH);
+			
+			if (fileURL == null){
+				throw new RuntimeException("Unable to locate consent agreement at " + CONSENT_AGREEMENT_PATH);
+			}
+			
+			InputStream inputStream = fileURL.openStream();
+			String content = CharStreams.toString(new InputStreamReader(inputStream, Charset.forName("UTF-8")) );
+			
 			consentText.setText(content);
 		} catch (Exception ex) {
 			consentText.setText("Error loading consent form: " + ex.getLocalizedMessage());

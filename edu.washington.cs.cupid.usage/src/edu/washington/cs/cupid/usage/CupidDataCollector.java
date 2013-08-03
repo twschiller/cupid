@@ -55,7 +55,7 @@ import edu.washington.cs.cupid.usage.preferences.PreferenceConstants;
  */
 public final class CupidDataCollector {
 
-	private static final String CUPID_UPLOAD_URL = "https://cupidplugin.appspot.com/CupidUsageData";
+	private static final String CUPID_UPLOAD_URL = "https://cupidplugin-2.appspot.com/CupidUsageData";
 	//private static final String CUPID_UPLOAD_URL = "http://localhost:8888/CupidUsageData";
 
 	private Gson gson; 
@@ -182,7 +182,9 @@ public final class CupidDataCollector {
 				    	monitor.worked(1);
 				    } else {
 				    	String reason = response.getStatusLine().getReasonPhrase();
-				    	Activator.getDefault().logInformation("Error uploading Cupid usage data: " + reason);
+				    	
+				    	Activator.getDefault().logInformation(
+				    			"Error uploading Cupid usage data: " + reason + " (Response: " + response.getStatusLine().getStatusCode() + ")");
 				    	return new Status(Status.WARNING, Activator.PLUGIN_ID, reason, null);
 				    }
 				}

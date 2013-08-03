@@ -305,6 +305,14 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 	public void logInformation(final String msg) {
 		pluginLog.log(new Status(Status.INFO, CupidScriptingPlugin.PLUGIN_ID, Status.INFO, msg, null));
 	}
+	
+	/**
+	 * Log information in the plugin's log.
+	 * @param msg localized information message
+	 */
+	public void logWarning(final String msg) {
+		pluginLog.log(new Status(Status.WARNING, CupidScriptingPlugin.PLUGIN_ID, Status.WARNING, msg, null));
+	}
 
 	@Override
 	public synchronized ICapability[] publish() {

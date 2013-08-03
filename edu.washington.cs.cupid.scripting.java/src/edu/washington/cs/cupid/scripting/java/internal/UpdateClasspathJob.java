@@ -12,6 +12,7 @@ package edu.washington.cs.cupid.scripting.java.internal;
 
 import java.util.List;
 
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -22,7 +23,6 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.ui.progress.UIJob;
 import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Lists;
@@ -34,7 +34,7 @@ import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
  * updating a plug-in changes the filename. Uses the scheduling rule of the Cupid Java project.
  * @author Todd Schiller
  */
-public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
+public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulingRule {
 
 	/**
 	 * Create a job that updates the Cupid classpath.
@@ -45,16 +45,16 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 	}
 	
 	@Override
-	public IStatus runInUIThread(final IProgressMonitor monitor) {
+	public IStatus runInWorkspace(final IProgressMonitor monitor) {
 		try {
 			IJavaProject project = CupidScriptingPlugin.getDefault().getCupidJavaProject();
 			
 			int classpathSize = project.getRawClasspath().length;
-			boolean any = false;
 			
 			monitor.beginTask("Update Cupid Classpath", classpathSize + 2);
 			
-			List<IClasspathEntry> updated = Lists.newArrayList();
+			List<IClasspathEntry> updatedClasspath = Lists.newArrayList();
+			List<IClasspathEntry> updatedEntries = Lists.newArrayList();
 			
 			for (IClasspathEntry entry : project.getRawClasspath()) {
 				IClasspathEntry resolved = JavaCore.getResolvedClasspathEntry(entry);
@@ -68,24 +68,41 @@ public final class UpdateClasspathJob extends UIJob implements ISchedulingRule {
 					if (parts.length == 2) {
 						Bundle bundle = Platform.getBundle(parts[0]);
 						if (bundle != null) {
+							// we found a bundle with the same name
 							IPath replacement = ClasspathUtil.bundlePath(bundle);
-							updated.add(JavaCore.newLibraryEntry(replacement, null, null));
-							any = true;
+							IClasspathEntry newEntry = JavaCore.newLibraryEntry(replacement, null, null);
+							updatedClasspath.add(newEntry);
+							updatedEntries.add(newEntry);
+						}else{
+							// we can't find a bundle with the same name (e.g., b/c it was uninstalled)
+							CupidScriptingPlugin.getDefault().logWarning(
+									"Can't find updated bundle for Cupid Project classpath entry " + entry.getPath());
 						}
 					} else {
+						CupidScriptingPlugin.getDefault().logWarning(
+								"Can't parse Cupid Project classpath entry " + entry.getPath());
+						
 						// we don't know how to find the name
-						updated.add(entry);
+						updatedClasspath.add(entry);
 					}
 				} else {
 					// don't change entries we can resolve
-					updated.add(entry);
+					updatedClasspath.add(entry);
 				}	
 				monitor.worked(1);
 			}
 			
-			if (any) {
+			if (!updatedEntries.isEmpty()) {
 				// perform update
-				project.setRawClasspath(updated.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
+				project.setRawClasspath(updatedClasspath.toArray(new IClasspathEntry[]{}), new SubProgressMonitor(monitor, 1));
+			
+				for (IClasspathEntry entry : updatedEntries){
+					CupidScriptingPlugin.getDefault().logInformation(
+							"Updated Cupid classpath entry " + entry.getPath());
+				}
+			}else{
+				CupidScriptingPlugin.getDefault().logInformation(
+						"Cupid Project classpath is up-to-date");
 			}
 			
 			return Status.OK_STATUS;

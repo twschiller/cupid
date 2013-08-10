@@ -12,6 +12,7 @@ package edu.washington.cs.cupid.scripting.java.internal;
 
 import java.io.File;
 import java.net.URL;
+import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -104,51 +105,20 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 
 								updatedClasspath.add(entry);
 							}
-						} else {
-							// TODO may need to look in other bundles? could check if any part of the cp entry is a bundle
-							Bundle cupid = Platform.getBundle(CUPID_BUNDLE_ID);
-							Enumeration<URL> urls = cupid.findEntries("/", filename, true);
+						} else if (filename.startsWith("guava")){
+							CodeSource guavaSrc = Lists.class.getProtectionDomain().getCodeSource();
+							IClasspathEntry newEntry = JavaCore.newLibraryEntry(ClasspathUtil.urlToPath(guavaSrc.getLocation()), null, null);
+							updatedClasspath.add(newEntry);
+							updatedEntries.add(newEntry);
 							
-							if (urls != null && urls.hasMoreElements()){
-								// It's a Cupid distributed library
-								URL uLib = urls.nextElement();
-								URL osLib = FileLocator.resolve(uLib);
-								
-								if (osLib.getPath().contains("!/")) {
-									IPath cupidPath = ClasspathUtil.bundlePath(cupid);
-									
-									if (cupidPath.getFileExtension() != null && cupidPath.getFileExtension().equalsIgnoreCase("JAR")){
-										// extract the JAR and put it in the lib directory of the Cupid project
-										
-										JarFile bundleJar = new JarFile(cupidPath.toFile());
-										JarEntry jLib = bundleJar.getJarEntry(filename);
-										
-										// create the file
-										IFolder libFolder = project.getProject().getFolder("lib");
-										IFile unpacked = libFolder.getFile(filename);
-										unpacked.create(bundleJar.getInputStream(jLib), true, null);
-									
-										IClasspathEntry newEntry = JavaCore.newLibraryEntry(unpacked.getFullPath(), null, null);
-										updatedClasspath.add(newEntry);
-										updatedEntries.add(newEntry);
-									} else {
-										throw new RuntimeException("Expected Cupid to be packaged as JAR. Entry: " + entry.getPath().toString());
-									}
-								}else{
-									// Cupid isn't in a JAR, so we can update directly
-									
-									IPath pLib = new Path(osLib.getPath());
-									IClasspathEntry newEntry = JavaCore.newLibraryEntry(pLib, null, null);
-									updatedClasspath.add(newEntry);
-									updatedEntries.add(newEntry);
-								}
-							}else{
-								CupidScriptingPlugin.getDefault().logWarning(
-										"Can't find updated library for Cupid Project classpath entry: " + entry.getPath());
+						} else{
+							// TODO handle other internal JARs besides Guava
+							
+							CupidScriptingPlugin.getDefault().logWarning(
+									"Can't find updated library for Cupid Project classpath entry: " + entry.getPath());
 
-								// we don't know how to find the name
-								updatedClasspath.add(entry);
-							}
+							// we don't know how to find the name
+							updatedClasspath.add(entry);
 						}
 					}
 				}else{

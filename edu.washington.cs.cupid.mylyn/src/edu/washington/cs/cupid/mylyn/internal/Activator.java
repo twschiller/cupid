@@ -16,7 +16,10 @@ import org.osgi.framework.BundleContext;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.mylyn.ActiveContextCapability;
+import edu.washington.cs.cupid.mylyn.InActiveContextCapability;
 import edu.washington.cs.cupid.mylyn.MylynTaskCapability;
+import edu.washington.cs.cupid.mylyn.TaskContextCapability;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -68,7 +71,10 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	@Override
 	public ICapability[] publish() {
 		return new ICapability[]{
-			new MylynTaskCapability()	
+			new MylynTaskCapability(),
+			new TaskContextCapability(),
+			new ActiveContextCapability(),
+			new InActiveContextCapability(),
 		};
 	}
 }

@@ -19,6 +19,7 @@ import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.hg.HgHeadsCapability;
 import edu.washington.cs.cupid.hg.HgLogCapability;
 import edu.washington.cs.cupid.hg.HgModifiedCapability;
+import edu.washington.cs.cupid.hg.HgModifiedFilterCapability;
 
 /**
  * The activator class controls the plug-in life cycle.
@@ -75,6 +76,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 			new HgHeadsCapability(),
 			new HgLogCapability(),
 			new HgModifiedCapability(),
+			new HgModifiedFilterCapability(),
 		};
 	}
 

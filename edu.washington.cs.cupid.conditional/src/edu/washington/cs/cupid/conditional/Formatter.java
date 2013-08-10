@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.decorators.DecoratorManager;
 
@@ -478,5 +479,27 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 				});
 			}
 		}
+	}
+
+	@Override
+	public void partActivated(IWorkbenchPartReference partRef) {
+		super.partActivated(partRef);
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
+	}
+
+	@Override
+	public void partInputChanged(IWorkbenchPartReference partRef) {
+		super.partInputChanged(partRef);
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
 	}
 }

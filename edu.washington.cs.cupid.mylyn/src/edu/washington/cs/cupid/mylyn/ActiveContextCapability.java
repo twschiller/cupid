@@ -14,7 +14,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 public class ActiveContextCapability extends LinearCapability<Void, IInteractionContext>{
 
 	public ActiveContextCapability() {
-		super("Active Task Context", "The Context for the Active Task", 
+		super("Mylyn Active Task Context", "The Context for the Active Task", 
 			  TypeToken.of(Void.class), TypeToken.of(IInteractionContext.class),
 			  ICapability.Flag.PURE);
 	}

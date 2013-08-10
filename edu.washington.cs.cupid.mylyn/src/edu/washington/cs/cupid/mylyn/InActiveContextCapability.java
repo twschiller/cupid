@@ -15,7 +15,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 public class InActiveContextCapability extends LinearCapability<IResource, Boolean> {
 
 	public InActiveContextCapability() {
-		super("In Active Task Context", "True if the resource is in the active task context", 
+		super("Mylyn In Active Task Context", "True if the resource is in the active task context", 
 			  IResource.class, Boolean.class, 
 			  ICapability.Flag.PURE);
 	}

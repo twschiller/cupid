@@ -26,7 +26,7 @@ public class TaskContextCapability extends LinearCapability<AbstractTask, List<I
 
 	public TaskContextCapability() {
 		super(
-			"Task Context", "Returns the Resources in the Context for the Task",
+			"Mylyn Task Context", "Returns the Resources in the Context for the Task",
 			TypeToken.of(AbstractTask.class), new TypeToken<List<IResource>>(){},
 			ICapability.Flag.PURE);
 	}

@@ -14,8 +14,12 @@ import java.io.File;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import org.eclipse.core.internal.utils.FileUtil;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.resources.team.ResourceRuleFactory;
@@ -106,12 +110,38 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 							Enumeration<URL> urls = cupid.findEntries("/", filename, true);
 							
 							if (urls != null && urls.hasMoreElements()){
+								// It's a Cupid distributed library
 								URL uLib = urls.nextElement();
 								URL osLib = FileLocator.resolve(uLib);
-								IPath pLib = new Path(osLib.getPath());
-								IClasspathEntry newEntry = JavaCore.newLibraryEntry(pLib, null, null);
-								updatedClasspath.add(newEntry);
-								updatedEntries.add(newEntry);
+								
+								if (osLib.getPath().contains("!/")) {
+									IPath cupidPath = ClasspathUtil.bundlePath(cupid);
+									
+									if (cupidPath.getFileExtension() != null && cupidPath.getFileExtension().equalsIgnoreCase("JAR")){
+										// extract the JAR and put it in the lib directory of the Cupid project
+										
+										JarFile bundleJar = new JarFile(cupidPath.toFile());
+										JarEntry jLib = bundleJar.getJarEntry(filename);
+										
+										// create the file
+										IFolder libFolder = project.getProject().getFolder("lib");
+										IFile unpacked = libFolder.getFile(filename);
+										unpacked.create(bundleJar.getInputStream(jLib), true, null);
+									
+										IClasspathEntry newEntry = JavaCore.newLibraryEntry(unpacked.getFullPath(), null, null);
+										updatedClasspath.add(newEntry);
+										updatedEntries.add(newEntry);
+									} else {
+										throw new RuntimeException("Expected Cupid to be packaged as JAR. Entry: " + entry.getPath().toString());
+									}
+								}else{
+									// Cupid isn't in a JAR, so we can update directly
+									
+									IPath pLib = new Path(osLib.getPath());
+									IClasspathEntry newEntry = JavaCore.newLibraryEntry(pLib, null, null);
+									updatedClasspath.add(newEntry);
+									updatedEntries.add(newEntry);
+								}
 							}else{
 								CupidScriptingPlugin.getDefault().logWarning(
 										"Can't find updated library for Cupid Project classpath entry: " + entry.getPath());

@@ -10,12 +10,20 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.internal;
 
+import java.io.File;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.List;
 
+import org.eclipse.core.internal.utils.FileUtil;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.resources.team.ResourceRuleFactory;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
@@ -28,6 +36,7 @@ import org.osgi.framework.Bundle;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
+import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 
 /**
@@ -37,12 +46,14 @@ import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
  */
 public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulingRule {
 
+	public static final String CUPID_BUNDLE_ID = "edu.washington.cs.cupid";
+	
 	/**
 	 * Create a job that updates the Cupid classpath.
 	 */
 	public UpdateClasspathJob() {
 		super("Update Cupid Classpath");
-		super.setRule(CupidScriptingPlugin.getDefault().getCupidJavaProject().getSchedulingRule());
+		super.setRule(ResourcesPlugin.getWorkspace().getRoot());
 	}
 	
 	@Override
@@ -60,52 +71,67 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 			List<String> allResolved = Lists.newArrayList();
 			
 			for (IClasspathEntry entry : project.getRawClasspath()) {
-				IClasspathEntry resolved = JavaCore.getResolvedClasspathEntry(entry);
 				
-				if (resolved == null && entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY){
-					// try to find bundle with same name
-					IPath path = entry.getPath();
-					String filename = path.segment(path.segmentCount() - 1);
+				if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY){
+					File file = entry.getPath().toFile();
 					
-					String [] parts = filename.split("_");
-					if (parts.length == 2) {
-						Bundle bundle = Platform.getBundle(parts[0]);
-						if (bundle != null) {
-							// we found a bundle with the same name
-							IPath replacement = ClasspathUtil.bundlePath(bundle);
-							IClasspathEntry newEntry = JavaCore.newLibraryEntry(replacement, null, null);
-							updatedClasspath.add(newEntry);
-							updatedEntries.add(newEntry);
-						}else{
-							// we can't find a bundle with the same name (e.g., b/c it was uninstalled)
-							CupidScriptingPlugin.getDefault().logWarning(
-									"Can't find updated bundle for Cupid Project classpath entry: " + entry.getPath());
-						
-							updatedClasspath.add(entry);
-						}
-					} else {
-						CupidScriptingPlugin.getDefault().logWarning(
-								"Can't parse Cupid Project classpath entry: " + entry.getPath());
-						
-						// we don't know how to find the name
+					if (file.exists()){
+						// the entry is valid
+						allResolved.add(entry.getPath().toString());
 						updatedClasspath.add(entry);
+						
+					} else {
+						// try to find bundle with same name
+						IPath path = entry.getPath();
+						String filename = path.segment(path.segmentCount() - 1);
+						
+						String [] parts = filename.split("_");
+						if (parts.length == 2) {
+							Bundle bundle = Platform.getBundle(parts[0]);
+							if (bundle != null) {
+								// we found a bundle with the same name
+								IPath replacement = ClasspathUtil.bundlePath(bundle);
+								IClasspathEntry newEntry = JavaCore.newLibraryEntry(replacement, null, null);
+								updatedClasspath.add(newEntry);
+								updatedEntries.add(newEntry);
+							} else {
+								CupidScriptingPlugin.getDefault().logWarning(
+										"Can't find updated bundle for Cupid Project classpath entry: " + entry.getPath());
+
+								updatedClasspath.add(entry);
+							}
+						} else {
+							// TODO may need to look in other bundles? could check if any part of the cp entry is a bundle
+							Bundle cupid = Platform.getBundle(CUPID_BUNDLE_ID);
+							Enumeration<URL> urls = cupid.findEntries("/", filename, true);
+							
+							if (urls != null && urls.hasMoreElements()){
+								URL uLib = urls.nextElement();
+								URL osLib = FileLocator.resolve(uLib);
+								IPath pLib = new Path(osLib.getPath());
+								IClasspathEntry newEntry = JavaCore.newLibraryEntry(pLib, null, null);
+								updatedClasspath.add(newEntry);
+								updatedEntries.add(newEntry);
+							}else{
+								CupidScriptingPlugin.getDefault().logWarning(
+										"Can't find updated library for Cupid Project classpath entry: " + entry.getPath());
+
+								// we don't know how to find the name
+								updatedClasspath.add(entry);
+							}
+						}
 					}
-				} else if (resolved == null){
-					CupidScriptingPlugin.getDefault().logWarning(
-							"Can't resolve non-library Cupid Project classpath entry: " + entry.getPath());
-					
-					// we don't know how to 
-					updatedClasspath.add(entry);
-				} else {
-					// don't change entries we can resolve
+				}else{
+					// don't try to handle variables / projects
 					updatedClasspath.add(entry);
 					allResolved.add(entry.getPath().toString());
-				}	
+				}
+				
 				monitor.worked(1);
 			}
 			
 			CupidScriptingPlugin.getDefault().logInformation(
-					"Resolved " + allResolved.size() + " Cupid classpath entries (see log for details)" + System.getProperty("line.separator") + Joiner.on(System.getProperty("line.separator")).join(allResolved));
+					"Found " + allResolved.size() + " valid Cupid classpath entries (see log for details)" + System.getProperty("line.separator") + Joiner.on(System.getProperty("line.separator")).join(allResolved));
 			
 			if (!updatedEntries.isEmpty()) {
 				// perform update

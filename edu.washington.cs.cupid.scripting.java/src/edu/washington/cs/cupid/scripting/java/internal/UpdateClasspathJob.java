@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.osgi.framework.Bundle;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
@@ -56,6 +57,8 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 			List<IClasspathEntry> updatedClasspath = Lists.newArrayList();
 			List<IClasspathEntry> updatedEntries = Lists.newArrayList();
 			
+			List<String> allResolved = Lists.newArrayList();
+			
 			for (IClasspathEntry entry : project.getRawClasspath()) {
 				IClasspathEntry resolved = JavaCore.getResolvedClasspathEntry(entry);
 				
@@ -76,21 +79,33 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 						}else{
 							// we can't find a bundle with the same name (e.g., b/c it was uninstalled)
 							CupidScriptingPlugin.getDefault().logWarning(
-									"Can't find updated bundle for Cupid Project classpath entry " + entry.getPath());
+									"Can't find updated bundle for Cupid Project classpath entry: " + entry.getPath());
+						
+							updatedClasspath.add(entry);
 						}
 					} else {
 						CupidScriptingPlugin.getDefault().logWarning(
-								"Can't parse Cupid Project classpath entry " + entry.getPath());
+								"Can't parse Cupid Project classpath entry: " + entry.getPath());
 						
 						// we don't know how to find the name
 						updatedClasspath.add(entry);
 					}
+				} else if (resolved == null){
+					CupidScriptingPlugin.getDefault().logWarning(
+							"Can't resolve non-library Cupid Project classpath entry: " + entry.getPath());
+					
+					// we don't know how to 
+					updatedClasspath.add(entry);
 				} else {
 					// don't change entries we can resolve
 					updatedClasspath.add(entry);
+					allResolved.add(entry.getPath().toString());
 				}	
 				monitor.worked(1);
 			}
+			
+			CupidScriptingPlugin.getDefault().logInformation(
+					"Resolved " + allResolved.size() + " Cupid classpath entries (see log for details)" + System.getProperty("line.separator") + Joiner.on(System.getProperty("line.separator")).join(allResolved));
 			
 			if (!updatedEntries.isEmpty()) {
 				// perform update
@@ -104,7 +119,7 @@ public final class UpdateClasspathJob extends WorkspaceJob implements ISchedulin
 				CupidScriptingPlugin.getDefault().logInformation(
 						"Cupid Project classpath is up-to-date");
 			}
-			
+				
 			return Status.OK_STATUS;
 		} catch (Exception ex) {
 			return new Status(IStatus.ERROR, CupidScriptingPlugin.PLUGIN_ID, "Error updating Cupid scripting classpath", ex);

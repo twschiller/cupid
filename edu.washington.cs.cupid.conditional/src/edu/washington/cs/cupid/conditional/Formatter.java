@@ -151,11 +151,18 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 					if (!ruleQueue.isEmpty()){
 						// Apply new formatting
 						asyncConditionalFormat(owner, item, ruleQueue, data);
-					}else if (originalFormats.containsKey(item)){
+					} else if (originalFormats.containsKey(item)){
 						// Restore original formatting
 						FormatUtil.setFormat(owner, item, originalFormats.get(item));
+						
+						synchronized(formatLock){
+							conditionalFormats.remove(item);
+						}
 					}else{
 						FormatUtil.setFormat(owner, item, new Format());
+						synchronized(formatLock){
+							conditionalFormats.remove(item);
+						}
 					}
 				}
 			}

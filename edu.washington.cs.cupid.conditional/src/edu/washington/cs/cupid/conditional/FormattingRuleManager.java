@@ -117,12 +117,14 @@ public class FormattingRuleManager implements IPropertyChangeListener {
 		CupidEventBuilder event = 
 				new CupidEventBuilder(what, getClass(), Activator.getDefault())
 					.addData("name", rule.getName())
+					.addData("inputType", rule.getQualifiedType())
 					.addData("capabilityId", rule.getCapabilityId());
 		
 		try {
 			ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 			event.addData("capabilityName", capability.getName());
-			event.addData("parameterType", CapabilityUtil.unaryParameter(capability).getType().toString());
+			event.addData("capabilityInputType", CapabilityUtil.unaryParameter(capability).getType().toString());
+			event.addData("capabilityOutput", rule.getCapabilityOutput());
 		} catch (NoSuchCapabilityException e) {
 			// NO OP
 		}

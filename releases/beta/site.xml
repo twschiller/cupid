@@ -21,14 +21,13 @@
    <feature url="features/edu.washington.cs.cupid.hg_1.3.1.v20130809-1915.jar" id="edu.washington.cs.cupid.hg" version="1.3.1.v20130809-1915">
       <category name="edu.washington.cs.cupid.discover"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.core_1.3.2.v20130813-1600.jar" id="edu.washington.cs.cupid.core" version="1.3.2.v20130813-1600">
-      <category name="edu.washington.cs.cupid.core"/>
+   <feature url="features/edu.washington.cs.cupid.core_1.3.2.v20130813-1830.jar" id="edu.washington.cs.cupid.core" version="1.3.2.v20130813-1830">
+      <category name="edu.washington.cs.cupid"/>
    </feature>
-   <category-def name="edu.washington.cs.cupid.core" label="Core Features">
-      <description>
-         Core Cupid Features (e.g., computation engine).
-      </description>
-   </category-def>
+   <feature url="features/edu.washington.cs.cupid.plugins_1.3.2.v20130813-1830.jar" id="edu.washington.cs.cupid.plugins" version="1.3.2.v20130813-1830">
+      <category name="edu.washington.cs.cupid"/>
+   </feature>
    <category-def name="edu.washington.cs.cupid.discover" label="Integration (Information Discovery)"/>
    <category-def name="edu.washington.cs.cupid.visualize" label="Visualization"/>
+   <category-def name="edu.washington.cs.cupid" label="Cupid"/>
 </site>

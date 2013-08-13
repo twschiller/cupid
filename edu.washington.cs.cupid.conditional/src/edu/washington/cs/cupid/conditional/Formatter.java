@@ -467,7 +467,7 @@ public class Formatter extends NullPartListener implements DisposeListener, IInv
 		@Override
 		public void done(IJobChangeEvent event) {
 			if (event.getJob().belongsTo(DecoratorManager.FAMILY_DECORATE)){
-				
+				// XXX calling getDefault() here throws exception if the display has been killed
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run() {

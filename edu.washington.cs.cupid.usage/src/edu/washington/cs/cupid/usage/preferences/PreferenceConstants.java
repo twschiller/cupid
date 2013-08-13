@@ -39,4 +39,15 @@ public final class PreferenceConstants {
 	 */
 	public static final String P_UUID = "uuidPreference";
 	
+	/**
+	 * The date of the next survey
+	 */
+	public static final String P_NEXT_SURVEY_DATE = "nextSurveyDate";
+	
+	/**
+	 * <code>true</code> iff user should be notified to take the survey
+	 */
+	public static final String P_REMIND_SURVEY = "doRemindSurvey";
+	
+	
 }

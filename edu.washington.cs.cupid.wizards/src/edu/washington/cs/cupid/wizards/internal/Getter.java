@@ -11,104 +11,77 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearSerializableCapability;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class Getter<I,V> implements IExtractCapability<I,V> {
+public final class Getter<I, V> extends LinearSerializableCapability<I, V> implements IExtractCapability<I,V> {
 
-	private static final long serialVersionUID = 1L;
-
-	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.getter";
+	private static final long serialVersionUID = 3L;
 	
-	private final TypeToken<I> type;
-	private final String field;
-	private final TypeToken<V> result;
+	private final List<String> fields;
 	
 	public Getter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
-		this.field = field;
-		this.type = type;
-		this.result = result;
+		
+		super(field, 
+			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
+			  type, result,
+			  Flag.PURE);
+					
+		this.fields = Lists.newArrayList(field);
 	}
 	
-	@Override
-	public String getUniqueId() {
-		return BASE_ID + ".[" + type.getRawType().getName() + "]." + field;
-	}
-
-	@Override
-	public String getName() {
-		return field;
-	}
-
-	public String getField() {
-		return field;
+	
+	public Getter(final List<String> fields, final TypeToken<I> type, final TypeToken<V> result) {
+		
+		super(TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields), 
+			  TypeManager.simpleTypeName(type) + "." + Joiner.on(".").join(fields),
+			  type, result,
+			  Flag.PURE);
+					
+		this.fields = fields;
 	}
 	
+	
 	@Override
-	public String getDescription() {
-		return "Get the '" + field + "' of type " + type.toString();
-	}
-
-	@Override
-	public TypeToken<I> getParameterType() {
-		return type;
-	}
-
-	@Override
-	public TypeToken<V> getReturnType() {
-		return result;
-	}
-
-	@Override
-	public CapabilityJob<I, V> getJob(final I input) {
-		return new CapabilityJob<I,V>(this, input){
+	public LinearJob<I, V> getJob(final I input) {
+		return new LinearJob<I, V>(this, input){
 			@Override
-			protected CapabilityStatus<V> run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
-					monitor.beginTask(getName(), 1);
+					monitor.beginTask(getName(), fields.size());
 					
-					Method method = input.getClass().getMethod(field);
+					Object result = getInput();
 					
-					if (!method.isAccessible()) {
-						method.setAccessible(true);
+					for (String field : fields){
+						Method method = result.getClass().getMethod(field);
+						if (!method.isAccessible()) {
+							method.setAccessible(true);
+						}
+						result = method.invoke(result);		
+						monitor.worked(1);
 					}
-					
-					Object out = method.invoke(input);
 					// TODO check the conversion
-					return CapabilityStatus.makeOk((V) out);
+					return LinearStatus.makeOk(getCapability(), (V) result);
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
 			}
 		};
 	}
-
-	@Override
-	public Set<String> getDynamicDependencies() {
-		return new HashSet<String>();
-	}
-
-	@Override
-	public boolean isPure() {
-		return true;
-	}
-
-	@Override
-	public boolean isLocal() {
-		return true;
-	}
-
-	@Override
-	public boolean isTransient() {
-		return true;
+	
+	public List<String> getFields(){
+		return Lists.newArrayList(fields);
 	}
 }

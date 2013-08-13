@@ -1,22 +1,23 @@
 package edu.washington.cs.cupid.chart.internal;
 
 import java.awt.Frame;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.ISelectionService;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -27,28 +28,33 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
-import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.jobs.NullJobListener;
+import edu.washington.cs.cupid.select.CupidSelectionService;
+import edu.washington.cs.cupid.select.ICupidSelectionListener;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.usage.events.EventConstants;
 
-public abstract class ChartViewPart extends ViewPart implements ISelectionListener {
+public abstract class ChartViewPart extends ViewPart implements ICupidSelectionListener {
 
-	@SuppressWarnings("rawtypes")
 	protected ICapability capability;
+	protected ICapability.IOutput<?> output;
+	protected Method outputMethod;
 	
-	@SuppressWarnings("rawtypes")
-	protected ConcurrentMap results;
+	protected List<Object> comboModel = Lists.newArrayList();
+	
+	protected ConcurrentMap<Object, Object> results;
 	
 	protected Frame frame;
 	
-	private ISelectionService selectionService;
+	private Composite cSelectOutput;
+	private Combo cOutput;
 	
 	protected abstract void buildChart();
 	
@@ -67,82 +73,142 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 
 	@Override
 	public void createPartControl(Composite parent) {
-		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionService.addPostSelectionListener(this);
+		CupidSelectionService.addListener(this);
 		
-		Composite inner = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
-		frame = SWT_AWT.new_Frame(inner);
+		parent.setLayout(new GridLayout());
 		
-		refreshCapabilities();
+		Composite inner = new Composite(parent, SWT.NONE);
+		inner.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		inner.setLayout(new GridLayout());
 		
-		CupidPlatform.getCapabilityRegistry().addChangeListener(new ICapabilityChangeListener(){
+		cSelectOutput = new Composite(inner, SWT.NONE);
+		GridLayout lSelectOutput = new GridLayout();
+		lSelectOutput.numColumns = 2;
+		cSelectOutput.setLayout(lSelectOutput);
+		
+		Label lOutput = new Label(cSelectOutput, SWT.LEFT);
+		lOutput.setText("Select Output:");
+		cOutput = new Combo(cSelectOutput, SWT.DROP_DOWN | SWT.READ_ONLY);
+		cOutput.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+	
+		cOutput.addModifyListener(new ModifyListener() {
 			@Override
-			public void onChange(ICapabilityPublisher publisher) {
-				refreshCapabilities();
-			}
-		});
-		
-		setPartName(getName());
-		setContentDescription("Please select a capability.");
-	}
-
-	/**
-	 * Add the list of available capabilities to the view's menu
-	 */
-	private void refreshCapabilities(){
-		Display.getDefault().asyncExec(new Runnable(){
-			@Override
-			public void run() {
-				synchronized(ChartViewPart.this){
-					//http://wiki.eclipse.org/FAQ_How_do_I_add_actions_to_a_view's_menu_and_toolbar%3F
-					final IActionBars actionBars = getViewSite().getActionBars();
-					final IMenuManager dropDownMenu = actionBars.getMenuManager();
-					
-					dropDownMenu.removeAll();
-					
-					for (final ICapability<?,?> capability : CupidPlatform.getCapabilityRegistry().getCapabilities()){
-						for (TypeToken<?> type : accepts()){
-							if (TypeManager.isJavaCompatible(type, capability.getReturnType())){
-								dropDownMenu.add(new Action(capability.getName()){
-									@Override
-									public void run() {
-										ChartViewPart.this.capability = capability;
-										ChartViewPart.this.setPartName(getName() + ": " + capability.getName());
-										ChartViewPart.this.setContentDescription(capability.getDescription());
-									
-										CupidDataCollector.record(
-												CupidEventBuilder.selectCapabilityEvent(ChartViewPart.this.getClass(), capability, Activator.getDefault())
-												.create());
-									}
-								});
-								break;
-							}
+			public void modifyText(ModifyEvent e) {
+				if (capability != null){
+					try{
+						Object selected = comboModel.get(cOutput.getSelectionIndex());
+						
+						if (selected instanceof ICapability.IOutput){
+							output = (ICapability.IOutput<?>) selected;
+							outputMethod = null;
+						}else if (selected instanceof Method){
+							output = CapabilityUtil.singleOutput(capability);
+							outputMethod = (Method) selected;
+						}else{
+							throw new RuntimeException("Unexpected output model entry of type " + selected.getClass().getName());
 						}
+					}catch(Exception ex){
+						// NO OP
 					}
-					
-					dropDownMenu.markDirty();
-					actionBars.updateActionBars();
 				}
 			}
 		});
+		
+		cSelectOutput.setVisible(false);
+		
+		Composite cFrame = new Composite(inner, SWT.EMBEDDED | SWT.NO_BACKGROUND);
+		cFrame.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		frame = SWT_AWT.new_Frame(cFrame);
+			
+		parent.pack();
+		
+		setPartName(getName());
+		setContentDescription("No capability provided.");
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+	public void setCapability(ICapability capability) throws IllegalArgumentException{
+
+		Display.getCurrent().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				frame.removeAll();
+			}
+		});
 		
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
-				.create());
-		
-		if (capability != null && selection instanceof StructuredSelection){
+		if (CapabilityUtil.isUnary(capability)){
+			
+			List<ICapability.IOutput<?>> compatible = Lists.newArrayList();
+			List<Method> compatibleMethods = Lists.newArrayList();
+			
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
+				for (TypeToken<?> type : accepts()){
+					if (TypeManager.isJavaCompatible(type, output.getType())){
+						compatible.add(output);
+					}
+				}
+			}
+			
+			if (CapabilityUtil.hasSingleOutput(capability)){
+				ICapability.IOutput<?> output = CapabilityUtil.singleOutput(capability);
+				
+				Type t = output.getType().getType();
+				if (t instanceof Class){
+					for (Method m : ((Class<?>) t).getMethods()){
+						if (m.getParameterTypes().length == 0 && m.getName().startsWith("get")){
+							for (TypeToken<?> type : accepts()){
+								if (TypeManager.isJavaCompatible(type, TypeManager.boxType(TypeToken.of(m.getReturnType())))){
+									compatibleMethods.add(m);
+								}
+							}	
+						}
+					}
+				}
+			}
+			
+			if (compatible.isEmpty() && compatibleMethods.isEmpty()){
+				throw new IllegalArgumentException("Capability '" + capability.getName() + "' has no compatible outputs");
+			}
+			
+			this.capability = capability;
+			this.output = !compatible.isEmpty() ? compatible.get(0) : null;	
+			this.outputMethod = compatible.isEmpty() ? compatibleMethods.get(0) : null;
+			
+			if (compatible.size() + compatibleMethods.size() <= 1){
+				this.cSelectOutput.setVisible(false);
+			}else{
+				this.cSelectOutput.setVisible(true);
+			}
+			
+			this.cOutput.removeAll();
+			this.comboModel.clear();
+			for (ICapability.IOutput<?> o : compatible){
+				this.cOutput.add(o.getName());
+				this.comboModel.add(o);
+			}
+			for (Method m : compatibleMethods){
+				this.cOutput.add(m.getName());
+				this.comboModel.add(m);
+			}
+			
+			this.cOutput.select(0);
+			
+			this.setPartName(getName() + ": " + capability.getName());
+			this.setContentDescription(capability.getDescription());
+			
+		}else{
+			throw new IllegalArgumentException("Capability " + capability.getName() + " is not single input");
+		}
+	}
+	
+	private void show(Object [] all){
+		if (capability != null){
 			ChartViewPart.this.showBusy(true);
 			
-			final StructuredSelection all = ((StructuredSelection) selection);
+			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
 			
-			final List compatible = Lists.newArrayList();
-			for (Object x : all.toList()){
-				if (TypeManager.isCompatible(capability, x)){
+			final List<Object> compatible = Lists.newArrayList();
+			for (Object x : all){
+				if (TypeManager.isCompatible(parameter, x)){
 					compatible.add(x);
 				}
 			}
@@ -150,11 +216,28 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 			results = Maps.newConcurrentMap();
 			
 			for (final Object x : compatible){
-				CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, x), ChartViewPart.this, new NullJobListener(){
+				ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, TypeManager.getCompatible(parameter, x));
+				
+				CapabilityExecutor.asyncExec(capability, packed, ChartViewPart.this, new NullJobListener(){
 					@Override
 					public void done(IJobChangeEvent event) {
-						CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
-						results.put(x, status.value() != null ? status.value() : status.getException() );
+						CapabilityStatus status = (CapabilityStatus) event.getResult();
+						
+						Object result = status.value() != null
+									? status.value().getOutput(output)
+									: status.getException();
+						
+						if (outputMethod != null){
+							try {
+								result = outputMethod.invoke(result);
+							} catch (IllegalArgumentException e) {
+								throw new RuntimeException("Incompatible output of type " + result.getClass() + " for method " + outputMethod.getName());
+							} catch (Exception e) {
+								result = e;
+							}
+						}
+								
+						results.put(x, result);
 						
 						if (results.size() == compatible.size()){
 							buildChart();
@@ -164,6 +247,15 @@ public abstract class ChartViewPart extends ViewPart implements ISelectionListen
 				});
 			}
 		}
+	}
+	
+	@Override
+	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {
+		CupidDataCollector.record(
+				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
+				.create());
+		
+		show(data);
 	}
 	
 	@Override

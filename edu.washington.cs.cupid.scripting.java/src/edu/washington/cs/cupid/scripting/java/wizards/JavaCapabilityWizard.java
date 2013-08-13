@@ -11,8 +11,9 @@
 package edu.washington.cs.cupid.scripting.java.wizards;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -22,7 +23,6 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -43,11 +43,10 @@ import org.eclipse.ui.ide.IDE;
 import org.osgi.framework.Bundle;
 
 import com.floreysoft.jmte.Engine;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import com.google.common.io.CharStreams;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.usage.events.EventConstants;
@@ -59,13 +58,18 @@ import edu.washington.cs.cupid.usage.events.EventConstants;
 public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	private JavaCapabilityWizardPage page;
 	private ISelection selection;
-
+	
 	/**
 	 * Construct a wizard for creating a new Java script capability.
 	 */
-	public JavaCapabilityWizard() {
+	public JavaCapabilityWizard(ISelection selection) {
 		super();
-		setNeedsProgressMonitor(true);
+		this.selection = selection;
+		this.setNeedsProgressMonitor(true);
+	}
+	
+	public JavaCapabilityWizard(){
+		this(null);
 	}
 	
 	@Override
@@ -82,7 +86,6 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	public boolean performFinish() {
 		final String name = page.getCapabilityName();
 		final String description = page.getCapabilityDescription();
-		final String id = page.getUniqueId();
 		
 		final Class<?> parameterType;
 		final Class<?> returnType;
@@ -100,7 +103,7 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		IRunnableWithProgress op = new IRunnableWithProgress() {
 			public void run(final IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					doFinish(name, id, description, parameterType, returnType, classpath,  monitor);
+					doFinish(name, description, parameterType, returnType, classpath,  monitor);
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {
@@ -115,7 +118,8 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 			return false;
 		} catch (InvocationTargetException e) {
 			Throwable realException = e.getTargetException();
-			MessageDialog.openError(getShell(), "Error", realException.getMessage());
+			MessageDialog.openError(getShell(), "Error", "Error creating Cupid Script; see log for more details.");
+			CupidScriptingPlugin.getDefault().logError("Error creating Cupid script", realException);
 			return false;
 		}
 		return true;
@@ -136,12 +140,11 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 	 * the editor on the newly created file.
 	 * @throws IOException 
 	 */
-	private void doFinish(final String name, final String id, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
+	private void doFinish(final String name, final String description, final Class<?> parameterType, final Class<?> returnType, final List<IPath> classpath, final IProgressMonitor monitor) throws Exception {
 			
 		CupidEventBuilder event = 
-				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), Activator.getDefault())
+				new CupidEventBuilder(EventConstants.FINISH_WHAT, getClass(), CupidScriptingPlugin.getDefault())
 				.addData("name", name)
-				.addData("id", id)
 				.addData("parameterType", parameterType.getName())
 				.addData("returnType", returnType.getName());
 		CupidDataCollector.record(event.create());
@@ -151,11 +154,11 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		
 		monitor.beginTask("Creating " + name, 2);
 		
-		IProject cupid = Activator.getDefault().getCupidProject();
+		IProject cupid = CupidScriptingPlugin.getDefault().getCupidProject();
 		
 		final IFile file = cupid.getFolder("src").getFile(new Path(className + ".java"));
 		
-		file.create(openContents(name, id, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
+		file.create(openContents(name, description, parameterType, returnType, cupid.getDefaultCharset()), true, monitor);
 	
 		IJavaProject proj = JavaCore.create(cupid);
 		List<IClasspathEntry> cp = Lists.newArrayList(proj.getRawClasspath());
@@ -183,21 +186,22 @@ public final class JavaCapabilityWizard extends Wizard implements INewWizard {
 		monitor.done();
 	}
 	
-	private InputStream openContents(final String name, final String id, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
-		String separator = System.getProperty("line.separator");
+	private InputStream openContents(final String name, final String description, final Class<?> paramType, final Class<?> returnType, final String charSet) throws Exception{
+		Bundle bundle = CupidScriptingPlugin.getDefault().getBundle();
 		
-		Bundle bundle = Activator.getDefault().getBundle();
-		URL fileURL = bundle.getEntry("templates/AbstractCapability.template");
-		File file = new File(FileLocator.resolve(fileURL).toURI());
+		URL fileURL = bundle.getEntry("templates/LinearCapability.template");
 		
-		String template = Joiner.on(separator).join(Files.readLines(file, Charset.defaultCharset()));
-	
+		if (fileURL == null){
+			throw new IOException("Error locating linear capability script template");
+		}
+		
+		String template = CharStreams.toString( new InputStreamReader(fileURL.openStream(), Charset.forName("UTF-8")) );
+		
 		Engine engine = new Engine();
 		Map<String, Object> model = new HashMap<String, Object>();
 		
 		model.put("CLASS", formClassName(name));
 		model.put("NAME", name);
-		model.put("UNIQUE_ID", id);
 		model.put("DESCRIPTION", description);
 		model.put("INPUT_TYPE", paramType.getSimpleName());
 		model.put("OUTPUT_TYPE", returnType.getSimpleName());

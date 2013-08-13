@@ -12,6 +12,8 @@ package edu.washington.cs.cupid.usage.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -32,9 +34,11 @@ import edu.washington.cs.cupid.usage.server.json.JsonCupidSession;
 @SuppressWarnings("serial")
 public class CupidUsageDataServlet extends HttpServlet {
 	
+	private static final Logger log = Logger.getLogger(CupidUsageDataServlet.class.getName());
+	
 	private Gson gson = new Gson();
 	
-	private void writeSession(JsonCupidSession raw){
+	private void writeSession(final JsonCupidSession raw){
 		EntityManager em = EMFService.get().createEntityManager();
 		
 		try{
@@ -78,12 +82,13 @@ public class CupidUsageDataServlet extends HttpServlet {
 	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		BufferedReader reader = req.getReader();
 		try {
+			BufferedReader reader = req.getReader();
 			JsonCupidSession raw = gson.fromJson(reader, JsonCupidSession.class);
 			writeSession(raw);
 			resp.setStatus(HttpServletResponse.SC_OK);
 		} catch (Exception ex) {
+			log.log(Level.WARNING, "Error recording Cupid session log", ex);
 			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Malformed Cupid session log: " + ex.getLocalizedMessage());
 		}
 	}

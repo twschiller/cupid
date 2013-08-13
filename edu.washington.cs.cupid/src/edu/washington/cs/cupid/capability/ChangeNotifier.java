@@ -35,13 +35,6 @@ public class ChangeNotifier implements ICapabilityChangeListener, ICapabilityCha
 	}
 	
 	@Override
-	public final void onChange(final ICapabilityPublisher publisher) {
-		for (final ICapabilityChangeListener listener : listeners) {
-			listener.onChange(publisher);
-		}
-	}
-
-	@Override
 	public final synchronized void addChangeListener(final ICapabilityChangeListener listener) {
 		listeners.add(listener);
 	}
@@ -49,5 +42,19 @@ public class ChangeNotifier implements ICapabilityChangeListener, ICapabilityCha
 	@Override
 	public final synchronized void removeChangeListener(final ICapabilityChangeListener listener) {
 		listeners.remove(listener);
+	}
+
+	@Override
+	public final synchronized void onCapabilityAdded(ICapability capability) {
+		for (final ICapabilityChangeListener listener : listeners) {
+			listener.onCapabilityAdded(capability);
+		}
+	}
+
+	@Override
+	public final synchronized void onCapabilityRemoved(ICapability capability) {
+		for (final ICapabilityChangeListener listener : listeners) {
+			listener.onCapabilityRemoved(capability);
+		}
 	}
 }

@@ -14,12 +14,15 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.ICapability;
@@ -67,6 +70,44 @@ public final class TypeManager {
 		return ADAPTER_REGISTRY;
 	}
 	
+	private static Set<Class<?>> getClassesBfs(Class<?> clazz) {
+		// adapted from: http://stackoverflow.com/questions/9797212/finding-the-nearest-common-superclass-or-superinterface-of-a-collection-of-cla
+		
+		Set<Class<?>> classes = Sets.newLinkedHashSet();
+	    Set<Class<?>> nextLevel = Sets.newLinkedHashSet();
+	    nextLevel.add(clazz);
+	    do {
+	        classes.addAll(nextLevel);
+	        Set<Class<?>> thisLevel = Sets.newLinkedHashSet(nextLevel);
+	        nextLevel.clear();
+	        for (Class<?> each : thisLevel) {
+	            Class<?> superClass = each.getSuperclass();
+	            if (superClass != null && superClass != Object.class) {
+	                nextLevel.add(superClass);
+	            }
+	            for (Class<?> eachInt : each.getInterfaces()) {
+	                nextLevel.add(eachInt);
+	            }
+	        }
+	    } while (!nextLevel.isEmpty());
+	    return classes;
+	}
+
+	/**
+	 * Returns the common set of superclasses sorted by distance from the first class?
+	 * @param classes
+	 * @return
+	 */
+	public static List<Class<?>> commonSuperClass(Class<?>... classes) {
+		// adapted from: http://stackoverflow.com/questions/9797212/finding-the-nearest-common-superclass-or-superinterface-of-a-collection-of-cla
+			
+	    Set<Class<?>> result = new LinkedHashSet<Class<?>>(getClassesBfs(classes[0]));
+	    for (Class<?> clazz : classes){
+	    	result.retainAll(getClassesBfs(clazz));
+	    }
+	    return Lists.newArrayList(result);
+	}
+	
 	private static boolean isPrimitive(Type type){
 		return type instanceof Class && ((Class<?>) type).isPrimitive();
 	}
@@ -95,6 +136,10 @@ public final class TypeManager {
 	 */
 	public static boolean isJavaCompatible(final TypeToken<?> lhs, final TypeToken<?> rhs) {
 		return lhs.isAssignableFrom(rhs);
+	}
+	
+	public static String simpleTypeName(final TypeToken<?> type) {
+		return simpleTypeName(type.getType());
 	}
 	
 	/**
@@ -127,16 +172,17 @@ public final class TypeManager {
 	
 	/**
 	 * Returns <code>true</code> iff argument <code>argument</code> can be supplied as the argument
-	 * for <code>capability</code>.
+	 * for <code>parameter</code>.
 	 * 
-	 * @param capability the capability
+	 * @param capability the parameter
 	 * @param argument the argument
 	 * @return <code>true</code> iff argument <code>argument</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability<?, ?> capability, final Object argument) {
-		return isCompatible(capability, TypeToken.of(argument.getClass()));
+	public static boolean isCompatible(final ICapability.IParameter<?> parameter, final Object argument) {
+		return isCompatible(parameter, TypeToken.of(argument.getClass()));
 	}
+	
 	
 	/**
 	 * Returns <code>true</code> iff an argument of type <code>argumentType</code> can be supplied as the argument
@@ -147,30 +193,23 @@ public final class TypeManager {
 	 * @return <code>true</code> iff an argument of type <code>argumentType</code> can be supplied as the argument
 	 * for <code>capability</code>
 	 */
-	public static boolean isCompatible(final ICapability<?, ?> capability, final TypeToken<?> argumentType) {
+	public static boolean isCompatible(final ICapability.IParameter<?> parameter, final TypeToken<?> argumentType) {
 		
-		if (capability == null) {
-			throw new NullPointerException("Capability cannot be null");
-		} else if (capability.getParameterType() == null) {
-			throw new NullPointerException("Capability " + capability.getName() + " has null parameter type");
-		}
+		TypeToken<?> parameterType = parameter.getType();
 		
-		TypeToken<?> parameterType = capability.getParameterType();
-		
-		if (parameterType.equals(ICapability.UNIT_TOKEN)) {
-			// capability does not expect any input
+		if (parameterType.equals(TypeToken.of(Void.class))) {
+			// parameter does not expect any input
 			return true;
 	
-		} else if (isJavaCompatible(capability.getParameterType(), argumentType)) {
+		} else if (isJavaCompatible(parameterType, argumentType)) {
 			// Java's standard typing rules work
-			return true;
-	
+			return true;	
 		} else if (parameterType.getType() instanceof ParameterizedType) {
 			if (parameterType.getRawType().isAssignableFrom(argumentType.getRawType())) {
 				// check if type is all variables (i.e., fully generic)
 				for (Type arg : ((ParameterizedType) parameterType.getType()).getActualTypeArguments()) {
 					if (!(arg instanceof TypeVariable)) {
-						return capability.getParameterType().isAssignableFrom(argumentType);
+						return parameterType.isAssignableFrom(argumentType);
 					}
 				}
 				return true;
@@ -178,7 +217,7 @@ public final class TypeManager {
 				return false;
 			}
 		} else {
-			return ADAPTER_REGISTRY.getTypeAdapter(argumentType, capability.getParameterType()) != null;
+			return ADAPTER_REGISTRY.getTypeAdapter(argumentType, parameterType) != null;
 		}
 	}
 
@@ -189,17 +228,16 @@ public final class TypeManager {
 	 * a corresponding compatible argument, otherwise
 	 * @see {@link TypeManager#isCompatible(ICapability, Object)}
 	 */
-	@SuppressWarnings("unchecked")
-	public static Object getCompatible(final ICapability<?, ?> capability, final Object argument) {
-		if (capability.getParameterType().equals(ICapability.UNIT_TOKEN)) {
+	public static Object getCompatible(final ICapability.IParameter<?> parameter, final Object argument) {
+		if (parameter.getType().equals(TypeToken.of(Void.class))) {
 			return argument;
-		} else if (isJavaCompatible(capability.getParameterType(), TypeToken.of(argument.getClass()))) {
+		} else if (isJavaCompatible(parameter.getType(), TypeToken.of(argument.getClass()))) {
 			return argument;
 		} else {
 			@SuppressWarnings("rawtypes")
 			ITypeAdapter adapter = ADAPTER_REGISTRY.getTypeAdapter(
 					TypeToken.of(argument.getClass()), 
-					capability.getParameterType());
+					parameter.getType());
 			
 			if (adapter == null) {
 				throw new IllegalArgumentException("Argument is not compatible with capability");
@@ -207,5 +245,9 @@ public final class TypeManager {
 				return adapter.adapt(argument);
 			}	
 		}	
+	}
+	
+	public static TypeToken<?> forName(String qualifiedName) throws ClassNotFoundException{
+		return TypeToken.of(Class.forName(qualifiedName));
 	}
 }

@@ -18,16 +18,19 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.hg.HgHeadsCapability;
 import edu.washington.cs.cupid.hg.HgLogCapability;
+import edu.washington.cs.cupid.hg.HgModifiedCapability;
+import edu.washington.cs.cupid.hg.HgModifiedFilterCapability;
 
 /**
- * The activator class controls the plug-in life cycle
+ * The activator class controls the plug-in life cycle.
  */
 public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 
-	// The plug-in ID
+	/**
+	 *  The plug-in ID.
+	 */
 	public static final String PLUGIN_ID = "edu.washington.cs.cupid.hg"; //$NON-NLS-1$
 
-	// The shared instance
 	private static Activator plugin;
 	
 	/**
@@ -36,19 +39,13 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	public Activator() {
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
+	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
+	@Override
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
@@ -74,10 +71,12 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	}
 
 	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?,?>[]{
+	public ICapability[] publish() {
+		return new ICapability[]{
 			new HgHeadsCapability(),
 			new HgLogCapability(),
+			new HgModifiedCapability(),
+			new HgModifiedFilterCapability(),
 		};
 	}
 

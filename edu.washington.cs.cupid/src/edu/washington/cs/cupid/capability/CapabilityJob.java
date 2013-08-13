@@ -29,19 +29,21 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * method.</p>
  * 
  * @author Todd Schiller (tws@cs.washington.edu)
- * @param <I> input type
- * @param <V> output type
+ * @param <T> the type of capability that produced the job
  * @see {@link Job}
  */
-public abstract class CapabilityJob<I, V> extends Job {
+public abstract class CapabilityJob<T extends ICapability> extends Job {
 	
+	private static final String ANONYMOUS_CUPID_CAPABILITY_NAME = "Anonymous Cupid Capability";
+
 	/**
 	 * The input to the capability.
 	 */
 	// TODO make private and expose getter
-	protected final I input;
+	private final ICapabilityArguments input;
 	
-	private final ICapability<I, V> capability;
+	private final T capability;
+	
 	private final Set<Object> families;
 	
 	/**
@@ -49,8 +51,8 @@ public abstract class CapabilityJob<I, V> extends Job {
 	 * @param capability the source capability
 	 * @param input the input
 	 */
-	public CapabilityJob(final ICapability<I, V> capability, final I input) {
-		super(capability.getUniqueId());
+	public CapabilityJob(final T capability, final ICapabilityArguments input) {
+		super(capability.getName() != null ? capability.getName() : CapabilityJob.ANONYMOUS_CUPID_CAPABILITY_NAME);
 		this.input = input;
 		this.capability = capability;
 		this.families = Sets.newHashSet((Object) input, CupidActivator.getDefault(), capability);
@@ -59,14 +61,14 @@ public abstract class CapabilityJob<I, V> extends Job {
 	/**
 	 * @return the associated capability
 	 */
-	public final I getInput() {
+	public final ICapabilityArguments getInputs() {
 		return input;
 	}
 	
 	/**
 	 * @return the associated capability
 	 */
-	public final ICapability<I, V> getCapability() {
+	public final T getCapability() {
 		return capability;
 	}
 	
@@ -86,6 +88,6 @@ public abstract class CapabilityJob<I, V> extends Job {
 	}
 	
 	@Override 
-	protected abstract CapabilityStatus<V> run(IProgressMonitor monitor);
+	protected abstract CapabilityStatus run(IProgressMonitor monitor);
 	
 }

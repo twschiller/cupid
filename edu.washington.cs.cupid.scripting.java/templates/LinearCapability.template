@@ -1,0 +1,37 @@
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
+import org.eclipse.core.runtime.IProgressMonitor;
+
+${foreach IMPORTS import}import ${import};
+${end}
+
+public final class ${CLASS} extends LinearCapability<${INPUT_TYPE}, ${OUTPUT_TYPE}>{
+
+        public ${CLASS}() {
+                super("${NAME}",
+                      "${DESCRIPTION}",
+                      ${INPUT_TYPE}.class, ${OUTPUT_TYPE}.class,
+                      Flag.PURE);
+        }
+        
+        @Override
+        public LinearJob<${INPUT_TYPE}, ${OUTPUT_TYPE}> getJob(final ${INPUT_TYPE} input) {
+                return new LinearJob<${INPUT_TYPE}, ${OUTPUT_TYPE}>(this, input){
+                        @Override
+                        protected LinearStatus<${OUTPUT_TYPE}> run(final IProgressMonitor monitor) {
+                                try {
+                                        monitor.beginTask("${NAME}", 100);
+                                         
+                                        ${OUTPUT_TYPE} result = null; // perform computation 
+
+                                        return LinearStatus.makeOk(getCapability(), result);
+                                } catch (Exception e) {
+                                        return LinearStatus.<${OUTPUT_TYPE}>makeError(e);
+                                } finally {
+                                        monitor.done();
+                                }
+                        }
+                };
+        }
+}

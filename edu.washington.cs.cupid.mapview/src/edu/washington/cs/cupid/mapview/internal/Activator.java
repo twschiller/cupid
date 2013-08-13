@@ -10,6 +10,9 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.mapview.internal;
 
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -27,6 +30,8 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
+	private static ILog pluginLog;
+	
 	/**
 	 * The constructor.
 	 */
@@ -37,6 +42,7 @@ public class Activator extends AbstractUIPlugin {
 	public final void start(final BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		pluginLog = Platform.getLog(context.getBundle());
 	}
 
 	@Override
@@ -51,6 +57,15 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static Activator getDefault() {
 		return plugin;
+	}
+	
+	/**
+	 * Log an error in the plugin's log.
+	 * @param msg localized error message
+	 * @param e the exception
+	 */
+	public void logError(final String msg, final Exception e) {
+		pluginLog.log(new Status(Status.ERROR, PLUGIN_ID, Status.ERROR, msg, e));			
 	}
 
 }

@@ -30,6 +30,9 @@ import org.eclipse.jdt.internal.junit.model.TestRunSession;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.linear.ILinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 import edu.washington.cs.cupid.junit.internal.Activator;
 
 /**
@@ -37,7 +40,7 @@ import edu.washington.cs.cupid.junit.internal.Activator;
  * @author Todd Schiller (tws@cs.washington.edu)
  */
 @SuppressWarnings({ "restriction" })
-public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
+public class JUnitJob extends LinearJob<IJavaProject, TestRunSession> {
 
 	private static final int TEST_POLLING_TIME_MILLIS = 10;
 	private final String configName;
@@ -49,7 +52,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 	 * @param configuration the configuration to run
 	 * @param input the project to run
 	 */
-	public JUnitJob(final ICapability<IJavaProject, TestRunSession> capability, final String configuration, final IJavaProject input) {
+	public JUnitJob(final ILinearCapability<IJavaProject, TestRunSession> capability, final String configuration, final IJavaProject input) {
 		super(capability, input);
 		this.configName = configuration;
 	}
@@ -60,7 +63,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 	}
 
 	@Override
-	protected final CapabilityStatus<TestRunSession> run(final IProgressMonitor monitor) {
+	protected final LinearStatus<TestRunSession> run(final IProgressMonitor monitor) {
 		try {
 			monitor.beginTask("Run JUnit Configuration", 100);
 			
@@ -75,7 +78,7 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 			
 			if (configuration == null) {
 				monitor.done();
-				return CapabilityStatus.makeError(new IllegalArgumentException("No launch configuration named " + configName));
+				return LinearStatus.<TestRunSession>makeError(new IllegalArgumentException("No launch configuration named " + configName));
 			} else {
 				ILaunchConfigurationWorkingCopy copy = configuration.getWorkingCopy();
 				copy.setAttribute(JUnitLaunchConfigurationConstants.ATTR_NO_DISPLAY, true);
@@ -92,14 +95,14 @@ public class JUnitJob extends CapabilityJob<IJavaProject, TestRunSession> {
 					try {
 						Thread.sleep(TEST_POLLING_TIME_MILLIS);
 					} catch (InterruptedException e) {
-						return CapabilityStatus.makeCancelled();
+						return LinearStatus.<TestRunSession>makeCancelled();
 					}
 				} while (!launch.isTerminated());
 
-				return CapabilityStatus.makeOk(Activator.getDefaultMonitor().forLaunch(launch));
+				return LinearStatus.makeOk(getCapability(), Activator.getDefaultMonitor().forLaunch(launch));
 			}
 		} catch (Exception ex) {
-			return CapabilityStatus.makeError(ex);
+			return LinearStatus.<TestRunSession>makeError(ex);
 		} finally {
 			monitor.done();
 		}

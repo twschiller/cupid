@@ -35,7 +35,7 @@
    <extension
          point="edu.washington.cs.cupid.publishers">
       <publisher
-            class="edu.washington.cs.cupid.scripting.java.internal.Activator">
+            class="edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin">
       </publisher>
    </extension>
    <extension
@@ -45,6 +45,21 @@
             id="edu.washington.cs.cupid.scripting.java.classpath"
             name="Fix Cupid Project Classpath">
       </quickFixProcessor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.scripting.java.objectContribution"
+            objectClass="java.lang.Object">
+         <action
+               class="edu.washington.cs.cupid.scripting.java.internal.CreateScriptAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.scripting.java.action2"
+               label="Create Script"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>

@@ -14,15 +14,15 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability that returns the project that contains a resource.
  * @author Todd Schiller
  */
-public final class ProjectForResourceCapability extends AbstractCapability<IResource, IProject> {
+public final class ProjectForResourceCapability extends LinearCapability<IResource, IProject> {
 
 	/**
 	 * Construct a capability that returns the project that contains a resource.
@@ -30,22 +30,21 @@ public final class ProjectForResourceCapability extends AbstractCapability<IReso
 	public ProjectForResourceCapability() {
 		super(
 				"Containing Project",
-				"edu.washington.cs.cupid.resources.project",
 				"The project that contains the resource",
 				IResource.class, IProject.class,
 				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<IResource, IProject> getJob(final IResource input) {
-		return new CapabilityJob<IResource, IProject>(this, input) {
+	public LinearJob<IResource, IProject> getJob(final IResource input) {
+		return new LinearJob<IResource, IProject>(this, input) {
 			@Override
-			protected CapabilityStatus<IProject> run(final IProgressMonitor monitor) {
+			protected LinearStatus<IProject> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 1);
-					return CapabilityStatus.makeOk(input.getProject());
+					return LinearStatus.makeOk(getCapability(), input.getProject());
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<IProject>makeError(ex);
 				} finally {
 					monitor.done();
 				}

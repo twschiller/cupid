@@ -24,8 +24,14 @@ package edu.washington.cs.cupid.capability;
 public interface ICapabilityChangeListener {
 	
 	/**
-	 * Triggered when the set of capabilities provided by <code>publisher</code> changes.
-	 * @param publisher the notifying publisher
+	 * Triggered when the <tt>publisher</tt> provides a new capability.
+	 * @param capability
 	 */
-	void onChange(final ICapabilityPublisher publisher);
+	void onCapabilityAdded(ICapability capability);
+	
+	/**
+	 * Triggered when the <tt>publisher</tt> no longer provides a capability.
+	 * @param capability
+	 */
+	void onCapabilityRemoved(ICapability capability);
 }

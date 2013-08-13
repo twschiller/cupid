@@ -17,7 +17,7 @@ import org.eclipse.core.resources.IProject;
 
 import com.google.common.io.Files;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 
 /**
  * Custom class loader for Cupid capabilities.
@@ -48,7 +48,7 @@ public final class CupidCapabilityLoader extends ClassLoader {
 	}
 		
 	private byte[] readCupidClass(final String fullyQualifiedName) throws IOException {
-		IProject cupidProject = Activator.getDefault().getCupidProject();
+		IProject cupidProject = CupidScriptingPlugin.getDefault().getCupidProject();
 		File file = new File(cupidProject.getFolder("bin").getRawLocation().toFile(), fullyQualifiedName + ".class");
 		return Files.toByteArray(file);
 	}

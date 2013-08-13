@@ -10,17 +10,14 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.jobs;
 
-import java.util.Arrays;
-
 /**
  * A job family constructed from other families.
  * @author Todd Schiller (tws@cs.washington.edu)
  */
 public final class JobFamily {
 
-	// TODO This is going to introduce memory leaks. Perhaps we need to intern, and cleanup objects we hold the last reference to?
-	
 	private final Object[] tags;
+	private final int hash;
 	
 	/**
 	 * Create a family using the specified {@link Object} tags. <i>All objects should use reference equality.</i>
@@ -28,6 +25,13 @@ public final class JobFamily {
 	 */
 	public JobFamily(final Object... tags) {
 		this.tags = tags;
+		
+//		Class<?> [] tagTypes = new Class<?>[tags.length];
+//		for (int i = 0; i < tags.length; i++){
+//			tagTypes[i] = tags[i].getClass();
+//		}
+//		hash = Arrays.hashCode(tagTypes);
+		hash = 42;
 	}
 		
 	@Override
@@ -37,10 +41,7 @@ public final class JobFamily {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(tags);
-		return result;
+		return hash;
 	}
 
 	@Override
@@ -51,12 +52,19 @@ public final class JobFamily {
 			return false;
 		} else if (getClass() != obj.getClass()) {
 			return false;
-		}
+		} 
 		
 		JobFamily other = (JobFamily) obj;
-		if (!Arrays.equals(tags, other.tags)) {
+		if (tags.length != other.tags.length) {
 			return false;
+		} else {
+			for (int i = 0; i < tags.length; i++){
+				if (tags[i] != other.tags[i]){
+					return false;
+				}
+			}
 		}
+		
 		return true;
 	}
 }

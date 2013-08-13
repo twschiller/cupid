@@ -52,7 +52,7 @@ public final class SelectionInspectorPreferencePage extends PreferencePage imple
 	 */
 	public static final String SEPARATOR = ";;";
 	
-	private List<ICapability<?, ?>> model;
+	private List<ICapability> model;
 	private Table table;
 	
 	private IPreferenceStore preferences = CupidActivator.getDefault().getPreferenceStore();
@@ -105,21 +105,21 @@ public final class SelectionInspectorPreferencePage extends PreferencePage imple
 		}
 	
 		model = Lists.newArrayList(CupidPlatform.getCapabilityRegistry().getCapabilities());
-		Collections.sort(model, new Comparator<ICapability<?, ?>>() {
+		Collections.sort(model, new Comparator<ICapability>() {
 			@Override
-			public int compare(final ICapability<?, ?> lhs, final ICapability<?, ?> rhs) {
+			public int compare(final ICapability lhs, final ICapability rhs) {
 				return lhs.getName().compareTo(rhs.getName());
 			}
 		});
 		
 		
 		
-		for (ICapability<?, ?> capability : model) {
+		for (ICapability capability : model) {
 			TableItem item = new TableItem(table, SWT.NULL);
 			item.setText(capability.getName());
 			item.setText(0, capability.getName());
 
-			if (!hidden.contains(capability.getUniqueId())) {
+			if (!hidden.contains(capability.getName())) {
 				item.setChecked(true);
 			}
 		}
@@ -151,7 +151,7 @@ public final class SelectionInspectorPreferencePage extends PreferencePage imple
 		
 		for (int i = 0; i < table.getItemCount(); i++) {
 			if (!table.getItem(i).getChecked()) {
-				hidden.add(model.get(i).getUniqueId());
+				hidden.add(model.get(i).getName());
 			}
 		}
 		

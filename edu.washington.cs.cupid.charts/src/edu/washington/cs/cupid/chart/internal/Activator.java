@@ -1,5 +1,8 @@
 package edu.washington.cs.cupid.chart.internal;
 
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -19,6 +22,8 @@ public class Activator extends AbstractUIPlugin  {
 	 */
 	private static Activator plugin;
 	
+	private static ILog pluginLog;
+	
 	/**
 	 * The constructor
 	 */
@@ -29,7 +34,7 @@ public class Activator extends AbstractUIPlugin  {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-	
+		pluginLog = Platform.getLog(context.getBundle());
 	}
 
 	@Override
@@ -56,6 +61,15 @@ public class Activator extends AbstractUIPlugin  {
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	}
+	
+	/**
+	 * Log an error in the plugin's log.
+	 * @param msg localized error message
+	 * @param e the exception
+	 */
+	public void logError(final String msg, final Exception e) {
+		pluginLog.log(new Status(Status.ERROR, PLUGIN_ID, Status.ERROR, msg, e));			
 	}
 
 }

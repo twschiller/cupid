@@ -19,16 +19,16 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability that computes the most frequent element in a collection.
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class MostFrequent<V> extends GenericAbstractCapability<List<V>, V> {
+public final class MostFrequent<V> extends GenericLinearCapability<List<V>, V> {
 	
 	// TODO make efficient
 	
@@ -38,28 +38,27 @@ public final class MostFrequent<V> extends GenericAbstractCapability<List<V>, V>
 	public MostFrequent() {
 		super(
 				"Most Frequent", 
-				"edu.washington.cs.cupid.standard.frequent",
 				"Get the most frequent element in a collection",
 				Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<List<V>, V> getJob(final List<V> input) {
-		return new CapabilityJob<List<V>, V>(this, input) {
+	public LinearJob<List<V>, V> getJob(final List<V> input) {
+		return new LinearJob<List<V>, V> (this, input) {
 			@Override
-			protected CapabilityStatus<V> run(final IProgressMonitor monitor) {
+			protected LinearStatus<V> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					
 					Multiset<V> set = HashMultiset.create();
 					set.addAll(input);
 					for (V val : Multisets.copyHighestCountFirst(set)) {
-						return CapabilityStatus.makeOk(val);
+						return LinearStatus.makeOk(getCapability(), val);
 					}
 					
-					return CapabilityStatus.makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
+					return LinearStatus.<V>makeError(new IllegalArgumentException("Cannot get most frequent element of empty collection"));
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<V>makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -68,17 +67,13 @@ public final class MostFrequent<V> extends GenericAbstractCapability<List<V>, V>
 	}
 
 	@Override
-	public TypeToken<List<V>> getParameterType() {
-		return new TypeToken<List<V>>(getClass()) {
-			private static final long serialVersionUID = 1L;
-		};
+	public TypeToken<List<V>> getInputType() {
+		return new TypeToken<List<V>>(getClass()) {};
 	}
 
 	@Override
-	public TypeToken<V> getReturnType() {
-		return new TypeToken<V>(getClass()) {
-			private static final long serialVersionUID = 1L;
-		};
+	public TypeToken<V> getOutputType() {
+		return new TypeToken<V>(getClass()) {};
 	}
 
 }

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.internal;
 
+import java.io.File;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -29,6 +30,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
@@ -98,17 +100,13 @@ public final class CupidActivator extends AbstractUIPlugin {
 				new MostFrequent(),
 				new NonEmpty());
 		
-		for (ICapability<?, ?> capability : standard) {
+		for (ICapability capability : standard) {
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			
 		}
 				
 		selectionManager = CupidSelectionService.getInstance();
 		
 		final IWorkbench workbench = PlatformUI.getWorkbench();
-		
-		for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
-			window.getSelectionService().addSelectionListener(selectionManager);
-		}
 		
 		workbench.getDisplay().asyncExec(new Runnable() {
 			@Override
@@ -148,6 +146,20 @@ public final class CupidActivator extends AbstractUIPlugin {
 //		if (target != null) {
 //			AddToJavaSearchJob.synchWithTarget(target.getTargetDefinition());
 //		}
+		
+		createCupidPipelineDir();
+	}
+	
+	private void createCupidPipelineDir(){
+		File pipelineDir = CupidPlatform.getPipelineDirectory();
+		if (!pipelineDir.exists()){
+			try{
+				Files.createParentDirs(pipelineDir);
+				pipelineDir.mkdir();
+			}catch (Exception e){
+				logError("Error creating Cupid pipeline directory at " + pipelineDir.getAbsolutePath(), e);
+			}
+		}	
 	}
 
 	private void registerSchedulingRuleExtensions() {
@@ -191,7 +203,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 
 		for (IConfigurationElement extension : extensions) {
 			try {
-				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability<?, ?>) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
+				CupidPlatform.getCapabilityRegistry().registerStaticCapability((ICapability) extension.createExecutableExtension(EXTENSION_CLASS_PROPERTY));
 			} catch (CoreException ex) {
 				logError("Error registering capabilities for extension " + extension.getName(), ex);
 			}

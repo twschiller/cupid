@@ -10,11 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.usage.internal;
 
-import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -28,14 +28,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.osgi.framework.Bundle;
 
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import com.google.common.io.CharStreams;
 
 /**
  * Dialog to prompt user to report usage data.
  * @author Todd Schiller
  */
 public final class DataCollectorDialog extends TitleAreaDialog {
+	
+	private static final String CONSENT_AGREEMENT_PATH = "/documents/consent-agreement.html"; //$NON-NLS-1$
 	
 	/**
 	 * Construct dialog to prompt user to report usage data.
@@ -78,12 +79,17 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 		
 		try {
 			Bundle bundle = Activator.getDefault().getBundle();
-			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
-			File file = new File(FileLocator.resolve(fileURL).toURI());
-		
-			String content = Joiner.on(System.getProperty("line.separator")).join(Files.readLines(file, Charset.defaultCharset()));
+			URL fileURL = bundle.getEntry(CONSENT_AGREEMENT_PATH);
+			
+			if (fileURL == null){
+				throw new RuntimeException("Unable to locate consent agreement at " + CONSENT_AGREEMENT_PATH);
+			}
+			
+			InputStream inputStream = fileURL.openStream();
+			String content = CharStreams.toString(new InputStreamReader(inputStream, Charset.forName("UTF-8")) );
 			consentText.setText(content);
 		} catch (Exception ex) {
+			Activator.getDefault().logError("Error loading consent form: " + ex.getLocalizedMessage(), ex);
 			consentText.setText("Error loading consent form: " + ex.getLocalizedMessage());
 		}
 		
@@ -94,5 +100,4 @@ public final class DataCollectorDialog extends TitleAreaDialog {
 		
 		return parent;
 	}
-	
 }

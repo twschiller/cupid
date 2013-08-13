@@ -11,11 +11,9 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import edu.washington.cs.cupid.capability.ISerializableCapability;
+import edu.washington.cs.cupid.capability.linear.ILinearCapability;
 
-/**
- * Interface for capabilities that extract information from other results
- * @author Todd Schiller
- */
-public interface IExtractCapability<I,V> extends ISerializableCapability<I,V> {
-	
+public interface IExtractCapability<I, V> extends ILinearCapability<I, V>, ISerializableCapability {
+
+
 }

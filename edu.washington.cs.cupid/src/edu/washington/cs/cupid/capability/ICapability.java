@@ -10,6 +10,8 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.capability;
 
+import java.io.Serializable;
+import java.util.EnumSet;
 import java.util.Set;
 
 import com.google.common.reflect.TypeToken;
@@ -20,28 +22,83 @@ import com.google.common.reflect.TypeToken;
  * @param <I> the input type
  * @param <T> the output type
  */
-public interface ICapability<I, T> {
+public interface ICapability {
+	
 	
 	/**
-	 * A void type; used as an input type for capabilities that do not take an input.
+	 * Capability property flags.
 	 * @author Todd Schiller
 	 */
-	interface Unit { };
+	enum Flag {
+		/**
+		 * The capability does not modify state.
+		 */
+		PURE, 
+				
+		/**
+		 * The capability depends on external state.
+		 */
+		TRANSIENT,
+		
+		/**
+		 * The capability is Cupid-generated. Auto-generated capabilities
+		 * are not user-accessible
+		 */
+		AUTO_GENERATED,
+	}
 	
 	/**
-	 * A void type; used as an input type for capabilities that do not take an input.
+	 * A named capability parameter, which may or may not have a default value.
+	 * @author Todd Schiller
+	 * @param <T> type parameter type
 	 */
-	TypeToken<Unit> UNIT_TOKEN = new TypeToken<Unit>() {
-		private static final long serialVersionUID = 1L;
-	};
+	interface IParameter<T> extends Serializable {
+		/**
+		 * Returns the name of the input.
+		 * @return the name of the input
+		 */
+		String getName();
+		
+		/**
+		 * Returns the type of the input.
+		 * @return the type of the input
+		 */
+		TypeToken<T> getType();
+		
+		/**
+		 * Returns the default value of the input; may be <code>null</code>.
+		 * @return the default value of the input
+		 */
+		T getDefault();
+		
+		/**
+		 * Returns <code>true</code> if the input has a default value
+		 * @return <code>true</code> if the input has a default value
+		 */
+		boolean hasDefault();
+	}
 	
 	/**
-	 * @return the capability's unique identifier
+	 * The named output of a capability.
+	 * @author Todd Schiller
+	 * @param <T> the type of the output
 	 */
-	String getUniqueId();
+	interface IOutput<T> extends Serializable {
+		/**
+		 * Returns the name of the output.
+		 * @return the name of the output
+		 */
+		String getName();
+		
+		/**
+		 * Returns the type of the output.
+		 * @return the type of the output
+		 */
+		TypeToken<T> getType();
+	}
 	
 	/**
-	 * @return a user-friendly name
+	 * @return the capability's name
 	 */
 	String getName();
 	
@@ -51,44 +108,24 @@ public interface ICapability<I, T> {
 	String getDescription();
 
 	/**
-	 * @return the capability's parameter type
+	 * @return the capability's parameter
 	 */
-	TypeToken<I> getParameterType();
+	Set<? extends IParameter<?>> getParameters();
 	
 	/**
-	 * @return the capability's return type
+	 * @return the capability's outputs
 	 */
-	TypeToken<T> getReturnType();
+	Set<? extends IOutput<?>> getOutputs();
 	
 	/**
 	 * @param input the execution's input
 	 * @see CapabilityJob
 	 * @return a job that calculates a result for <code>input</code> when executed
 	 */
-	CapabilityJob<I, T> getJob(I input);
+	CapabilityJob<? extends ICapability> getJob(ICapabilityArguments input);
 	
 	/**
-	 * Returns the unique ids of the capabilities this capability dynamically depends on.
-	 * @return the unique ids of the capabilities this capability dynamically depends on
+	 * @return the flags for the capability.
 	 */
-	Set<String> getDynamicDependencies();
-	
-	/**
-	 * @return <code>true</code> iff the capability does not modify any local or remote state
-	 */
-	boolean isPure();
-	
-	/**
-	 * <code>true</code> iff the capability works independently on peers.
-	 * @return <code>true</code> iff the capability works independently on peers
-	 * @deprecated method will be removed in favor of multiple methods
-	 */
-	boolean isLocal();
-	
-	/**
-	 * Returns <code>true</code> iff the capability depends on remote or transient state. The results
-	 * of transient capabilities are not cached.
-	 * @return <code>true</code> iff the capability depends on remote or transient state.
-	 */
-	boolean isTransient();
+	EnumSet<Flag> getFlags();
 }

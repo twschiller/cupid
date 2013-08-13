@@ -13,10 +13,6 @@ package edu.washington.cs.cupid.mapview;
 import java.util.Map;
 
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -28,18 +24,19 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
+import org.eclipse.zest.core.viewers.ZoomContributionViewItem;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
-import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.mapview.internal.Activator;
 import edu.washington.cs.cupid.mapview.internal.GraphLabelProvider;
@@ -60,9 +57,8 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
-	public static final String ID = "edu.washington.cs.cupid.chart.views.HistogramView";
+	public static final String ID = "edu.washington.cs.cupid.MapView";
 
-	@SuppressWarnings("rawtypes")
 	private ICapability capability;
 
 	@SuppressWarnings("rawtypes")
@@ -87,15 +83,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 		
 		CupidSelectionService.addListener(this);
 		
-		refreshCapabilities();
-		
-		CupidPlatform.getCapabilityRegistry().addChangeListener(new ICapabilityChangeListener() {
-			@Override
-			public void onChange(final ICapabilityPublisher publisher) {
-				refreshCapabilities();
-			}
-		});
-		
 		setPartName(NAME);
 		setContentDescription("Please select a capability.");
 	}
@@ -119,6 +106,23 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 		});
 	}
 	
+	public void setCapability(ICapability capability){
+		if (CapabilityUtil.isLinear(capability)
+				&& TypeManager.isJavaCompatible(ACCEPTED_OUTPUT_TYPE, CapabilityUtil.singleOutput(capability).getType())) {
+			
+			
+			this.capability = capability;
+			this.setPartName(NAME + ": " + capability.getName());
+			this.setContentDescription(capability.getDescription());
+			 
+			CupidDataCollector.record(
+					CupidEventBuilder.selectCapabilityEvent(this.getClass(), capability, Activator.getDefault())
+					.create());
+		}else{
+			throw new IllegalArgumentException("Capability does not produce a valid mapping: " + capability.getName());
+		}
+	}
+	
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -131,10 +135,9 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	 * @see http://www.vogella.com/articles/EclipseZest/article.html
 	 */
 	private void fillToolBar() {
-//	Don't add zoom options to menu, since capabilities are listed there.
-//		ZoomContributionViewItem toolbarZoomContributionViewItem = new ZoomContributionViewItem(this);
-//		IActionBars bars = getViewSite().getActionBars();
-//		bars.getMenuManager().add(toolbarZoomContributionViewItem);
+		ZoomContributionViewItem toolbarZoomContributionViewItem = new ZoomContributionViewItem(this);
+		IActionBars bars = getViewSite().getActionBars();
+		bars.getMenuManager().add(toolbarZoomContributionViewItem);
 	}
 
 	@Override
@@ -143,7 +146,6 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 	}
 	
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void showMapping(final Object input) {
 		MapView.this.showBusy(true);
 			
@@ -151,84 +153,26 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 			return;
 		}
 			
-		if (input != null && TypeManager.isCompatible(capability, input)) {
-			CapabilityExecutor.asyncExec(capability, TypeManager.getCompatible(capability, input), MapView.this, new NullJobListener() {
+		IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
+		
+		if (input != null && TypeManager.isCompatible(parameter, input)) {
+			ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability,  TypeManager.getCompatible(parameter, input));
+			
+			CapabilityExecutor.asyncExec(capability, packed, MapView.this, new NullJobListener() {
 				@Override
 				public void done(final IJobChangeEvent event) {
-					CapabilityStatus<?> status = (CapabilityStatus<?>) event.getResult();
+					CapabilityStatus status = (CapabilityStatus) event.getResult();
 					
 					if (status.value() != null && status.isOK()) {
-						buildMap((Map) status.value());
+						buildMap((Map<?, ?>) CapabilityUtil.singleOutputValue(capability, status));
 					}
 				
 					MapView.this.showBusy(false);
 				}
 			});
-	
 		}
 	}
 	
-
-	/**
-	 * Add the list of available capabilities to the view's menu.
-	 */
-	private void refreshCapabilities() {
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				synchronized (MapView.this) {
-					//http://wiki.eclipse.org/FAQ_How_do_I_add_actions_to_a_view's_menu_and_toolbar%3F
-					final IActionBars actionBars = getViewSite().getActionBars();
-					final IMenuManager dropDownMenu = actionBars.getMenuManager();
-					
-					dropDownMenu.removeAll();
-					
-					for (final ICapability<?, ?> available : CupidPlatform.getCapabilityRegistry().getCapabilities()) {
-						if (TypeManager.isJavaCompatible(ACCEPTED_OUTPUT_TYPE, available.getReturnType())) {
-							dropDownMenu.add(new Action(available.getName()) {
-								@Override
-								public void run() {
-									MapView.this.capability = available;
-									MapView.this.setPartName(NAME + ": " + available.getName());
-									MapView.this.setContentDescription(available.getDescription());
-									
-									CupidDataCollector.record(
-											CupidEventBuilder.selectCapabilityEvent(MapView.this.getClass(), capability, Activator.getDefault())
-											.create());	
-								}
-							});
-						}
-					}
-					
-					dropDownMenu.markDirty();
-					actionBars.updateActionBars();
-				}
-			}
-		});
-	}
-	
-	@Override
-	public final void selectionChanged(final IWorkbenchPart part, final ISelection selection) {	
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, selection, Activator.getDefault())
-				.create());
-		
-		if (selection instanceof StructuredSelection) {	
-			// TODO handle multiple selected elements
-			final StructuredSelection all = ((StructuredSelection) selection);
-			showMapping(all.getFirstElement());
-		} 
-		// TODO handle other selection types
-	}
-	
-	@Override
-	public final void selectionChanged(final IWorkbenchPart part, final Object data) {
-		CupidDataCollector.record(
-				CupidEventBuilder.contextEvent(getClass(), part, data, Activator.getDefault())
-				.create());
-		
-		showMapping(data);
-	}
 
 	@Override
 	public final void selectionChanged(final IWorkbenchPart part, final Object[] data) {

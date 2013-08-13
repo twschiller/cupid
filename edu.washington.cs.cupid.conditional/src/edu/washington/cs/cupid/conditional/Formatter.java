@@ -10,14 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.conditional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -26,15 +23,11 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.TreeEvent;
 import org.eclipse.swt.events.TreeListener;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
@@ -42,67 +35,73 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.swt.widgets.Widget;
-import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IPageListener;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.decorators.DecoratorManager;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
-import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.IInvalidationListener;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
-import edu.washington.cs.cupid.conditional.internal.Activator;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.conditional.internal.FormatUtil;
+import edu.washington.cs.cupid.conditional.internal.FormatUtil.RuleCapabilityPair;
 import edu.washington.cs.cupid.conditional.internal.NullPartListener;
-import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.conditional.internal.WorkbenchVisitor;
 import edu.washington.cs.cupid.jobs.ISchedulingRuleRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
-import edu.washington.cs.cupid.usage.CupidDataCollector;
-import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
 /**
- * Applies conditional formatting rules to workbench items.
+ * Applies conditional formatting rules to workbench items. Formatting rules are applied at the following times:
+ * <ul>
+ *  <li> When the formatting rule is first created / initialized </li>
+ *  <li> When item becomes viewable (e.g., the parent tree node is expanded) </li>
+ *  <li> When the item is decorated, since some decorations revert the formatting </li>
+ * </ul>
+ * 
  * @author Todd Schiller (tws@cs.washington.edu)
+ * @see {@link FormatUtil} Utility methods for performing formatting
  */
-public class Formatter extends NullPartListener implements IPropertyChangeListener, DisposeListener, IInvalidationListener {
-
-	// TODO Later rules will override the formatting specified by earlier rule.
-	// TODO Check if a rule was removed before applying it
-	// TODO Stale formatting needs to be cleared when the result is invalidated
+public class Formatter extends NullPartListener implements DisposeListener, IInvalidationListener, FormattingRuleManager.RuleChangeListener {
 	
-	/**
-	 * Active rules, ordered by precedence.
-	 */
-	private List<FormattingRule> activeRules = Lists.newArrayList();
-
 	/**
 	 * The original format for a workbench item; used to restore formats when recomputing capabilities.
+	 * Items are removed from the map when they are disposed, or the conditional formatting is cleared.
 	 */
-	private Map<Item, Format> originalFormats = Maps.newIdentityHashMap();
+	private final Map<Item, Format> originalFormats = Maps.newIdentityHashMap();
 	
 	/**
-	 * The set of inputs and their associated display items.
+	 * The format applied to an item as the result of conditional formatting. When a decoration
+	 * event occurs, these formats are immediately re-applied, and the conditional formatting
+	 * job is kicked of to update conditional formats. Items are removed from the map when they
+	 * are disposed, or if no conditional formatting rule applies.
 	 */
-	private Multimap<Object, Item> activeObjects = HashMultimap.create();
-	
+	private final Map<Item, Format> conditionalFormats = Maps.newIdentityHashMap();
+		
 	/**
-	 * The set of items with conditional formatting, and their associated inputs. Guarded by monitor lock for {@link Formatter#activeObjects}. 
-	 * XXX what if the associated input changes?
+	 * Mapping from each item to the {@link Table} or {@link Tree} containing the 
+	 * item. Items are removed from the map when they are disposed.
 	 */
-	private IdentityHashMap<Item, Object> activeItems = Maps.newIdentityHashMap();
+	private final Map<Item, Control> itemContainers = Maps.newIdentityHashMap();
 	
-	private Class<?> workbenchPartReferenceClazz = null;
-	private Class<?> partPaneClazz = null;
-	private Method getPaneMethod = null;
-	private Method getControlMethod = null;
+	private final Set<Item> pending = Sets.newIdentityHashSet();
+	
+	private final WeakHashMap<Object, Set<Item>> viewData = new WeakHashMap<Object, Set<Item>>();
+	
+	private final Object formatLock = new Object();
+	
+	private final IWorkbench workbench;
+	private final FormattingRuleManager ruleManager;
 	
 	private final ISchedulingRuleRegistry scheduler = CapabilityExecutor.getSchedulingRuleRegistry();
 	
@@ -110,331 +109,271 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 	 * Construct a listener that applies conditional formatting rules to workbench items.
 	 * @throws Exception if instantiation fails
 	 */
-	public Formatter() throws Exception {
-		workbenchPartReferenceClazz = Class.forName("org.eclipse.ui.internal.WorkbenchPartReference");
-		partPaneClazz = Class.forName("org.eclipse.ui.internal.PartPane");
-		getPaneMethod = workbenchPartReferenceClazz.getMethod("getPane");
-		getControlMethod = partPaneClazz.getMethod("getControl");
-		updateRules();
-		
+	public Formatter(IWorkbench workbench, FormattingRuleManager ruleManager) throws Exception {
+		this.workbench = workbench;
+		this.ruleManager = ruleManager;
+		this.formatVisitor = new WorkbenchFormatter();
+		this.registerVisitor = new WorkbenchRegister();
+		this.ruleManager.addRuleChangeListener(this);
+	}
+	
+	/**
+	 * Registers the formatter with the workbench.
+	 * <b>Must be run from the UI thread</b>
+	 */
+	public void initialize(){
+		registerVisitor.visit(workbench);
+		Job.getJobManager().addJobChangeListener(new DecorationManager());
 		CapabilityExecutor.addCacheListener(this);
 	}
 	
 	/**
-	 * Returns the <i>first</i> data associated with <code>item</code>, or <code>null</code>.
-	 * @param item the item
-	 * @return the data associated with <code>item</code>
+	 * <b>Must be run from the UI thread.</b>
 	 */
-	private static Object data(final Item item) {
-		Object object = item.getData();
-		
-		if (object == null) {
-			return null;
-		}
-		
-		if (object.getClass().isArray()) {
-			Object result = null;
-			for (Object element : (Object[]) object) {
-				if (result == null) {
-					result = element;
-				} else {
-					// TODO log warning properly
-					break;
-				}
-			}
-			return result;
-		} else {
-			return object;
-		}
-	}
-	
-	private CupidEventBuilder createRuleEvent(String what, FormattingRule rule){
-		CupidEventBuilder event = 
-				new CupidEventBuilder(what, getClass(), Activator.getDefault())
-					.addData("name", rule.getName())
-					.addData("capabilityId", rule.getCapabilityId());
-		
-		try {
-			ICapability<?,?> capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
-			event.addData("capabilityName", capability.getName());
-			event.addData("capabilityId", capability.getParameterType().toString());
-			event.addData("parameterType", capability.getParameterType().toString());	
-		} catch (NoSuchCapabilityException e) {
-			// NO OP
-		}
-		
-		return event;
+	public void formatActiveWindow(){
+		formatVisitor.visit(workbench.getActiveWorkbenchWindow());
 	}
 	
 	/**
-	 * Set {@link Activator#activeRules} to the list of rules that are active
-	 * and have an associated capability.
+	 * Apply conditional formatting to the item, or clear any formatting if no rules
+	 * apply. <b>Must be run from the UI thread.</b>
+	 * @param owner the table / tree
+	 * @param item the item to conditionally format
 	 */
-	private void updateRules() {
-		synchronized (activeRules) {
-			List<FormattingRule> current = Lists.newArrayList();
-			
-			for (FormattingRule rule : Activator.getDefault().storedRules()) {
-				if (rule.isActive() && rule.getCapabilityId() != null) {
-					current.add(rule);
-				}
-			}
-
-			Set<FormattingRule> newSet = Sets.newHashSet(current);
-			Set<FormattingRule> oldSet = Sets.newHashSet(activeRules);
-			
-			for (FormattingRule rule : Sets.difference(newSet, oldSet)) {
-				CupidDataCollector.record(createRuleEvent("enableFormattingRule", rule).create());
-			}
-			
-			for (FormattingRule rule : Sets.difference(oldSet, newSet)) {
-				CupidDataCollector.record(createRuleEvent("disableFormattingRule", rule).create());
-			}
-			
-			activeRules.clear();
-			activeRules.addAll(current);
-		}
-	}
-	
-	@Override
-	public final void partActivated(final IWorkbenchPartReference partRef) {
-		applyFormattingRules(partRef);
-	}
-
-	@Override
-	public final void partVisible(final IWorkbenchPartReference partRef) {
-		applyFormattingRules(partRef);
-	}
-
-	private static Format getFormat(final Widget object) {
-		checkArgument(!object.isDisposed(), "widget is disposed");
-		
-		Format result = new Format();
-		
-		Class<?> clazz = object.getClass();
-		
-		try {
-			result.setBackground(((Color) clazz.getMethod("getBackground").invoke(object)).getRGB());
-		} catch (NoSuchMethodException e) {
-			// NO OP
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		
-		try {
-			result.setForeground(((Color) clazz.getMethod("getForeground").invoke(object)).getRGB());
-		} catch (NoSuchMethodException e) {
-			// NO OP
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		
-		try {
-			result.setFont(((Font) clazz.getMethod("getFont").invoke(object)).getFontData());
-		} catch (NoSuchMethodException e) {
-			// NO OP
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		
-		return result;
-	}
-
-	/**
-	 * Apply background color, foreground color, and font to <code>object</code>, if the object
-	 * supports the corresponding setter methods.
-	 * @param object the target
-	 * @param format the format
-	 */
-	public static void applyFormat(final Widget object, final Format format) {
-		checkArgument(!object.isDisposed(), "widget is disposed");
-		
-		Display display = Display.getDefault();
-		Class<?> clazz = object.getClass();
-		
-		if (format.getBackground() != null) {
-			try {
-				clazz.getMethod("setBackground", Color.class).invoke(object, new Color(display, format.getBackground()));
-			} catch (NoSuchMethodException e) {
-				// NO OP
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		if (format.getForeground() != null) {
-			try {
-				clazz.getMethod("setForeground", Color.class).invoke(object, new Color(display, format.getForeground()));
-			} catch (NoSuchMethodException e) {
-				// NO OP
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		if (format.getFont() != null) {
-			try {
-				clazz.getMethod("setFont", Font.class).invoke(object, new Font(display, format.getFont()));
-			} catch (NoSuchMethodException e) {
-				// NO OP
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void asyncFormat(final Item item, final FormattingRule rule, @SuppressWarnings("rawtypes") final ICapability capability, final Object input) {
-		synchronized (activeObjects) {
-			activeObjects.put(input, item);
-			activeItems.put(item, input);
-			item.addDisposeListener(this);
-		}
-		
-		CapabilityExecutor.asyncExec(capability, input, Formatter.this, new NullJobListener() {
-			@SuppressWarnings("rawtypes")
+	private void asyncConditionalFormat(final Control owner, final Item item){
+		Display.getDefault().asyncExec(new Runnable() {	
 			@Override
-			public void done(final IJobChangeEvent event) {
-				CapabilityJob job = (CapabilityJob) event.getJob();
-				CapabilityStatus<Boolean> status = (CapabilityStatus<Boolean>) job.getResult();
-			
-				if (status.getCode() == Status.OK) {
-					if (status.value()) {
-						// apply the formatting rule
-						Display.getDefault().asyncExec(new Runnable() {
-							@Override
-							public void run() {
-								synchronized (originalFormats) {
-									
-									if (!item.isDisposed()) {
-										if (!originalFormats.containsKey(item)) {
-											originalFormats.put(item, getFormat(item));
-										}
-										applyFormat(item, rule.getFormat());
-									}
+			public void run() {
+				if (!item.isDisposed()){
+					Object data = FormatUtil.data(item);
 
-								}
-							}
-						});
+					Queue<RuleCapabilityPair> ruleQueue = Lists.newLinkedList(FormatUtil.rules(data));
+					if (!ruleQueue.isEmpty()){
+						// Apply new formatting
+						asyncConditionalFormat(owner, item, ruleQueue, data);
+					} else if (originalFormats.containsKey(item)){
+						// Restore original formatting
+						FormatUtil.setFormat(owner, item, originalFormats.get(item));
+						
+						synchronized(formatLock){
+							conditionalFormats.remove(item);
+						}
+					}else{
+						FormatUtil.setFormat(owner, item, new Format());
+						synchronized(formatLock){
+							conditionalFormats.remove(item);
+						}
 					}
 				}
 			}
 		});
 	}
 	
-	/**
-	 * Asynchronously apply formatting rules to <code>item</code> using {@link Activator#data(Item)} to 
-	 * generate the input for the item.
-	 * @param item the item
-	 */
-	private void applyFormattingRules(final Item item) {
-		Object input = data(item);
+	private void asyncConditionalFormat(final Control owner, final Item item, final Queue<RuleCapabilityPair> ruleQueue, final Object data) {
+		if (data == null) return;
 		
-		if (input == null) {
-			return;
-		}
-		
-		for (final FormattingRule rule : activeRules) {
-			
-			@SuppressWarnings("rawtypes")
-			ICapability capability = null;
-
-			try {
-				capability = Activator.findPredicate(rule);
-			} catch (Exception e) {
-				continue;
-				// TODO error information needs to be aggregated and passed up the line
-			}
-
-			if (TypeManager.isCompatible(capability, input)) {
-				asyncFormat(item, rule, capability, TypeManager.getCompatible(capability, input));
-			}
-		}
-	}
-	
-	/**
-	 * Recursively apply formatting rules to a TreeItem and its children.
-	 * @param item the tree item
-	 */
-	private void applyFormattingRules(final TreeItem item) {
-		applyFormattingRules((Item) item);
-		for (TreeItem child : item.getItems()) {
-			applyFormattingRules(child);
-		}
-	}
-	
-	/**
-	 * Recursively apply {@link Activator#activeRules} to <code>control</code> and its children.
-	 * @param control the control
-	 */
-	private void applyFormattingRules(final Control control) {
-		if (!activeRules.isEmpty()) {
-			if (control instanceof Tree) {
-				
-				Tree tree = (Tree) control;
-				
-				tree.addTreeListener(new TreeListener() {
-					@Override
-					public void treeCollapsed(final TreeEvent e) {
-						// NO OP
-					}
-					@Override
-					public void treeExpanded(final TreeEvent e) {
-						final TreeItem item = ((TreeItem) e.item);
-						applyFormattingRules((TreeItem) item);
-					}
-				});
-				
-				for (final TreeItem item : tree.getItems()) {
-					applyFormattingRules(item);
-				}
-			} else if (control instanceof Table) {
-				for (final TableItem item : ((Table) control).getItems()) {
-					applyFormattingRules(item);
-				}
+		synchronized (formatLock) {
+			if (pending.contains(item)){
+				return;
 			}
 			
-			// recursively apply to children
-			if (control instanceof Composite) {
-				for (Control child : ((Composite) control).getChildren()) {
-					applyFormattingRules(child);
+			itemContainers.put(item, owner);
+			item.addDisposeListener(this);
+			
+			if (!viewData.containsKey(data)){
+				viewData.put(data, Sets.<Item>newIdentityHashSet());
+			}
+			viewData.get(data).add(item);
+			pending.add(item);
+		}
+		
+		new SerialRuleExecutor(owner, item, ruleQueue, data).run();
+	}
+	
+	private class SerialRuleExecutor extends NullJobListener{
+
+		private final List<Format> resultQueue = Lists.newLinkedList();
+		
+		private final Control owner;
+		private final Item item;
+		private final Queue<RuleCapabilityPair> ruleQueue;
+		private final Object data;
+		
+		private RuleCapabilityPair current = null;
+		
+		public SerialRuleExecutor(Control owner, Item item, Queue<RuleCapabilityPair> ruleQueue, Object data) {
+			this.owner = owner;
+			this.item = item;
+			this.data = data;
+			this.ruleQueue = ruleQueue;
+		}	
+		
+		private void run(){
+			if (ruleQueue.isEmpty()) return;
+			
+			current = ruleQueue.poll();	
+			final Object arg = TypeManager.getCompatible(CapabilityUtil.unaryParameter(current.capability), data);
+			final ICapabilityArguments packed = CapabilityUtil.packUnaryInput(current.capability, arg);
+			CapabilityExecutor.asyncExec(current.capability, packed, Formatter.this, this);
+		}
+		
+		@Override
+		public void done(IJobChangeEvent event) {
+			CapabilityJob<?> job = (CapabilityJob<?>) event.getJob();
+			CapabilityStatus status = (CapabilityStatus) job.getResult();
+		
+			if (status.getCode() == Status.OK) {
+				if ((Boolean) CapabilityUtil.singleOutputValue(current.capability, status)) {
+					resultQueue.add(current.rule.getFormat());
+				}
+			} else {
+				status.getException().printStackTrace();
+			}
+			
+			if (!ruleQueue.isEmpty()){
+				// need to keep calculating capabilities
+				run();
+			}else if (!resultQueue.isEmpty()){
+				// apply the new formatting
+				if (originalFormats.containsKey(item)){
+					resultQueue.add(0, originalFormats.get(item));
+				}
+				asyncFormat(owner, item, FormatUtil.merge(resultQueue));
+			}else {
+				// clear the formatting
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						synchronized (formatLock) {
+							if (!item.isDisposed() && originalFormats.containsKey(item)) {
+								FormatUtil.setFormat(owner, item, originalFormats.get(item));
+							}
+							pending.remove(item);
+							conditionalFormats.remove(item);
+						}
+					}
+				});			
+			}
+		}
+	}
+	
+	private void asyncFormat(final Control owner, final Item item, final Format format){
+		Preconditions.checkNotNull(format);
+		
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (formatLock) {
+					if (!item.isDisposed()) {
+						if (!originalFormats.containsKey(item)){
+							originalFormats.put(item, FormatUtil.getFormat(item));
+						}
+						
+						FormatUtil.setFormat(owner, item, format);
+						conditionalFormats.put(item, format);
+						pending.remove(item);
+					}
 				}
 			}
-		}
+		});
 	}
 	
-	/**
-	 * If <code>partRef</code> is a {@link IViewReference}, applys the active formatting rules
-	 * to the controls in the view.
-	 * @param partRef the workbench part
-	 */
-	public final void applyFormattingRules(final IWorkbenchPartReference partRef) {
-		Control control = null;
+	private final WorkbenchRegister registerVisitor;
+	
+	private class WorkbenchRegister extends WorkbenchVisitor{
+		public WorkbenchRegister() throws Exception {
+			super();
+		}
+		@Override
+		public void visit(Tree tree) {
+			tree.addTreeListener(new TreeExpandFormatter(tree));
+			super.visit(tree);
+		}
 		
-		if (partRef instanceof IViewReference) {
-			try {
-				Object pane = getPaneMethod.invoke(partRef);
-				control = (Control) getControlMethod.invoke(pane);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-
-			if (control != null) {
-				applyFormattingRules(control);
-			}
+		@Override
+		public void visit(IWorkbenchWindow window) {
+			window.addPageListener(pageListener);
+			super.visit(window);
+		}
+		@Override
+		public void visit(IWorkbenchPage page) {
+			page.addPartListener(Formatter.this);
+			super.visit(page);
 		}
 	}
 	
-	@Override
-	public final void propertyChange(final PropertyChangeEvent event) {
-		if (event.getProperty().equals(PreferenceConstants.P_RULES)) {
-			updateRules();
+	private final WorkbenchFormatter formatVisitor;
+	
+	private class WorkbenchFormatter extends WorkbenchVisitor{
+		public WorkbenchFormatter() throws Exception {
+			super();
+		}
+
+		@Override
+		public void visit(Tree tree, TreeItem item) {
+			asyncConditionalFormat(tree, item);
+			super.visit(tree, item);
+		}
+
+		@Override
+		public void visit(Table table, TableItem item) {
+			asyncConditionalFormat(table, item);
+			super.visit(table, item);
 		}
 	}
+	
+	private final PageListener pageListener = new PageListener();
 
+	private class PageListener implements IPageListener{
+		@Override
+		public void pageActivated(final IWorkbenchPage page) {
+			page.addPartListener(Formatter.this);
+		}
+
+		@Override
+		public void pageClosed(final IWorkbenchPage page) {
+			// NOP
+		}
+
+		@Override
+		public void pageOpened(final IWorkbenchPage page) {
+			page.addPartListener(Formatter.this);
+			
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					registerVisitor.visit(page);
+					formatVisitor.visit(page);
+				}
+			});
+		}
+	}
+	
+	private final class TreeExpandFormatter implements TreeListener{
+		private final Tree tree;
+		
+		private TreeExpandFormatter(final Tree tree) {
+			this.tree = tree;
+		}
+
+		@Override
+		public void treeCollapsed(final TreeEvent e) {
+			// NOP
+		}
+
+		@Override
+		public void treeExpanded(final TreeEvent e) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					formatVisitor.visit(tree, (TreeItem) e.item);
+				}
+			});
+		}
+	}
+		
 	/**
-	 * When an {@link Item} is disposed, remove it from the set of active items. If
-	 * the item was the last item for an object, remove the object from the set of
-	 * active objects.
+	 * When an {@link Item} is disposed, remove all formatting information.
 	 * @param e the dispose event
 	 */
 	@Override
@@ -442,10 +381,47 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 		if (e.getSource() instanceof Item) {
 			Item item = (Item) e.getSource();
 			
-			synchronized (activeObjects) {
-				Object input = activeItems.get(item);	
-				activeObjects.remove(input, item);
-				activeItems.remove(item);
+			synchronized (formatLock) {
+				originalFormats.remove(item);
+				conditionalFormats.remove(item);
+				itemContainers.remove(item);
+				
+				for (Set<Item> viewItems : viewData.values()){
+					viewItems.remove(item);
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void ruleActivated(final FormattingRule rule) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
+	}
+
+	@Override
+	public void ruleDeactivated(final FormattingRule rule) {
+		synchronized (formatLock){
+			// Re-apply formatting rules to all formatted items
+			for (final Item item : Sets.newHashSet(conditionalFormats.keySet())){
+				asyncConditionalFormat(itemContainers.get(item), item);
+			}
+		}
+	}
+	
+	@Override
+	public final void onResourceChange(final Set<Object> invalidated, final IResourceChangeEvent event) {
+		if (event.getDelta() != null) {
+			synchronized (formatLock) {
+				try {
+					event.getDelta().accept(new InvalidationVisitor());
+				} catch (CoreException e) {
+					throw new RuntimeException("Error invalidating conditional formats", e);
+				}
 			}
 		}
 	}
@@ -460,37 +436,14 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			if (delta.getAffectedChildren().length == 0) {
 				IResource resource = delta.getResource();
 				if (resource != null && interesting(delta)) {
-
-					Set<Object> inputs = Sets.newHashSet(activeObjects.keySet());
-
+					Set<Object> inputs = Sets.newHashSet(viewData.keySet());
 					for (Object input : inputs) {
-						
-						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {
-							
-							Collection<Item> items = activeObjects.get(input);
-								
-							for (final Item item : items) {
-								if (!item.isDisposed()) {
-									Display.getDefault().asyncExec(new Runnable() {
-										@Override
-										public void run() {
-											synchronized (originalFormats) {
-												if (!item.isDisposed()) {
-													if (originalFormats.containsKey(item)) {
-														applyFormat(item, originalFormats.get(item));
-													}
-												}
-											}
-										}
-									});
-									
-									applyFormattingRules(item);
-								}
-								
+						if (resource.isConflicting(scheduler.getSchedulingRule(input))) {		
+							for (final Item item : viewData.get(input)){
+								asyncConditionalFormat(itemContainers.get(item), item);
 							}
 						}
 					}
-
 				}
 			}
 			return true;
@@ -504,17 +457,56 @@ public class Formatter extends NullPartListener implements IPropertyChangeListen
 			return (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.TYPE)) != 0;
 		}
 	}
-
-	@Override
-	public final void onResourceChange(final Set<Object> invalidated, final IResourceChangeEvent event) {
-		if (event.getDelta() != null) {
-			synchronized (activeObjects) {
-				try {
-					event.getDelta().accept(new InvalidationVisitor());
-				} catch (CoreException e) {
-					throw new RuntimeException("Error invalidating conditional formats", e);
-				}
+		
+	/**
+	 * Whenever a decoration job completes, re-applies the current conditional formatting
+	 * and then kicks of a new conditional formatting job.
+	 * @author Todd Schiller
+	 */
+	private class DecorationManager extends NullJobListener{
+		@Override
+		public void done(IJobChangeEvent event) {
+			if (event.getJob().belongsTo(DecoratorManager.FAMILY_DECORATE)){
+				// XXX calling getDefault() here throws exception if the display has been killed
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						synchronized(formatLock){
+							for (final Map.Entry<Item, Format> x : conditionalFormats.entrySet()){
+								Item item = (Item) x.getKey();			
+								
+								if (!pending.contains(item)){
+									Control container = itemContainers.get(item);
+									FormatUtil.setFormat(container, item, x.getValue());
+									asyncConditionalFormat(container, item);		
+								}
+							}
+						}
+					}
+				});
 			}
 		}
+	}
+
+	@Override
+	public void partActivated(IWorkbenchPartReference partRef) {
+		super.partActivated(partRef);
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
+	}
+
+	@Override
+	public void partInputChanged(IWorkbenchPartReference partRef) {
+		super.partInputChanged(partRef);
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				formatVisitor.visit(workbench);
+			}
+		});
 	}
 }

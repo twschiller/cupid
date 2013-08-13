@@ -12,7 +12,10 @@ package edu.washington.cs.cupid.capability;
 
 import java.util.SortedSet;
 
+import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
+
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 
 
 /**
@@ -25,27 +28,33 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * Returns an unmodifiable view of the available capabilities.
 	 * @return an unmodifiable view of the available capabilities
 	 */
-	SortedSet<ICapability<?, ?>> getCapabilities();
-
+	SortedSet<ICapability> getCapabilities();
+	
+	/**
+	 * Returns an unmodifiable view of the available capabilities.
+	 * @return an unmodifiable view of the available capabilities
+	 */
+	SortedSet<ICapability> getCapabilities(Predicate<ICapability> filter);
+	
 	/**
 	 * Returns the available capabilities that are compatible with input of the given type.
 	 * @param type the query
 	 * @return the capabilities that are compatible with input of the given type
 	 */
-	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> type);
+	SortedSet<ICapability> getCapabilities(TypeToken<?> type);
 
 	/**
 	 * Returns the available capabilities that are compatible with the given types.
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with output of the given type
 	 */
-	SortedSet<ICapability<?, ?>> getCapabilitiesForOutput(TypeToken<?> outputType);
+	SortedSet<ICapability> getCapabilitiesForOutput(TypeToken<?> outputType);
 	
 	/**
 	 * Returns the capabilities that output boolean values.
 	 * @return the capabilities that output boolean values
 	 */
-	SortedSet<ICapability<?, Boolean>> getPredicates();
+	SortedSet<ICapability> getPredicates();
 	
 	/**
 	 * Returns the available capabilities that are compatible with the given types.
@@ -53,7 +62,7 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * @param outputType the output type
 	 * @return the capabilities that are compatible with input of the given type
 	 */
-	SortedSet<ICapability<?, ?>> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType);
+	SortedSet<ICapability> getCapabilities(TypeToken<?> inputType, TypeToken<?> outputType);
 
 	/**
 	 * Returns the capability with the given unique id.
@@ -61,7 +70,7 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * @return the capability with the given unique id
 	 * @throws NoSuchCapabilityException iff a capability with the given id is not available
 	 */
-	ICapability<?, ?> findCapability(String uniqueId) throws NoSuchCapabilityException;
+	ICapability findCapability(String uniqueId) throws NoSuchCapabilityException;
 
 	/**
 	 * Returns the viewer associated with <code>type</code>, or 
@@ -69,14 +78,14 @@ public interface ICapabilityRegistry extends ICapabilityPublisher, ICapabilityCh
 	 * @param type the output type
 	 * @return the viewer associated with <code>type</code>, or <code>null</code>
 	 */
-	ICapability<?, String> getViewer(TypeToken<?> type);
+	ICapability getViewer(TypeToken<?> type);
 	
 	/**
 	 * Register a capability that is not provided via an {@link ICapabilityPublisher}, e.g.
 	 * by an extension point.
 	 * @param capability the capability
 	 */
-	void registerStaticCapability(ICapability<?, ?> capability);
+	void registerStaticCapability(ICapability capability);
 	
 	/**
 	 * Register a capability publisher.

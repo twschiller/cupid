@@ -35,4 +35,5 @@ public interface ICapabilityChangeNotifier {
 	 * @param listener the non-<code>null</code> listener to remove
 	 */
 	void removeChangeListener(ICapabilityChangeListener listener);
+
 }

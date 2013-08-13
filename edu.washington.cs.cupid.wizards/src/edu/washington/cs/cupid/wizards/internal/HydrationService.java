@@ -15,19 +15,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ISerializableCapability;
 
 /**
  * Handles serialization and deserialization
  * @author Todd Schiller
  */
 public class HydrationService {
-
+	
 	public HydrationService() {
 		super();
 	}
@@ -38,7 +39,7 @@ public class HydrationService {
 	 * @param capability the capability
 	 * @return a version of the capability name that is a valid file name
 	 */
-	public static String cleanName(ICapability<?,?> capability){
+	public static String cleanName(ICapability capability){
 		char result[] = new char[capability.getName().length()];
 		char old[] = capability.getName().toCharArray();
 		
@@ -51,15 +52,26 @@ public class HydrationService {
 		return new String(result);
 	}
 	
-	public ICapability<?,?> hydrate(File file) throws FileNotFoundException, IOException, ClassNotFoundException{
-		ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
-		return (ICapability<?,?> ) fileIn.readObject();
+	public ISerializableCapability hydrate(File file) throws NotSerializableException, FileNotFoundException, IOException, ClassNotFoundException{
+		ObjectInputStream fileIn = null;
+		
+		try{
+			fileIn = new ObjectInputStream(new FileInputStream(file));
+			return (ISerializableCapability) fileIn.readObject();
+		}finally{
+			try{
+				fileIn.close();
+			}catch(IOException ex){
+				// NO OP
+			}
+		}
 	}
 	
-	public <I extends ICapability<?, ?> & Serializable> void store(I capability) throws IOException{
+	public File store(ISerializableCapability capability) throws IOException {
 		File file = new File(CupidPlatform.getPipelineDirectory(), cleanName(capability) + ".arrow");
 		ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(file));
 		writer.writeObject(capability);
 		writer.close();
+		return file;
 	}
 }

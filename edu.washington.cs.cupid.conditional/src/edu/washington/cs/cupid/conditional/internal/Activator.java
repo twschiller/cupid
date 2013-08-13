@@ -10,31 +10,30 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.conditional.internal;
 
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.IPageListener;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.IStartup;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.progress.WorkbenchJob;
 import org.osgi.framework.BundleContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.MalformedCapabilityException;
-import edu.washington.cs.cupid.capability.NoSuchCapabilityException;
+import edu.washington.cs.cupid.capability.exception.MalformedCapabilityException;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.conditional.Formatter;
 import edu.washington.cs.cupid.conditional.FormattingRule;
-import edu.washington.cs.cupid.conditional.preferences.PreferenceConstants;
-import edu.washington.cs.cupid.usage.events.CupidEvent;
-
+import edu.washington.cs.cupid.conditional.FormattingRuleManager;
 
 /**
  * Activator for the conditional formatting plug-in.
@@ -49,6 +48,8 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 
 	private static Activator plugin;
 
+	private static ILog pluginLog;
+	
 	/**
 	 * Construct the conditional formatting plug-in.
 	 */
@@ -60,51 +61,48 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	 * Applies conditional formatting rules to views when they are activated.
 	 */
 	private Formatter formatter;
+	private FormattingRuleManager ruleManager;
 
 	@Override
 	public void start(final BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 		
-		formatter = new Formatter();
-		getPreferenceStore().addPropertyChangeListener(formatter);
+		IWorkbench workbench = PlatformUI.getWorkbench();
 		
-		final IWorkbench workbench = PlatformUI.getWorkbench();
+		ruleManager = FormattingRuleManager.getInstance();
+		formatter = new Formatter(workbench, ruleManager);
 		
-		workbench.getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-				
-				for (IWorkbenchPage page : window.getPages()) {
-					for (IViewReference view : page.getViewReferences()) {
-						formatter.applyFormattingRules(view);
-					}
-					
-					page.addPartListener(formatter);
-				}
-				
-				window.addPageListener(new IPageListener() {
-					@Override
-					public void pageActivated(final IWorkbenchPage page) {
-						page.addPartListener(formatter);
-					}
-					@Override
-					public void pageClosed(final IWorkbenchPage page) {
-						page.removePartListener(formatter);
-					}
-					@Override
-					public void pageOpened(final IWorkbenchPage page) {
-						page.addPartListener(formatter);
-					}
-				});
-			}
-		});
+		getPreferenceStore().addPropertyChangeListener(ruleManager);
+		
+		pluginLog = Platform.getLog(context.getBundle());
+	
+		new FormatWorkbenchJob().schedule();
 	}
+	
+	public class FormatWorkbenchJob extends WorkbenchJob{
+		public FormatWorkbenchJob() {
+			super("Initialize Conditional Formatting");
+		}
+
+		@Override
+		public IStatus runInUIThread(IProgressMonitor monitor) {
+			try{
+				monitor.beginTask("Initialize Conditional Formatter", 2);
+				formatter.initialize();
+				monitor.worked(1);
+				formatter.formatActiveWindow();
+				return Status.OK_STATUS;
+			}finally{
+				monitor.done();
+			}
+		}
+	}
+	
 	
 	@Override
 	public void earlyStartup() {
-		// NO OP?	
+		// NOP	
 	}
 
 	@Override
@@ -121,39 +119,35 @@ public final class Activator extends AbstractUIPlugin implements IStartup {
 	}
 
 	/**
-	 * @return the formatting rules in the preference store
-	 */
-	public FormattingRule[] storedRules() {
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		String json = store.getString(PreferenceConstants.P_RULES);
-		try {
-			FormattingRule[] parsed = (new Gson()).fromJson(json, FormattingRule[].class);
-			return parsed != null ? parsed : new FormattingRule[]{};
-		} catch (Exception ex) {
-			throw new RuntimeException("Error loading formatting rules", ex);
-		}
-	}
-	
-	/**
 	 * Returns the predicate capability for <code>rule</code>.
 	 * @param rule the formatting rule.
 	 * @return the predicate capability for <code>rule</code>
 	 * @throws NoSuchCapabilityException iff the rule has no associated capability id, or no capability is available with the given id
-	 * @throws MalformedCapabilityException iff the corresponding available capability is not a predicate 
-     * (i.e., does not have a boolean return value)
+	 * @throws MalformedCapabilityException iff the corresponding available capability has a mismatched type
+	 * @throws ClassNotFoundException iff the input type is not found
 	 */
-	@SuppressWarnings("unchecked")
-	public static ICapability<?, Boolean> findPredicate(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException {
+	public static ICapability findRuleCapability(final FormattingRule rule) throws NoSuchCapabilityException, MalformedCapabilityException, ClassNotFoundException {
 		Preconditions.checkNotNull(rule.getCapabilityId(), "Formatting rule must be associated with a capability");
 		
-		@SuppressWarnings("rawtypes")
+		TypeToken<?> inputType = TypeManager.forName(rule.getQualifiedType());
 		ICapability capability = CupidPlatform.getCapabilityRegistry().findCapability(rule.getCapabilityId());
 
-		if (!TypeManager.isJavaCompatible(TypeToken.of(Boolean.class), capability.getReturnType())) {
-			throw new MalformedCapabilityException(capability, "Formatting rule requires predicate capability");
+		if (CapabilityUtil.isLinear(capability) 
+				&& !CapabilityUtil.isGenerator(capability)
+				&& TypeManager.isJavaCompatible(CapabilityUtil.unaryParameter(capability).getType(), inputType)){
+			
+			return capability;
+		} else {
+			throw new MalformedCapabilityException(capability, "Formatting rule requires linear predicate capability");
 		}
-
-		return capability;
 	}
 
+	/**
+	 * Log an error in the plugin's log.
+	 * @param msg localized error message
+	 * @param e the exception
+	 */
+	public void logError(final String msg, final Exception e) {
+		pluginLog.log(new Status(Status.ERROR, PLUGIN_ID, Status.ERROR, msg, e));			
+	}
 }

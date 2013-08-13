@@ -36,9 +36,10 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.osgi.framework.Bundle;
+
 import com.google.common.collect.Lists;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 import edu.washington.cs.cupid.scripting.java.internal.ClasspathUtil;
 
 /**
@@ -55,9 +56,8 @@ public final class ClasspathProcessor implements IQuickFixProcessor {
 	public boolean hasCorrections(final ICompilationUnit unit, final int problemId) {
 		try {
 			IResource resource = unit.getCorrespondingResource();
-			if (resource.getProject() == Activator.getDefault().getCupidProject()) {
+			if (resource.getProject() == CupidScriptingPlugin.getDefault().getCupidProject()) {
 				return problemId == IProblem.UndefinedType
-						|| problemId == IProblem.UndefinedType
 						|| problemId == IProblem.IsClassPathCorrect
 						|| problemId == IProblem.MissingTypeInMethod;
 			} else {

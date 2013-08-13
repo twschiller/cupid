@@ -2,21 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            category="edu.washington.cs.plse.cupid.preferences"
-            class="edu.washington.cs.cupid.jdt.preferences.JdtPreferencePage"
-            id="edu.washington.cs.cupid.jdt.preferences.JdtPreferencePage"
-            name="Java (JDT)">
-      </page>
-   </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
-            class="edu.washington.cs.cupid.jdt.preferences.PreferenceInitializer">
-      </initializer>
-   </extension>
-   <extension
          point="edu.washington.cs.cupid.publishers">
       <publisher
             class="edu.washington.cs.cupid.jdt.Activator">
@@ -38,6 +23,10 @@
       </adapter>
       <adapter
             class="edu.washington.cs.cupid.jdt.types.ProjectAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.CompilationUnitAdapter"
+            name="CompilationUnitFileAdapter">
       </adapter>
    </extension>
 

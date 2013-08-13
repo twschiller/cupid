@@ -13,6 +13,7 @@ package edu.washington.cs.cupid.markers.internal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -31,7 +32,9 @@ import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
 import edu.washington.cs.cupid.capability.ICapabilityRegistry;
 import edu.washington.cs.cupid.jobs.NullJobListener;
 import edu.washington.cs.cupid.markers.IMarkerBuilder;
@@ -107,25 +110,36 @@ public final class MarkerManager {
 			}
 	
 			ICapabilityRegistry registry = CupidPlatform.getCapabilityRegistry();
+			
 			for (IResource resource : visitor.getMatches()) {
 				deleteMarkers(resource);
 				
-				for (ICapability<?, ?> capability : registry.getCapabilities(TypeToken.of(resource.getClass()), IMarkerBuilder.MARKER_RESULT)) {
-					Object argument = TypeManager.getCompatible(capability, resource);
-					asyncAddMarkers(capability, resource, argument);
+				SortedSet<ICapability> capabilities = registry.getCapabilities(TypeToken.of(resource.getClass()), IMarkerBuilder.MARKER_RESULT);
+				for (ICapability capability : capabilities) {
+					// TODO also include generators?
+					
+					if (CapabilityUtil.isUnary(capability)
+						&& TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), resource)){
+								
+						Object adapted = TypeManager.getCompatible(CapabilityUtil.unaryParameter(capability), resource);	
+						asyncAddMarkers(capability, resource, adapted);
+					}
 				}
 			}
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
 		private void asyncAddMarkers(final ICapability capability, final IResource resource, final Object input) {
-			CapabilityExecutor.asyncExec(capability, input, MarkerListener.this, new NullJobListener() {
+			ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability, input);
+			
+			CapabilityExecutor.asyncExec(capability, packed, MarkerListener.this, new NullJobListener() {
 				@Override
 				public void done(final IJobChangeEvent event) {
 					CapabilityStatus result = (CapabilityStatus) event.getResult();
 
 					if (result.value() != null) {
-						for (MarkerBuilder marker : (Collection<MarkerBuilder>) result.value()) {
+						Collection<MarkerBuilder> builders = (Collection<MarkerBuilder>) CapabilityUtil.singleOutputValue(capability, result);
+						
+						for (MarkerBuilder marker : builders) {
 							try {
 								registerMarker(resource, marker.create(IMarker.PROBLEM));
 							} catch (CoreException e) {

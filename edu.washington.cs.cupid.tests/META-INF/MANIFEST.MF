@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Cupid Test Capabilities
+Bundle-SymbolicName: edu.washington.cs.cupid.tests;singleton:=true
+Bundle-Version: 1.0.0.0
+Bundle-Activator: edu.washington.cs.cupid.tests.Activator
+Bundle-Vendor: University of Washington PLSE
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources;bundle-version="3.7.101",
+ edu.washington.cs.cupid;bundle-version="1.0.0",
+ org.eclipse.jdt.core;bundle-version="3.7.3"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

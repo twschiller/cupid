@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="edu.washington.cs.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.jdt.Activator">
+      </publisher>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.schedulingRules">
+      <rule
+            class="edu.washington.cs.cupid.jdt.scheduling.JavaSchedulingRule">
+      </rule>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.typeAdapters">
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.JavaProjectAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.JavaResourceAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.ProjectAdapter">
+      </adapter>
+      <adapter
+            class="edu.washington.cs.cupid.jdt.types.CompilationUnitAdapter"
+            name="CompilationUnitFileAdapter">
+      </adapter>
+   </extension>
+
+</plugin>

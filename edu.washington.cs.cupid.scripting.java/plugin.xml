@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            canFinishEarly="false"
+            category="edu.washington.cs.cupid.scripting.wizards"
+            class="edu.washington.cs.cupid.scripting.java.wizards.JavaCapabilityWizard"
+            icon="icons/cup_add.png"
+            id="edu.washington.cs.cupid.scripting.java.wizard"
+            name="Java Capability">
+      </wizard>
+      <category
+            id="edu.washington.cs.cupid.scripting.wizards"
+            name="Cupid">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="edu.washington.cs.cupid.scripting.java.actionSet"
+            label="Cupid Action Set"
+            visible="true">
+         <action
+               class="edu.washington.cs.cupid.scripting.java.wizards.JavaCapabilityAction"
+               icon="icons/cup_add.png"
+               id="edu.washington.cs.cupid.scripting.java.CreateScript"
+               label="Java Capability"
+               style="push"
+               toolbarPath="cupidGroup">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin">
+      </publisher>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.ui.quickFixProcessors">
+      <quickFixProcessor
+            class="edu.washington.cs.cupid.scripting.java.quickfix.ClasspathProcessor"
+            id="edu.washington.cs.cupid.scripting.java.classpath"
+            name="Fix Cupid Project Classpath">
+      </quickFixProcessor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.scripting.java.objectContribution"
+            objectClass="java.lang.Object">
+         <action
+               class="edu.washington.cs.cupid.scripting.java.internal.CreateScriptAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.scripting.java.action2"
+               label="Create Script"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.chart.PieChartView"
+            icon="icons/Pie-chart-icon.png"
+            id="edu.washington.cs.cupid.chart.PieChartView"
+            name="Pie Chart View">
+      </view>
+      <view
+            allowMultiple="true"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.chart.HistogramView"
+            icon="icons/chart-icon.png"
+            id="edu.washington.cs.cupid.chart.HistogramView"
+            name="Histogram View"
+            restorable="false">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.charts.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.chart.internal.CreateHistogramAction"
+               enablesFor="1"
+               id="edu.washington.cs.cupid.charts.CreateHistogram"
+               label="Create Histogram"
+               menubarPath="cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.chart.internal.CreatePieChartAction"
+               id="edu.washington.cs.cupid.charts.CreatePieChart"
+               label="Create Pie Chart"
+               menubarPath="cupidGroup">
+         </action>
+      </objectContribution>
+   </extension>
+   
+
+</plugin>

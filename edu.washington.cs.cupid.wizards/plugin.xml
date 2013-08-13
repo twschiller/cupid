@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Cupid Action Set"
+            visible="true"
+            id="edu.cs.washington.cs.cupid.wizards.actionSet">
+         <menu
+               label="Cupid"
+               id="cupidMenu">
+            <groupMarker
+                  name="cupidGroup">
+            </groupMarker>
+         </menu>
+         <action
+               class="edu.washington.cs.cupid.wizards.actions.CreateMappingAction"
+               icon="icons/mapping-icon.png"
+               id="edu.washington.cs.cupid.wizards.actions.MappingAction"
+               label="Create &amp;Mapping Capability"
+               toolbarPath="cupidGroup"
+               tooltip="Create Mapping Capability">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
+               icon="icons/add-to-database-icon.png"
+               id="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
+               label="Create &amp;Extract Field Capability"
+               state="false"
+               style="push"
+               toolbarPath="cupidGroup"
+               tooltip="Create Extract Field Capability">
+         </action>
+         <action
+               label="Create &amp;New Capability"
+               icon="icons/heart-add.png"
+               class="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction"
+               tooltip="Create New Capability"
+               toolbarPath="cupidGroup"
+               id="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="edu.washington.cs.cupid.wizards.objectContribution"
+            objectClass="java.lang.Object">
+         <menu
+               id="edu.washington.cs.cupid.wizards.menu"
+               label="Cupid"
+               path="additions">
+            <separator
+                  name="cupidGroup">
+            </separator>
+         </menu>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.NewExtractCapabilityAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.wizards.extract.capability"
+               label="Extract Capability"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.NewMappingCapabilityAction"
+               enablesFor="1"
+               id="edu.washington.cs.cupid.wizards.extract.action"
+               label="Create &amp;Mapping"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.ApplyFormattingAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.wizards.conditional.format"
+               label="Create &amp;Formatting Rule"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.wizards.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.DeleteCapabilityAction"
+               id="edu.washington.cs.cupid.wizards.deleteCapability"
+               label="Delete Capability">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="edu.washington.cs.cupid.publishers">
+      <publisher
+            class="edu.washington.cs.cupid.wizards.internal.Activator">
+      </publisher>
+   </extension>
+
+</plugin>

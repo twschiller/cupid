@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes autoGenerate="true">
+
+<!--    App Engine should do this automatically -->
+<!-- 	<datastore-index kind="CupidUser" ancestor="false" > -->
+<!-- 		<property name="uuid" direction="asc" />     -->
+<!--  	</datastore-index> -->
+ 
+    <datastore-index kind="CupidEvent" ancestor="true">
+        <property name="what" direction="asc" />
+        <property name="kind" direction="asc" />
+        <property name="when" direction="asc" />
+    </datastore-index>
+
+    <datastore-index kind="CupidSession" ancestor="true" />
+    
+    <datastore-index kind="SystemData" ancestor="true">
+    	<property name="os" direction="asc" />
+    	<property name="locale" direction="asc" />
+    </datastore-index>
+    
+</datastore-indexes>

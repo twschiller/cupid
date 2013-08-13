@@ -34,9 +34,11 @@ public final class CompilationUnitLocator implements IResourceVisitor {
 		IJavaElement element = JavaCore.create(resource);
 		
 		if (element instanceof ICompilationUnit) {
-			// exclude inner classes
-			if (!element.getElementName().contains("$")) {
-				classes.add((ICompilationUnit) element);
+			ICompilationUnit cu = (ICompilationUnit) element;
+			
+			// exclude inner and hidden classes
+			if (!element.getElementName().contains("$") && !cu.getResource().isHidden()) {
+				classes.add(cu);
 				return false;
 			}
 		}

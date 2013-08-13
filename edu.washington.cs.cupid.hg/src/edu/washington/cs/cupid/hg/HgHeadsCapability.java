@@ -22,55 +22,44 @@ import com.vectrace.MercurialEclipse.model.ChangeSet;
 import com.vectrace.MercurialEclipse.model.HgRoot;
 import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
-import edu.washington.cs.cupid.capability.GenericAbstractCapability;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability that returns the Hg heads for a resource.
  * @author Todd Schiller
  */
-public final class HgHeadsCapability extends GenericAbstractCapability<IResource, List<ChangeSet>> {
+public final class HgHeadsCapability extends LinearCapability<IResource, List<ChangeSet>> {
 
 	/**
 	 * Construct a capability that returns the Hg heads for a resource.
 	 */
 	public HgHeadsCapability() {
 		super("Hg Heads",
-			  "edu.washington.cs.cupid.hg.heads",
 			  "Hg heads for the resource's repository",
-			  Flag.PURE, Flag.TRANSIENT);
+			  TypeToken.of(IResource.class), new TypeToken<List<ChangeSet>>(){}, 
+			  Flag.PURE);
 	}
 	
 	@Override
-	public TypeToken<IResource> getParameterType() {
-		return TypeToken.of(IResource.class);
-	}
-
-	@SuppressWarnings("serial")
-	@Override
-	public TypeToken<List<ChangeSet>> getReturnType() {
-		return new TypeToken<List<ChangeSet>>(getClass()) {};
-	}
-
-	@Override
-	public CapabilityJob<IResource, List<ChangeSet>> getJob(final IResource input) {
-		return new CapabilityJob<IResource, List<ChangeSet>>(this, input) {
+	public LinearJob<IResource, List<ChangeSet>> getJob(final IResource input) {
+		return new LinearJob<IResource, List<ChangeSet>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<ChangeSet>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<ChangeSet>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 1);
 					HgRoot root = MercurialRootCache.getInstance().getHgRoot(input);
 					
 					if (root == null) {
-						return CapabilityStatus.makeError(new ResourceNotHgVersionedException(input));
+						return LinearStatus.<List<ChangeSet>>makeError(new ResourceNotHgVersionedException(input));
 					}
 					
 					List<ChangeSet> result = 
 							Lists.newArrayList(HgLogClient.getChangeSets(root, HgLogClient.getHeads(root)));
-					return CapabilityStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<List<ChangeSet>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

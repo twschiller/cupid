@@ -12,5 +12,19 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.mapview.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.mapview.internal.ShowMappingAction"
+               id="edu.washington.cs.cupid.mapview.ShowMapping"
+               label="Show Mapping"
+               menubarPath="cupidGroup">
+         </action>
+      </objectContribution>
+   </extension>
 
 </plugin>

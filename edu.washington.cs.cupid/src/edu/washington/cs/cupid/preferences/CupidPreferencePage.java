@@ -42,11 +42,11 @@ public final class CupidPreferencePage extends FieldEditorPreferencePage impleme
 				"Cupid Pipeline Directory:",
 				getFieldEditorParent()));
 		
-		addField(
-			new BooleanFieldEditor(
-				PreferenceConstants.P_IMPURE,
-				"Enable side-effecting capabilities (experimental)",
-				getFieldEditorParent()));
+//		addField(
+//			new BooleanFieldEditor(
+//				PreferenceConstants.P_IMPURE,
+//				"Enable side-effecting capabilities (experimental)",
+//				getFieldEditorParent()));
 	}
 
 	@Override

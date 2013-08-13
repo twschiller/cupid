@@ -10,33 +10,25 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.tests;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IMethod;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.ImmediateJob;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
 
-public class MethodCapabilityTest extends AbstractCapability<IMethod, Boolean> {
+public class MethodCapabilityTest extends LinearCapability<IMethod, Boolean> {
 
 	public MethodCapabilityTest(){
 		super(
 				"Method is foo",
-				"edu.washington.cs.cupid.tests.methods.foo",
 				"true iff the method is called foo",
 				IMethod.class,
 				Boolean.class,
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<IMethod, Boolean> getJob(IMethod input) {
-		return new CapabilityJob<IMethod, Boolean>(this, input){
-			@Override
-			protected CapabilityStatus<Boolean> run(IProgressMonitor monitor) {
-				monitor.done();
-				return CapabilityStatus.makeOk(input.getElementName().equals("foo"));
-			}
-		};
+	public LinearJob<IMethod, Boolean> getJob(IMethod input) {
+		return new ImmediateJob<IMethod, Boolean>(this, input, input.getElementName().equals("foo"));	
 	}
 }

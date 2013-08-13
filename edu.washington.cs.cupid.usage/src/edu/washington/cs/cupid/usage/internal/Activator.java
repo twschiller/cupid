@@ -10,6 +10,7 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.usage.internal;
 
+import java.util.Date;
 import java.util.UUID;
 
 import org.eclipse.core.runtime.ILog;
@@ -18,6 +19,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -72,7 +74,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 		
 		if (preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION)){
 			collector.start();
-			collector.upload.schedule();
+			collector.upload.schedule(1000 * 10 /* 10 s */);
 		}
 		
 		if (!preferences.getBoolean(PreferenceConstants.P_SHOWN_ENABLE_DIALOG)){
@@ -105,6 +107,40 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 			}.schedule();
 		}
 		
+		boolean doSurvey = preferences.getBoolean(PreferenceConstants.P_REMIND_SURVEY);
+		Date next = new Date(preferences.getLong(PreferenceConstants.P_NEXT_SURVEY_DATE));
+		Date today = new Date();
+		
+		if (doSurvey && today.after(next)){
+			new UIJob("Usage Survey Job"){
+				@Override
+				public IStatus runInUIThread(IProgressMonitor monitor) {
+					IShellProvider workbench = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					
+					if (workbench != null){
+						SurveyDialog dialog = new SurveyDialog(workbench.getShell());
+						int result = dialog.open();
+						
+						if (result == IDialogConstants.ABORT_ID){
+							preferences.setValue(PreferenceConstants.P_REMIND_SURVEY, false);	
+						}else if (result == IDialogConstants.OK_ID){
+							preferences.setValue(PreferenceConstants.P_REMIND_SURVEY, false);
+						}else if (result == IDialogConstants.IGNORE_ID){
+							preferences.setValue(PreferenceConstants.P_REMIND_SURVEY, true);
+							preferences.setValue(
+									PreferenceConstants.P_NEXT_SURVEY_DATE, 
+									SurveyDialog.addDaysToDate(new Date(), 7).getTime());
+						}else if (result == IDialogConstants.CANCEL_ID){
+							// NOP
+						}else{
+							Activator.getDefault().logError("Unexpected result from Cupid survey dialog", null);
+						}
+					}
+					
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+		}
 	}
 
 	@Override

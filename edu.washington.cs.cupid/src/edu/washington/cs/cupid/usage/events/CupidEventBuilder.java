@@ -22,6 +22,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import com.google.common.collect.Maps;
 
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapability.Flag;
+import edu.washington.cs.cupid.capability.IDynamicCapability;
 
 /**
  * Fluent interface for building {@link CupidEvent} for recording usage data.
@@ -94,19 +96,23 @@ public final class CupidEventBuilder {
 		return new CupidEventBuilder(EventConstants.ACTION_WHAT, action.getId(), plugin).addData("delegate", delegate.getClass().getName());
 	}
 	
-	private static Map<String, String> capabilityData(ICapability<?,?> capability){
+	private static Map<String, String> capabilityData(ICapability capability){
 		Map<String, String> data = Maps.newHashMap();
 
 		data.put("name", capability.getName());
-		data.put("id", capability.getUniqueId());
-		data.put("parameterType", capability.getParameterType().toString());
-		data.put("returnType", capability.getReturnType().toString());
-		data.put("class", capability.getClass().getName());
-		data.put("pure", Boolean.toString(capability.isPure()));
-		data.put("transient", Boolean.toString(capability.isTransient()));
-		data.put("local", Boolean.toString(capability.isLocal()));
-		data.put("dynamic", Boolean.toString(!capability.getDynamicDependencies().isEmpty()));
+		
+		// TODO dump parameter types in event information
+//		data.put("parameterType", capability.getParameterType().toString());
+//		data.put("returnType", capability.getReturnType().toString());
 
+		data.put("class", capability.getClass().getName());
+		data.put("pure", Boolean.toString(capability.getFlags().contains(Flag.PURE)));
+		data.put("transient", Boolean.toString(capability.getFlags().contains(Flag.TRANSIENT)));
+		
+		if (capability instanceof IDynamicCapability){
+			data.put("dynamic", Boolean.toString(!((IDynamicCapability) capability).getDynamicDependencies().isEmpty()));
+		}
+		
 		return data;
 	}
 	
@@ -168,11 +174,11 @@ public final class CupidEventBuilder {
 		return new CupidEventBuilder(EventConstants.SELECTION_CONTEXT_WHAT, view, plugin).addData(data);
 	}
 	
-	public static CupidEventBuilder selectCapabilityEvent(final Class<?> source, final ICapability<?,?> capability, final Plugin plugin){
+	public static CupidEventBuilder selectCapabilityEvent(final Class<?> source, final ICapability capability, final Plugin plugin){
 		return new CupidEventBuilder(EventConstants.ACTIVATE_CAPABILITY_WHAT, source, plugin).addData(capabilityData(capability));
 	}
 	
-	public static CupidEventBuilder createCapabilityEvent(final Class<?> source, final ICapability<?,?> capability, final Plugin plugin){
+	public static CupidEventBuilder createCapabilityEvent(final Class<?> source, final ICapability capability, final Plugin plugin){
 		return new CupidEventBuilder(EventConstants.CREATE_CAPABILITY_WHAT, source, plugin).addData(capabilityData(capability));
 	}
 	

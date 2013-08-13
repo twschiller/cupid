@@ -17,6 +17,7 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jdt.compiler.CompilerMessagesCapability;
+import edu.washington.cs.cupid.jdt.compiler.StackFrameResourceCapability;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -61,9 +62,10 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher 
 	}
 
 	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?,?>[]{ 
+	public ICapability[] publish() {
+		return new ICapability[]{ 
 				new CompilerMessagesCapability(), 
+				new StackFrameResourceCapability(),
 		};
 	}
 

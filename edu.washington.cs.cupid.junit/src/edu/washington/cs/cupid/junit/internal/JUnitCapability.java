@@ -15,6 +15,8 @@ import org.eclipse.jdt.internal.junit.model.TestRunSession;
 
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.junit.JUnitJob;
 
 /**
@@ -22,7 +24,7 @@ import edu.washington.cs.cupid.junit.JUnitJob;
  * @author Todd Schiller
  */
 @SuppressWarnings({ "restriction" })
-public final class JUnitCapability extends AbstractCapability<IJavaProject, TestRunSession> {
+public final class JUnitCapability extends LinearCapability<IJavaProject, TestRunSession> {
 
 	private final String configuration;
 	
@@ -41,7 +43,7 @@ public final class JUnitCapability extends AbstractCapability<IJavaProject, Test
 	}
 	
 	@Override
-	public CapabilityJob<IJavaProject, TestRunSession> getJob(final IJavaProject input) {
+	public LinearJob<IJavaProject, TestRunSession> getJob(final IJavaProject input) {
 		return new JUnitJob(this, configuration, input);
 	}
 }

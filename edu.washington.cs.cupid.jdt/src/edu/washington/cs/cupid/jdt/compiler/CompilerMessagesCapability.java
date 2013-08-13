@@ -21,38 +21,37 @@ import org.eclipse.jdt.core.dom.Message;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns the compiler messages for a compilation unit.
  * @author Todd Schiller
  */
-public final class CompilerMessagesCapability extends AbstractCapability<ICompilationUnit, List<Message>> {
+public final class CompilerMessagesCapability extends LinearCapability<ICompilationUnit, List<Message>> {
 		
 	/**
 	 * Construct a capability that returns the compiler messages for a compilation unit.
 	 */
 	public CompilerMessagesCapability() {
 		super("Compiler Messages", 
-			  "edu.washington.cs.cupid.jdt.messages", 
 			  "Compiler messages (e.g., warnings and errors)",
 			  TypeToken.of(ICompilationUnit.class), new TypeToken<List<Message>>() {},
 			  Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<ICompilationUnit, List<Message>> getJob(final ICompilationUnit input) {
-		return new CapabilityJob<ICompilationUnit, List<Message>>(this, input) {
+	public LinearJob<ICompilationUnit, List<Message>> getJob(final ICompilationUnit input) {
+		return new LinearJob<ICompilationUnit, List<Message>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<Message>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<Message>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					CompilationUnit unit = ParseUtil.parse(input, new SubProgressMonitor(monitor, 100));	
-					return CapabilityStatus.makeOk(Arrays.asList(unit.getMessages()));
+					return LinearStatus.makeOk(getCapability(), Arrays.asList(unit.getMessages()));
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<List<Message>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

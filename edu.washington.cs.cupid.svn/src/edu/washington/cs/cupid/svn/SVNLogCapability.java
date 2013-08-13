@@ -29,13 +29,16 @@ import com.google.common.reflect.TypeToken;
 import edu.washington.cs.cupid.capability.AbstractCapability;
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns the full log of an SVN project.
  * @author Todd Schiller
  */
-public final class SVNLogCapability extends AbstractCapability<IResource, List<SVNLogEntry>> {
-
+public final class SVNLogCapability extends LinearCapability<IResource, List<SVNLogEntry>> {
+1
 	// http://wiki.svnkit.com/Printing_Out_Repository_History
 
 	/**
@@ -50,11 +53,11 @@ public final class SVNLogCapability extends AbstractCapability<IResource, List<S
 	}
 
 	@Override
-	public CapabilityJob<IResource, List<SVNLogEntry>> getJob(final IResource input) {
+	public LinearJob<IResource, List<SVNLogEntry>> getJob(final IResource input) {
 
-		return new CapabilityJob<IResource, List<SVNLogEntry>>(this, input) {
+		return new LinearJob<IResource, List<SVNLogEntry>>(this, input) {
 			@Override
-			protected CapabilityStatus<List<SVNLogEntry>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<SVNLogEntry>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					
@@ -74,9 +77,9 @@ public final class SVNLogCapability extends AbstractCapability<IResource, List<S
 						}
 					});
 				
-					return CapabilityStatus.makeOk(entries);
+					return LinearStatus.makeOk(getCapability(), entries);
 				} catch (Exception e) {
-					return CapabilityStatus.makeError(e);
+					return LinearStatus.<List<SVNLogEntry>>makeError(e);
 				} finally {
 					monitor.done();
 				}

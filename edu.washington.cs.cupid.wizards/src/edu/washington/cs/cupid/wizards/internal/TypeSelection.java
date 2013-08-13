@@ -10,12 +10,17 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.internal;
 
+import java.util.List;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.SelectionDialog;
+
+import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Methods for allowing users to select types
@@ -44,5 +49,21 @@ public class TypeSelection {
 		Object result[] = dialog.getResult();
 		
 		return result == null ? null : result[0];
+	}
+	
+	public static List<Class<?>> getSuperTypes(TypeToken<?> type){
+		List<Class<?>> result = Lists.newArrayList();
+		
+		Class<?> clazz = type.getRawType();
+		while (clazz != null){
+			result.add(clazz);
+			for (Class<?> i : clazz.getInterfaces()){
+				if (!result.contains(i)){
+					result.add(i);
+				}
+			}
+			clazz = clazz.getSuperclass();
+		}
+		return result;
 	}
 }

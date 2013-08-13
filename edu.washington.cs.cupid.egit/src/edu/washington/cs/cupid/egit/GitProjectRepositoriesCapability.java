@@ -20,38 +20,37 @@ import org.eclipse.egit.core.project.RepositoryMapping;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Searches for existing Git repositories associated with a project's files.
  * @author Todd Schiller
  */
-public final class GitProjectRepositoriesCapability extends AbstractCapability<IProject, Collection<RepositoryMapping>> {
+public final class GitProjectRepositoriesCapability extends LinearCapability<IProject, Collection<RepositoryMapping>> {
 
 	/**
 	 * Construct a capability that searches for existing Git repositories associated with a project's files.
 	 */
 	public GitProjectRepositoriesCapability() {
 		super("Git Repositories",
-			  "edu.washington.cs.cupid.egit.repositories",
 			  "Get all Git repositories associated with a project",
 			  TypeToken.of(IProject.class), new TypeToken<Collection<RepositoryMapping>>() {},
 			  Flag.PURE, Flag.TRANSIENT);	
 	}
 	
 	@Override
-	public CapabilityJob<IProject, Collection<RepositoryMapping>> getJob(final IProject input) {
-		return new CapabilityJob<IProject, Collection<RepositoryMapping>>(this, input) {
+	public LinearJob<IProject, Collection<RepositoryMapping>> getJob(final IProject input) {
+		return new LinearJob<IProject, Collection<RepositoryMapping>>(this, input) {
 			@Override
-			protected CapabilityStatus<Collection<RepositoryMapping>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<Collection<RepositoryMapping>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					RepositoryFinder finder = new RepositoryFinder(input);
-					return CapabilityStatus.makeOk(finder.find(new SubProgressMonitor(monitor, 100)));
+					return LinearStatus.makeOk(getCapability(), finder.find(new SubProgressMonitor(monitor, 100)));
 				} catch (Exception e) {
-					return CapabilityStatus.makeError(e);
+					return LinearStatus.<Collection<RepositoryMapping>>makeError(e);
 				} finally {
 					monitor.done();
 				}

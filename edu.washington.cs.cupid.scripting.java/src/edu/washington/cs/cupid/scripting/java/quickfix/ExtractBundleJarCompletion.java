@@ -10,9 +10,6 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.scripting.java.quickfix;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -113,15 +110,4 @@ public final class ExtractBundleJarCompletion implements IJavaCompletionProposal
 	public IContextInformation getContextInformation() {
 		return null;
 	}
-	
-	private static void extractFile(InputStream inStream, OutputStream outStream) throws IOException {
-		byte[] buf = new byte[1024];
-		int l;
-		while ((l = inStream.read(buf)) >= 0) {
-			outStream.write(buf, 0, l);
-		}
-		inStream.close();
-		outStream.close();
-	}
-
 }

@@ -19,7 +19,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FormattingRule {
 
 	private String name;
-	private String capabilityId = null;
+	private String qualifiedType;
+	private String capabilityId;
+	private String capabilityOutput;
+	private String snippet;
 	private Format format = new Format();
 	private boolean active;
 	
@@ -38,9 +41,13 @@ public class FormattingRule {
 	 * @param format the format
 	 * @param active <code>true</code> iff the rule is active
 	 */
-	public FormattingRule(final String name, final String capabilityId, final Format format, final boolean active) {
+	public FormattingRule(final String name, final String qualifiedType, final String capabilityId, final String capabilityOutput, final String snippet, final Format format, final boolean active) {
 		this(name);
+		this.qualifiedType = qualifiedType;
 		this.capabilityId = capabilityId;
+		this.capabilityOutput = capabilityOutput;
+		this.snippet = snippet;
+		this.format = format;
 		this.active = active;
 	}
 	
@@ -49,10 +56,9 @@ public class FormattingRule {
 	 * @return a <i>shallow</i> copy of the formatting rule
 	 */
 	public final FormattingRule copy() {
-		return new FormattingRule(this.name, this.capabilityId, this.format, this.active);
+		return new FormattingRule(this.name, this.qualifiedType, this.capabilityId, this.capabilityOutput, this.snippet, this.format, this.active);
 	}
 
-	
 	/**
 	 * @return the name of the formatting rule
 	 */
@@ -109,5 +115,29 @@ public class FormattingRule {
 	 */
 	public final void setActive(final boolean active) {
 		this.active = active;
-	} 
+	}
+
+	public String getQualifiedType() {
+		return qualifiedType;
+	}
+
+	public void setQualifiedType(String qualifiedType) {
+		this.qualifiedType = qualifiedType;
+	}
+
+	public String getSnippet() {
+		return snippet;
+	}
+
+	public void setSnippet(String snippet) {
+		this.snippet = snippet;
+	}
+
+	public String getCapabilityOutput() {
+		return capabilityOutput;
+	}
+
+	public void setCapabilityOutput(String capabilityOutput) {
+		this.capabilityOutput = capabilityOutput;
+	}
 }

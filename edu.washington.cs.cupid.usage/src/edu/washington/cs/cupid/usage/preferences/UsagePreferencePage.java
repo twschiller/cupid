@@ -22,21 +22,26 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.internal.image.GIFFileFormat;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 
 import com.google.common.io.CharStreams;
 
 import edu.washington.cs.cupid.usage.internal.Activator;
+import edu.washington.cs.cupid.usage.internal.SurveyDialog;
 
 public class UsagePreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -99,6 +104,13 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		layout.numColumns = 2;
 		composite.setLayout(layout);
 		
+		Link surveyLink = new Link(composite, SWT.LEFT);
+		surveyLink.setText("Help improve Cupid by completing a short survey: <a href=\"" + SurveyDialog.DEV_SURVEY_URL + "\">Open in Browser.</a>");
+		
+		GridData dSurvey = new GridData(SWT.FILL, SWT.NONE, true, false);
+		dSurvey.horizontalSpan = 2;
+		surveyLink.setLayoutData(dSurvey);
+		
 		enabled = new Button(composite, SWT.CHECK);
 		enabled.setText("Enable Cupid Data Reporting");
 		enabled.setSelection(preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION));
@@ -106,6 +118,25 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		Button delete = new Button(composite, SWT.PUSH);
 		delete.setText("Erase Workspace Usage Data");
 		
+		
+		surveyLink.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					//  Open default external browser 
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(e.text));
+				} catch (Exception ex) {
+					Activator.getDefault().logError("Error loading Cupid survey in browser", ex);
+				} 
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				//NOP
+			}
+		});
+	
 		tabs = new TabFolder(composite, SWT.BOTTOM);
 		consentTab = new TabItem(tabs, SWT.NONE);
 		consentTab.setText("Consent Agreement");

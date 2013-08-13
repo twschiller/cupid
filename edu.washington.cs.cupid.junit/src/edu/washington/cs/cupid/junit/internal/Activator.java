@@ -10,10 +10,12 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.junit.internal;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -28,9 +30,10 @@ import edu.washington.cs.cupid.capability.ChangeNotifier;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
-import edu.washington.cs.cupid.capability.LinearPipeline;
+import edu.washington.cs.cupid.capability.linear.LinearPipeline;
 import edu.washington.cs.cupid.junit.JUnitMonitor;
 import edu.washington.cs.cupid.junit.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.markers.IMarkerBuilder;
 import edu.washington.cs.cupid.standard.Count;
 
 /**
@@ -49,7 +52,6 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	
 	private static final ChangeNotifier CHANGE_NOTIFIER = new ChangeNotifier();
 	
-	@SuppressWarnings("rawtypes")
 	private static final HashMap<String, Set<ICapability>> LAUNCH_CONFIGURATIONS = Maps.newHashMap();
 	
 	/**
@@ -109,7 +111,7 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public ICapability<?, ?>[] publish() {
+	public ICapability[] publish() {
 		List<ICapability> capabilities = Lists.newArrayList();
 		
 		Set<String> current = Sets.newHashSet(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE).split(";"));
@@ -119,18 +121,13 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 				if (!LAUNCH_CONFIGURATIONS.containsKey(config)) {
 					LAUNCH_CONFIGURATIONS.put(config, Sets.<ICapability>newHashSet());
 					
-					LAUNCH_CONFIGURATIONS.get(config).add(
-							new LinearPipeline.PipelineBuilder(new JUnitCapability(config))
-							.attach(new JUnitFailures())
-							.attach(new Count())
-							.create("Test Failure Count (" + config + ")", 
-									"The number of JUnit test failures (" + config + ")"));
+					LAUNCH_CONFIGURATIONS.get(config).add(new LinearPipeline<IJavaProject, Integer>(
+							"Test Failure Count (" + config + ")", "The number of JUnit test failures (" + config + ")",
+							new JUnitCapability(config), new JUnitFailures(), new Count()));
 					
-					LAUNCH_CONFIGURATIONS.get(config).add(
-							new LinearPipeline.PipelineBuilder(new JUnitCapability(config))
-							.attach(new JUnitMarkers())
-							.create("JUnit Test Failure Markers (" + config + ")", 
-									"JUnit test failure markers (" + config + ")"));
+					LAUNCH_CONFIGURATIONS.get(config).add(new LinearPipeline<IJavaProject, Collection<IMarkerBuilder>>(
+							"JUnit Test Failure Markers (" + config + ")", "JUnit test failure markers (" + config + ")",
+							new JUnitCapability(config), new JUnitMarkers()));
 				}
 				
 				capabilities.addAll(LAUNCH_CONFIGURATIONS.get(config));

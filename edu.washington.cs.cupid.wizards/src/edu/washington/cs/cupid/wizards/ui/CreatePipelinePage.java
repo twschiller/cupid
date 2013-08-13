@@ -15,42 +15,67 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
 
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.swt.widgets.Widget;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
-import edu.washington.cs.cupid.capability.dynamic.SerializablePipeline;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
+import edu.washington.cs.cupid.capability.OutputSelector;
+import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
+import edu.washington.cs.cupid.views.OptionEditorFactory;
+import edu.washington.cs.cupid.views.OptionEditorFactory.OptionEditor;
+import edu.washington.cs.cupid.views.OptionEditorFactory.ValueChangedListener;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 
 /**
@@ -59,8 +84,6 @@ import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
  */
 public class CreatePipelinePage extends WizardPage{
 	
-	// TODO organization (alphabetize, or use unique id paths?)
-	// TODO window icon
 	
 	// http://www.vogella.com/articles/EclipseDialogs/article.html#tutorialswt
 	
@@ -70,16 +93,30 @@ public class CreatePipelinePage extends WizardPage{
 
 	private static final String DEFAULT_MESSAGE = "Select capabilities to form a pipeline.";
 	
-	
 	//
 	// Model
 	//
 	
-	private List<ICapability<?,?>> current = Lists.newLinkedList();
+	/**
+	 * The current pipeline
+	 */
+	private List<ICapability> current = Lists.newLinkedList();
+	
+	/**
+	 * Options for the selected capability that is in the pipeline
+	 */
+	private List<CapabilityArguments> currentOptions = Lists.newArrayList();;
+	
+	/**
+	 * Options for the selected capability that has not been added yet
+	 */
+	private CapabilityArguments newOptions = new CapabilityArguments();
 	
 	//
 	// View
 	// 
+	
+	private Object selection = null;
 	
 	private TreeViewer capabilityTree;
 	private TableViewer pipelineTable;
@@ -87,6 +124,12 @@ public class CreatePipelinePage extends WizardPage{
 	private Text nameEntry;
 	private Text descriptionEntry;
 	
+	private Group optionGroup;
+	private ScrolledComposite optionContainer;
+	private Composite optionInnerContainer;
+    private List<Widget> optionWidgets = Lists.newArrayList();
+    private BiMap<IParameter<?>, OptionEditor<?>> optionInputs = HashBiMap.create();
+    
 	@Override
 	public void createControl(Composite parent) {
 		this.setTitle("New Pipeline");
@@ -114,6 +157,7 @@ public class CreatePipelinePage extends WizardPage{
 		
 		buildCapabilityTree(composite);
 		buildPipelineTable(composite);
+		buildOptionEditor(composite);
 		
 		capabilityTree.addDoubleClickListener(new IDoubleClickListener(){
 			@Override
@@ -121,17 +165,58 @@ public class CreatePipelinePage extends WizardPage{
 				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
 				
 				if (selected instanceof ICapability){
-					current.add((ICapability<?,?>) selected);
+					if (!CapabilityUtil.hasSingleOutput((ICapability) selected)){
+						return;
+					}
+					
+					current.add((ICapability) selected);
 				}else if (selected instanceof DerivedCapability){
 					current.add(((DerivedCapability) selected).toPipeline());
 				}
+				
+				currentOptions.add(newOptions);
 				
 				pipelineTable.setInput(current);
 				capabilityTree.refresh(true);
 				refreshMessage();
 			}
 		});
+		
+		capabilityTree.addSelectionChangedListener(new ISelectionChangedListener(){
+			@Override
+			public void selectionChanged(final SelectionChangedEvent event) {
+				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				
+				if (selection != selected){
+					clearOptions();
+					
+					ICapability capability = null;
+					if (selected instanceof ICapability){
+						capability = (ICapability) selected;
+					}else if (selected instanceof DerivedCapability){
+						capability = ((DerivedCapability) selected).toPipeline();
+					}
+					
+					showOptions(capability, null);
+				
+					selection = selected;
+				}
+			}
+		});
 
+		pipelineTable.addSelectionChangedListener(new ISelectionChangedListener(){
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				Object selected = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				
+				if (selected == null){
+					clearOptions();
+				}else{
+					showOptions((ICapability) selected, pipelineTable.getTable().getSelectionIndex());
+				}
+			}
+		});
+		
 		pipelineTable.getTable().addKeyListener(new DeleteListener());
 		
 		this.setMessage(DEFAULT_MESSAGE);
@@ -149,7 +234,7 @@ public class CreatePipelinePage extends WizardPage{
 		public void keyReleased(KeyEvent e) {
 			if (!pipelineTable.getSelection().isEmpty()){
 				IStructuredSelection selected = ((IStructuredSelection) pipelineTable.getSelection());
-				ICapability<?,?> element = (ICapability<?,?>) selected.getFirstElement();
+				ICapability element = (ICapability) selected.getFirstElement();
 				
 				int index = -1;
 				for (int i = 0; i < current.size(); i++){
@@ -165,6 +250,7 @@ public class CreatePipelinePage extends WizardPage{
 				case SWT.DEL:
 				case SWT.BS:
 					current.remove(index);
+					currentOptions.remove(index);
 					pipelineTable.setInput(current);
 					pipelineTable.getTable().select(index == current.size() ? current.size()-1 : index);
 					break;
@@ -177,6 +263,7 @@ public class CreatePipelinePage extends WizardPage{
 	}
 	
 	private void refreshMessage(){
+		this.setMessage(null);
 		List<String> errors = typeErrors();
 		if (current.isEmpty()){
 			this.setMessage(DEFAULT_MESSAGE);
@@ -238,14 +325,18 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public String getColumnText(Object element, int columnIndex) {
-			ICapability<?,?> capability = (ICapability<?,?>) element;
+			ICapability capability = (ICapability) element;
 			switch(columnIndex){
 			case 0:
 				return capability.getName();
 			case 1:
-				return TypeManager.simpleTypeName(capability.getParameterType().getType());
+				if (CapabilityUtil.isUnary(capability)){
+					return TypeManager.simpleTypeName(CapabilityUtil.unaryParameter(capability).getType().getType());
+				} else {
+					return null;
+				}
 			case 2:
-				return TypeManager.simpleTypeName(capability.getReturnType().getType());
+				return TypeManager.simpleTypeName(CapabilityUtil.singleOutput(capability).getType().getType());
 			default:
 				return null;
 			}
@@ -261,32 +352,38 @@ public class CreatePipelinePage extends WizardPage{
 		
 		if (!current.isEmpty()){
 			
-			TypeToken<?> last = current.get(0).getReturnType();
+			TypeToken<?> last = CapabilityUtil.singleOutput(current.get(0)).getType();
 			
 			for (int i = 1; i < current.size(); i++){
-				ICapability<?,?> next = current.get(i);
-				if (!TypeManager.isCompatible(next, last)){
-					result.add("Capability " + next.getName() + " with input " + next.getParameterType() + " is not compatible with type " + last);
+				ICapability next = current.get(i);
+				
+				if (!CapabilityUtil.isGenerator(next)){
+					IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
+					if (!TypeManager.isCompatible(nextParameter, last)){
+						result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
+					}	
 				}
-				last = next.getReturnType();
+				
+				last = CapabilityUtil.singleOutput(next).getType();
 			}
 		}
 		
 		return result;
 	}
 	
-	
-	
 	private class TreeLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider{
 
 		@Override
 		public String getText(Object element) {
 			if (element instanceof ICapability){
-				ICapability<?,?> capability = (ICapability<?,?>) element;
+				ICapability capability = (ICapability) element;
 				return capability.getName() + ": " + capability.getDescription();
 			}else if (element instanceof DerivedCapability){
 				DerivedCapability capability = (DerivedCapability) element;
-				return capability.getGetter().getName();
+				
+				return capability.getGetter() == null ? 
+						capability.getOutput().getName() :
+						capability.getGetter().getName();
 			}else{
 				throw new RuntimeException("Unexpected tree element of type " + element.getClass());
 			}
@@ -297,11 +394,14 @@ public class CreatePipelinePage extends WizardPage{
 			if (current.isEmpty()){
 				return null;
 			}else{
-				ICapability<?,?> capability = element instanceof ICapability 
-						?  (ICapability<?,?>) element
+				ICapability capability = element instanceof ICapability 
+						?  (ICapability) element
 						:  ((DerivedCapability) element).getCapability();
 				
-				if (TypeManager.isCompatible(capability, current.get(current.size()-1).getReturnType())){
+				ICapability last = current.get(current.size()-1);
+						
+				if (CapabilityUtil.isGenerator(capability)
+					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())){
 					return null;
 				}else{
 					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
@@ -343,10 +443,10 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public Object[] getElements(Object inputElement) {
-			List<ICapability<?,?>> xs = Lists.newArrayList((Collection<ICapability<?,?>>) inputElement);
-			Collections.sort(xs, new Comparator<ICapability<?,?>>(){
+			List<ICapability> xs = Lists.newArrayList((Collection<ICapability>) inputElement);
+			Collections.sort(xs, new Comparator<ICapability>(){
 				@Override
-				public int compare(ICapability<?, ?> lhs, ICapability<?, ?> rhs) {
+				public int compare(ICapability lhs, ICapability rhs) {
 					return lhs.getName().compareTo(rhs.getName());
 				}
 				
@@ -357,14 +457,42 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof ICapability){
-				List<DerivedCapability> xs = DerivedCapability.derived((ICapability<?,?>) parentElement);
-				Collections.sort(xs, new Comparator<DerivedCapability>(){
-					@Override
-					public int compare(DerivedCapability lhs, DerivedCapability rhs) {
-						return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
-					}
-				});
-				return xs.toArray();
+				ICapability c = (ICapability) parentElement;
+				
+				if (CapabilityUtil.hasSingleOutput(c)){
+					List<DerivedCapability> xs = DerivedCapability.derived(c, CapabilityUtil.singleOutput(c));
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
+						}
+					});
+					return xs.toArray();		
+				}else{
+					List<DerivedCapability> xs = DerivedCapability.derived(c);
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getOutput().getName().compareTo(lhs.getOutput().getName());
+						}
+					});
+					return xs.toArray();
+				}
+			}else if (parentElement instanceof DerivedCapability){
+				DerivedCapability c = (DerivedCapability) parentElement;
+				
+				if (c.getGetter() == null){
+					List<DerivedCapability> xs = DerivedCapability.derived(c.getCapability(), c.getOutput());
+					Collections.sort(xs, new Comparator<DerivedCapability>(){
+						@Override
+						public int compare(DerivedCapability lhs, DerivedCapability rhs) {
+							return lhs.getGetter().getName().compareTo(rhs.getGetter().getName());
+						}
+					});
+					return xs.toArray();
+				}else{
+					return new Object[]{};
+				}
 			}else{
 				return new Object[]{};
 			}
@@ -373,7 +501,14 @@ public class CreatePipelinePage extends WizardPage{
 		@Override
 		public Object getParent(Object element) {
 			if (element instanceof DerivedCapability){
-				return ((DerivedCapability) element).getCapability();
+				DerivedCapability c = (DerivedCapability) element;
+				
+				if (c.getGetter() == null || CapabilityUtil.hasSingleOutput(c.getCapability())){
+					return c.getCapability();
+				}else{
+					// TODO: track parent for getters of capabilities with multiple outputs
+					return null;
+				}
 			}else{
 				return null;
 			}
@@ -381,11 +516,8 @@ public class CreatePipelinePage extends WizardPage{
 
 		@Override
 		public boolean hasChildren(Object element) {
-			if (element instanceof ICapability){
-				return !DerivedCapability.derived((ICapability<?,?>) element).isEmpty();
-			}else{
-				return false;
-			}
+			// TODO make efficient
+			return getChildren(element).length != 0;
 		}
 	}
 	
@@ -420,20 +552,23 @@ public class CreatePipelinePage extends WizardPage{
 		return current.size();
 	}
 	
-	public SerializablePipeline createPipeline(){
-		List<Object> descriptors = Lists.newArrayList();
+	public DynamicSerializablePipeline createPipeline(){
+		List<Serializable> descriptors = Lists.newArrayList();
 		for (Object x : current){
-			if (x instanceof Serializable){
-				descriptors.add(x);
+			if (x instanceof ICapability && CapabilityUtil.isSerializable((ICapability) x)){
+				descriptors.add((Serializable) x);
+			}else if (!(x instanceof ICapability) && x instanceof Serializable){
+				descriptors.add((Serializable) x);
 			}else{
-				descriptors.add(((ICapability<?,?>)x).getUniqueId());
+				descriptors.add(((ICapability)x).getName());
 			}
 		}
 		
-		SerializablePipeline pipeline = new SerializablePipeline(
+		DynamicSerializablePipeline pipeline = new DynamicSerializablePipeline(
 				nameEntry.getText(),
 				descriptionEntry.getText(),
-				descriptors);
+				descriptors,
+				currentOptions);
 		
 		return pipeline;
 	}
@@ -442,42 +577,270 @@ public class CreatePipelinePage extends WizardPage{
 		capabilityTree = new TreeViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		capabilityTree.setContentProvider(new TreeContentProvider());
 		capabilityTree.setLabelProvider(new TreeLabelProvider());
-		GridData data = new GridData(GridData.FILL_BOTH);
+
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.minimumHeight = 400;
+		data.verticalSpan = 2;
+		capabilityTree.getTree().setLayoutData(data);
+		
 		
 		TreeColumn column = new TreeColumn(capabilityTree.getTree(), SWT.LEFT);
 		column.setWidth(300);
 		column.setText("Capability");
-		capabilityTree.getTree().setLayoutData(data);
 		
-		capabilityTree.setInput(CupidPlatform.getCapabilityRegistry().getCapabilities());
+		SortedSet<ICapability> unary = CupidPlatform.getCapabilityRegistry().getCapabilities(new Predicate<ICapability>(){
+			@Override
+			public boolean apply(ICapability capability) {
+				return CapabilityUtil.isUnary(capability);
+			}
+		});
+		
+		capabilityTree.setInput(Lists.newArrayList(unary));
 	}
 	
 	private void buildPipelineTable(Composite composite){
 		pipelineTable = new TableViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		
-		GridData data = new GridData(GridData.FILL_BOTH);
-		data = new GridData(GridData.FILL_BOTH);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.minimumWidth = 300;
+		pipelineTable.getTable().setLayoutData(data);
 		
 		pipelineTable.setContentProvider(new TableContentProvider());
 		pipelineTable.setLabelProvider(new TableLabelProvider());
-		pipelineTable.getTable().setLayoutData(data);
+		
 		
 		TableColumn nameColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		nameColumn.setText("Capability");
-		nameColumn.setWidth(200);
 		
 		TableColumn inputTypeColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		inputTypeColumn.setText("Input Type");
-		inputTypeColumn.setWidth(100);
 		
 		TableColumn outputTypeColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		outputTypeColumn.setText("Output Type");
-		outputTypeColumn.setWidth(100);
+		
+		TableLayout layout = new TableLayout();
+		layout.addColumnData(new ColumnWeightData(2));
+		layout.addColumnData(new ColumnWeightData(1));
+		layout.addColumnData(new ColumnWeightData(1));
+		pipelineTable.getTable().setLayout(layout);
 		
 		pipelineTable.getTable().setHeaderVisible(true);
 	}
+	
+	private void clearOptions(){
+        for (Widget control : optionWidgets){
+        	control.dispose();
+        }
+        
+        newOptions = new CapabilityArguments();
+        
+        optionWidgets.clear();
+        optionInputs.clear();
+	}	
 
+	
+	private void buildOptionEditor(Composite composite){
+		optionGroup = new Group(composite, SWT.BORDER);
+		optionGroup.setText("Capability Options");
+		optionGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		optionGroup.setLayout(new GridLayout());
+		
+		optionContainer = new ScrolledComposite(optionGroup, SWT.V_SCROLL | SWT.H_SCROLL);
+		optionContainer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		optionContainer.setLayout(new FillLayout());	
+		 
+        optionInnerContainer = new Composite(optionContainer, SWT.NONE);
+		optionInnerContainer.setLayout(new GridLayout());
+		optionContainer.setContent(optionInnerContainer);
+        
+		optionContainer.setExpandVertical(true);
+		optionContainer.setExpandHorizontal(true);
+	}
+
+	private class CapabilityOutputPair{
+		private ICapability capability;
+		private ICapability.IOutput<?> output;
+		
+		private CapabilityOutputPair(ICapability capability, IOutput<?> output) {
+			super();
+			this.capability = capability;
+			this.output = output;
+		}
+	}
+	
+	private List<CapabilityOutputPair> capabilitiesForOption(TypeToken<?> pipeInput, ICapability.IParameter<?> option){
+		
+		List<CapabilityOutputPair> result = Lists.newArrayList();
+		
+		for (ICapability capability : CupidPlatform.getCapabilityRegistry().getCapabilities(pipeInput, option.getType())){
+			for (ICapability.IOutput<?> output : capability.getOutputs()){
+				if (TypeManager.isJavaCompatible(option.getType(), output.getType())){
+					result.add(new CapabilityOutputPair(capability, output));
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	private void showOptions(final ICapability capability, final Integer pipeIndex){
+        if (!optionWidgets.isEmpty()){
+        	clearOptions();
+        }
+          
+        if (capability == null){
+        	return;
+        }
+        
+       
+    	final CapabilityArguments capabilityOptions = (pipeIndex == null)
+    			? newOptions
+    			: currentOptions.get(pipeIndex);
+        
+        for (final ICapability.IParameter<?> option : CapabilityUtil.options(capability)){
+        	
+        	@SuppressWarnings("rawtypes")
+			final OptionEditor input = OptionEditorFactory.getEditor(capability, option);
+  
+        	if (input == null){
+        		continue;
+        	}
+        	
+        	boolean hasValue = capabilityOptions.hasValueArgument(option);
+        	
+        	Label label = new Label(optionInnerContainer, SWT.LEFT);
+        	label.setText(option.getName());
+        	
+        	Composite cOption = new Composite(optionInnerContainer, SWT.NONE);
+        	cOption.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        	GridLayout lOption = new GridLayout() ;
+        	lOption.numColumns = 2;
+        	cOption.setLayout(lOption);
+        	
+        	GridData dLabel = new GridData();
+        	dLabel.verticalSpan = 2;
+        	dLabel.verticalAlignment = SWT.TOP;
+        	label.setLayoutData(dLabel);
+        
+        	Button bConstant = new Button(cOption, SWT.RADIO);
+        	bConstant.setText("Constant:");
+        	
+        	final Control entry = hasValue ?
+        			input.create(cOption, capabilityOptions.getValueArgument(option))
+        			: input.create(cOption, option.getDefault());
+        
+        	bConstant.setSelection(hasValue);
+            entry.setEnabled(hasValue);    	
+        			
+        	Button bCapability = new Button(cOption, SWT.RADIO);
+        	bCapability.setText("Capability:");
+        	
+        	final Combo cCombo = new Combo(cOption, SWT.READ_ONLY);
+        	cCombo.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+        	
+        	bCapability.setSelection(!hasValue);
+        	cCombo.setEnabled(!hasValue);
+        	
+        	TypeToken<?> pipeInput = null;
+        	
+        	if (pipeIndex == null){
+        		pipeInput = CapabilityUtil.isGenerator(capability) 
+        				? TypeToken.of(Void.class)
+        				: CapabilityUtil.unaryParameter(capability).getType();
+        	}else{
+        		ICapability first = current.get(0);
+        		pipeInput = CapabilityUtil.isGenerator(first) 
+        				? TypeToken.of(Void.class)
+        				: CapabilityUtil.unaryParameter(first).getType();
+        	}
+        	
+        	final List<CapabilityOutputPair> compatible = capabilitiesForOption(pipeInput, option);
+        	
+        	if (!compatible.isEmpty()){
+        		
+            	for (CapabilityOutputPair c : compatible){
+            		if (CapabilityUtil.hasSingleOutput(c.capability)){
+            			cCombo.add(c.capability.getName());		
+            		}else{
+            			cCombo.add(c.capability.getName() + " - " + c.output.getName());
+            		}
+            	}
+        	}else{
+        		bCapability.setEnabled(false);
+        	}
+        	    
+    		if (!hasValue){
+    			OutputSelector s = (OutputSelector) capabilityOptions.getCapabilityArgument(option);
+    			try {
+					ICapability c = s.getCapability();
+					if (CapabilityUtil.hasSingleOutput(c)){
+						cCombo.setText(c.getName());
+					}else{
+						cCombo.setText(c.getName() + " - " + s.getOutput().getName());
+					}
+				} catch (NoSuchCapabilityException e) {
+					throw new RuntimeException(e);
+				}	
+    		}
+        	
+        	input.addValueChangedListener(new ValueChangedListener(){
+				@Override
+				public void valueChanged(OptionEditor option, Object value) {
+					capabilityOptions.add((IParameter)input.getOption(), value);
+				}
+        	});
+        	
+        	cCombo.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					CapabilityOutputPair o = compatible.get(cCombo.getSelectionIndex());
+					capabilityOptions.add(option, new OutputSelector(o.capability, o.output));
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {
+					// NO OP
+				}
+			});
+        	
+        	bConstant.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					cCombo.setEnabled(false);
+					entry.setEnabled(true);
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {
+					// NO OP
+				}
+			});
+        	
+        	bCapability.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					cCombo.setEnabled(true);
+					entry.setEnabled(false);
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {
+					// NO OP
+				}
+			});
+        	
+        	
+        	optionContainer.setMinSize(optionInnerContainer.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+        	
+        	optionInputs.put(option, input);
+        	optionWidgets.add(cOption);
+        	optionWidgets.add(input.getWidget());
+        	optionWidgets.add(label);
+        }
+
+        optionGroup.layout(true);
+        optionInnerContainer.setSize(optionInnerContainer.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	}
 	
 }

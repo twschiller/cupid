@@ -14,38 +14,36 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class CompilationUnit extends AbstractCapability<IJavaElement, ICompilationUnit> {
+public final class CompilationUnit extends LinearCapability<IJavaElement, ICompilationUnit> {
 
 	public CompilationUnit(){
 		super("Compilation Unit", 
-			  "edu.washington.cs.cupid.jdt.compilationunit", 
 			  "Get the compilation unit associated with a Java element",
-			  IJavaElement.class,
-			  ICompilationUnit.class,
-			  Flag.PURE, Flag.LOCAL);
+			  IJavaElement.class, ICompilationUnit.class,
+			  Flag.PURE);
 	}
 	
 	@Override
-	public CapabilityJob<IJavaElement, ICompilationUnit> getJob(final IJavaElement input) {
-		return new CapabilityJob<IJavaElement, ICompilationUnit>(this, input) {
+	public LinearJob<IJavaElement, ICompilationUnit> getJob(final IJavaElement input) {
+		return new LinearJob<IJavaElement, ICompilationUnit>(this, input) {
 
 			@Override
-			protected CapabilityStatus<ICompilationUnit> run(final IProgressMonitor monitor) {
+			protected LinearStatus<ICompilationUnit> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 1);
 					IJavaElement cu = input.getAncestor(IJavaElement.COMPILATION_UNIT);
 					
 					if (cu != null) {
-						return CapabilityStatus.makeError(new RuntimeException("No associated compilation unit"));
+						return LinearStatus.<ICompilationUnit>makeError(new RuntimeException("No associated compilation unit"));
 					} else {
-						return CapabilityStatus.makeOk((ICompilationUnit)  cu);
+						return LinearStatus.makeOk(getCapability(), (ICompilationUnit)  cu);
 					}
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<ICompilationUnit>makeError(ex);
 				} finally {
 					monitor.done();
 				}

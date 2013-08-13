@@ -16,7 +16,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-import edu.washington.cs.cupid.scripting.java.internal.Activator;
+import edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 
@@ -37,7 +37,7 @@ public final class JavaCapabilityAction implements IWorkbenchWindowActionDelegat
 	@Override
 	public void run(final IAction action) {
 		CupidDataCollector.record(
-				CupidEventBuilder.createAction(action, this, Activator.getDefault())
+				CupidEventBuilder.createAction(action, this, CupidScriptingPlugin.getDefault())
 				.create());
 		
 		JavaCapabilityWizard wizard = new JavaCapabilityWizard();

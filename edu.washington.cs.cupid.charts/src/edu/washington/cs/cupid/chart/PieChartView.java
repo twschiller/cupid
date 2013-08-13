@@ -19,14 +19,12 @@ import edu.washington.cs.cupid.chart.internal.ChartViewPart;
 public class PieChartView extends ChartViewPart{
 
 	// TODO reduce flicker: http://www.eclipse.org/articles/article.php?file=Article-Swing-SWT-Integration/index.html
-	// TODO make labels look better
 	// TODO add job cancellation smoothing (like for the inspector view)
-	// TODO add preferences
 	
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
-	public static final String ID = "edu.washington.cs.cupid.chart.views.PieChartView";
+	public static final String ID = "edu.washington.cs.cupid.chart.PieChartView";
 
 	/**
 	 * The constructor.
@@ -40,7 +38,6 @@ public class PieChartView extends ChartViewPart{
 		// determine relative frequencies
 		DefaultPieDataset dataset = new DefaultPieDataset();
 		
-		@SuppressWarnings("unchecked")
 		Set<?> unique = Sets.newHashSet(results.values());
 		
 		for (Object result : unique){

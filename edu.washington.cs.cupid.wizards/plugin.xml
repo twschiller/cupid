@@ -18,35 +18,35 @@
          <action
                class="edu.washington.cs.cupid.wizards.actions.CreateMappingAction"
                icon="icons/mapping-icon.png"
-               id="edu.cs.washington.cs.cupid.wizards.actions.MappingAction"
-               label="&amp;Create Mapping Capability"
+               id="edu.washington.cs.cupid.wizards.actions.MappingAction"
+               label="Create &amp;Mapping Capability"
                toolbarPath="cupidGroup"
                tooltip="Create Mapping Capability">
          </action>
          <action
                class="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
                icon="icons/add-to-database-icon.png"
-               id="edu.cs.washington.cs.cupid.wizards.actions.ExtractFieldAction"
-               label="&amp;Create Extract Field Capability"
+               id="edu.washington.cs.cupid.wizards.actions.ExtractFieldAction"
+               label="Create &amp;Extract Field Capability"
                state="false"
                style="push"
                toolbarPath="cupidGroup"
                tooltip="Create Extract Field Capability">
          </action>
          <action
-               label="&amp;Create New Capability"
+               label="Create &amp;New Capability"
                icon="icons/heart-add.png"
                class="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction"
                tooltip="Create New Capability"
                toolbarPath="cupidGroup"
-               id="edu.cs.washington.cs.cupid.wizards.actions.CreatePipelineAction">
+               id="edu.washington.cs.cupid.wizards.actions.CreatePipelineAction">
          </action>
       </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="edu.washington.cs.cupid.wizards.contribution1"
+            id="edu.washington.cs.cupid.wizards.objectContribution"
             objectClass="java.lang.Object">
          <menu
                id="edu.washington.cs.cupid.wizards.menu"
@@ -58,7 +58,7 @@
          </menu>
          <action
                class="edu.washington.cs.cupid.wizards.popup.actions.NewExtractCapabilityAction"
-               enablesFor="1"
+               enablesFor="+"
                id="edu.washington.cs.cupid.wizards.extract.capability"
                label="Extract Capability"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
@@ -67,8 +67,25 @@
                class="edu.washington.cs.cupid.wizards.popup.actions.NewMappingCapabilityAction"
                enablesFor="1"
                id="edu.washington.cs.cupid.wizards.extract.action"
-               label="Create Mapping"
+               label="Create &amp;Mapping"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.ApplyFormattingAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.wizards.conditional.format"
+               label="Create &amp;Formatting Rule"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.wizards.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.DeleteCapabilityAction"
+               id="edu.washington.cs.cupid.wizards.deleteCapability"
+               label="Delete Capability">
          </action>
       </objectContribution>
    </extension>

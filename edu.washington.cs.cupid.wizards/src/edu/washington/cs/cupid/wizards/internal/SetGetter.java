@@ -11,7 +11,6 @@
 package edu.washington.cs.cupid.wizards.internal;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -20,54 +19,33 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.linear.GenericLinearSerializableCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>> {
-	private static final long serialVersionUID = 1L;
-
-	private static final String BASE_ID = "edu.washington.cs.cupid.wizards.internal.set.getter";
+public final class SetGetter<I,V> extends GenericLinearSerializableCapability<Set<I>,Set<V>> implements IExtractCapability<Set<I>,Set<V>> {
+	private static final long serialVersionUID = 3L;
 	
 	private final TypeToken<I> type;
 	private final String field;
 	private final TypeToken<V> result;
 	
 	public SetGetter(final String field, final TypeToken<I> type, final TypeToken<V> result) {
+		super("{ " + field + " }",
+			  "Get the '" + field + "' of type " + TypeManager.simpleTypeName(type),
+			  Flag.PURE);
+		
 		this.field = field;
 		this.type = type;
 		this.result = result;
 	}
 	
 	@Override
-	public String getUniqueId() {
-		return BASE_ID + "." + field;
-	}
-
-	@Override
-	public String getName() {
-		return "{ " + field + " }";
-	}
-
-	@Override
-	public String getDescription() {
-		return "Get the '" + field + "' of type " + type.toString();
-	}
-
-	@Override
-	public TypeToken<Set<I>> getParameterType() {
-		return new TypeToken<Set<I>>(getClass()){}.where(new TypeParameter<I>(){}, type);
-	}
-
-	@Override
-	public TypeToken<Set<V>> getReturnType() {
-		return new TypeToken<Set<V>>(getClass()){}.where(new TypeParameter<V>(){}, result);
-	}
-
-	@Override
-	public CapabilityJob<Set<I>, Set<V>> getJob(final Set<I> input) {
-		return new CapabilityJob<Set<I>, Set<V>>(this, input) {
+	public LinearJob<Set<I>, Set<V>> getJob(final Set<I> input) {
+		return new LinearJob<Set<I>, Set<V>>(this, input) {
 			@Override
-			protected CapabilityStatus<Set<V>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<Set<V>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), input.size());
 					
@@ -87,33 +65,26 @@ public final class SetGetter<I,V> implements IExtractCapability<Set<I>,Set<V>> {
 						monitor.worked(1);
 					}
 					
-					return CapabilityStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 				} catch (Exception ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<Set<V>>makeError(ex);
 				} finally {
 					monitor.done();
 				}
 			}
 		};
 	}
+	
 
 	@Override
-	public Set<String> getDynamicDependencies() {
-		return new HashSet<String>();
+	public TypeToken<Set<I>> getInputType() {
+		return new TypeToken<Set<I>>(getClass()){}.where(new TypeParameter<I>(){}, type);
 	}
 
-	@Override
-	public boolean isPure() {
-		return true;
-	}
 
 	@Override
-	public boolean isLocal() {
-		return true;
+	public TypeToken<Set<V>> getOutputType() {
+		return new TypeToken<Set<V>>(getClass()){}.where(new TypeParameter<V>(){}, result);
 	}
 
-	@Override
-	public boolean isTransient() {
-		return true;
-	}
 }

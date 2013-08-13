@@ -10,11 +10,11 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.usage.preferences;
 
-import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
@@ -22,25 +22,31 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.internal.image.GIFFileFormat;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import com.google.common.io.CharStreams;
 
 import edu.washington.cs.cupid.usage.internal.Activator;
+import edu.washington.cs.cupid.usage.internal.SurveyDialog;
 
 public class UsagePreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
+	private static final String CONSENT_AGREEMENT_PATH = "/documents/consent-agreement.html"; //$NON-NLS-1$
+	
 	private TabFolder tabs;
 	private TabItem consentTab;
 	private TabItem dataTab;
@@ -98,6 +104,13 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		layout.numColumns = 2;
 		composite.setLayout(layout);
 		
+		Link surveyLink = new Link(composite, SWT.LEFT);
+		surveyLink.setText("Help improve Cupid by completing a short survey: <a href=\"" + SurveyDialog.DEV_SURVEY_URL + "\">Open in Browser.</a>");
+		
+		GridData dSurvey = new GridData(SWT.FILL, SWT.NONE, true, false);
+		dSurvey.horizontalSpan = 2;
+		surveyLink.setLayoutData(dSurvey);
+		
 		enabled = new Button(composite, SWT.CHECK);
 		enabled.setText("Enable Cupid Data Reporting");
 		enabled.setSelection(preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION));
@@ -105,6 +118,25 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		Button delete = new Button(composite, SWT.PUSH);
 		delete.setText("Erase Workspace Usage Data");
 		
+		
+		surveyLink.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					//  Open default external browser 
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(e.text));
+				} catch (Exception ex) {
+					Activator.getDefault().logError("Error loading Cupid survey in browser", ex);
+				} 
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				//NOP
+			}
+		});
+	
 		tabs = new TabFolder(composite, SWT.BOTTOM);
 		consentTab = new TabItem(tabs, SWT.NONE);
 		consentTab.setText("Consent Agreement");
@@ -113,10 +145,15 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
 		
 		try{
 			Bundle bundle = Activator.getDefault().getBundle();
-			URL fileURL = bundle.getEntry("documents/consent-agreement.html");
-			File file = new File(FileLocator.resolve(fileURL).toURI());
-		
-			String content = Joiner.on(System.getProperty("line.separator")).join(Files.readLines(file, Charset.defaultCharset()));
+			URL fileURL = bundle.getEntry(CONSENT_AGREEMENT_PATH);
+			
+			if (fileURL == null){
+				throw new RuntimeException("Unable to locate consent agreement at " + CONSENT_AGREEMENT_PATH);
+			}
+			
+			InputStream inputStream = fileURL.openStream();
+			String content = CharStreams.toString(new InputStreamReader(inputStream, Charset.forName("UTF-8")) );
+			
 			consentText.setText(content);
 		} catch (Exception ex) {
 			consentText.setText("Error loading consent form: " + ex.getLocalizedMessage());

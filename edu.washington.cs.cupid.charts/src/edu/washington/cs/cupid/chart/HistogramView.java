@@ -22,7 +22,7 @@ public class HistogramView extends ChartViewPart{
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
-	public static final String ID = "edu.washington.cs.cupid.chart.views.HistogramView";
+	public static final String ID = "edu.washington.cs.cupid.chart.HistogramView";
 	
 	/**
 	 * The constructor.
@@ -38,7 +38,6 @@ public class HistogramView extends ChartViewPart{
 		
 		double[] values = new double[results.values().size()];
 		
-		@SuppressWarnings("unchecked")
 		Number[] arr = (Number[]) results.values().toArray(new Number[]{});
 		
 		for (int i = 0; i < values.length; i++){

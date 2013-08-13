@@ -23,45 +23,44 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
-import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.linear.LinearCapability;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * Capability that returns a map from types to methods for a compilation unit
  * @author Todd Schiller
  */
-public class MapCapabilityTest extends AbstractCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
+public class MapCapabilityTest extends LinearCapability<ICompilationUnit, Map<IType, Set<IMethod>>> {
 
 	public MapCapabilityTest(){
 		super(
 				"Method Map",
-				"edu.washington.cs.cupid.tests.maps.methods",
 				"Types and methods for a compilation unit",
 				new TypeToken<ICompilationUnit>(){},
 				new TypeToken<Map<IType,Set<IMethod>>>(){},
-				Flag.PURE, Flag.LOCAL);
+				Flag.PURE);
 	}
 
 	@Override
-	public CapabilityJob<ICompilationUnit, Map<IType, Set<IMethod>>> getJob(ICompilationUnit input) {
-		return new CapabilityJob<ICompilationUnit, Map<IType, Set<IMethod>>>(this, input){
+	public LinearJob<ICompilationUnit, Map<IType, Set<IMethod>>> getJob(ICompilationUnit input) {
+		return new LinearJob<ICompilationUnit, Map<IType, Set<IMethod>>>(this, input){
 			@Override
-			protected CapabilityStatus<Map<IType, Set<IMethod>>> run(IProgressMonitor monitor) {
+			protected LinearStatus<Map<IType, Set<IMethod>>> run(IProgressMonitor monitor) {
 				monitor.done();
 				
 				Map<IType, Set<IMethod>> result = Maps.newHashMap();
 
 				try{
-					for (IType type : input.getTypes()){
+					for (IType type : ((ICompilationUnit) getInput()).getTypes()){
 						Set<IMethod> methods = Sets.newHashSet(type.getMethods());
 						result.put(type, methods);
 					}
 				}catch(JavaModelException ex){
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<Map<IType, Set<IMethod>>>makeError(ex);
 				}
 
-				return CapabilityStatus.makeOk(result);
+				return LinearStatus.makeOk(getCapability(), result);
 			}
 		};
 	}

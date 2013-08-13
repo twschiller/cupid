@@ -10,14 +10,12 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.wizards.internal;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -25,15 +23,18 @@ import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
+import edu.washington.cs.cupid.capability.IDynamicCapability;
 import edu.washington.cs.cupid.capability.ISerializableCapability;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
+import edu.washington.cs.cupid.capability.linear.LinearJob;
+import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
+public class ValueMapping<I,V> extends AbstractMapping<I,I,V> implements IDynamicCapability {
 
-	private static final long serialVersionUID = 1L;
-	
-	private final static String BASE_ID = "edu.washington.cs.cupid.wizards.internal.mapping.value";
+	private static final long serialVersionUID = 2L;
 		
-	private ISerializableCapability<?,Collection<V>> valueGenerator;
+	private ISerializableCapability valueGenerator;
 	private String keyLink;
 	private String valueLink;
 	
@@ -41,25 +42,27 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 			String name,
 			String description,
 			TypeToken<I> inputType, String keyLink,
-			ISerializableCapability<?,Collection<V>> valueGenerator, TypeToken<V> valueType, String valueLink){
+			ISerializableCapability valueGenerator, TypeToken<V> valueType, String valueLink){
 	
-		super(name, description, inputType, inputType, valueType);
+		super(name, description, 
+			 inputType, inputType, valueType,
+			 valueGenerator.getFlags());
+		
 		this.valueGenerator = valueGenerator;
 		this.keyLink = keyLink;
 		this.valueLink = valueLink;
 	}
 	
 	@Override
-	public String getUniqueId() {
-		return BASE_ID + ".[" + inputType.getRawType().getName() + "].[" + valueGenerator.getUniqueId() + "]"; 
-	}
-
-	@Override
 	public Set<String> getDynamicDependencies() {
-		return valueGenerator.getDynamicDependencies();
+		if (valueGenerator instanceof IDynamicCapability){
+			return ((IDynamicCapability) valueGenerator).getDynamicDependencies();
+		} else {
+			return Sets.newHashSet();
+		}
 	}
 
-	private Object link(Object value, String valueLink) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
+	private Object link(Object value, String valueLink) throws Exception {
 		if (valueLink == null){
 			return value;
 		} else {
@@ -69,18 +72,29 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 	}
 
 	@Override
-	public CapabilityJob<I, Map<I,Set<V>>> getJob(I input) {
-		return new CapabilityJob<I, Map<I,Set<V>>>(this, input){
+	public LinearJob<I, Map<I, Set<V>>> getJob(I input) {
+		return new LinearJob<I, Map<I,Set<V>>>(this, input){
 			@Override
-			protected CapabilityStatus<Map<I, Set<V>>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<Map<I, Set<V>>> run(final IProgressMonitor monitor) {
 				try{
-					monitor.beginTask(getName(), 20);
+					monitor.beginTask(getName(), 100);
 					
-					Object key = link(input, keyLink);
+					Object key = link(getInput(), keyLink);
 
-					CapabilityJob<?,Collection<V>> subtask = valueGenerator.getJob(null);
+					CapabilityJob<?> subtask = valueGenerator.getJob(new CapabilityArguments());
 					monitor.subTask("Generating Values");
-					Collection<V> values = runSubtask(subtask, new SubProgressMonitor(monitor, 10), 10 );
+					
+					subtask.schedule();
+					subtask.join();
+					
+					CapabilityStatus status = (CapabilityStatus) subtask.getResult();
+					if (!status.isOK()){
+						throw status.getException();
+					}
+					
+					Collection<V> values = (Collection<V>) CapabilityUtil.singleOutputValue(valueGenerator, status);
+					
+					monitor.worked(50);
 					
 					monitor.subTask("Linking Key and Values");
 					Set<V> collection = Sets.newHashSet();
@@ -91,32 +105,16 @@ public class ValueMapping<I,V> extends AbstractMapping<I,I,V> {
 					}
 
 					Map<I, Set<V>> result = Maps.newHashMap();
-					result.put((I) input, collection);
+					result.put((I) getInput(), collection);
 
-					return CapabilityStatus.makeOk(result);
+					return LinearStatus.makeOk(getCapability(), result);
 
 				} catch(Throwable ex) {
-					return CapabilityStatus.makeError(ex);
+					return LinearStatus.<Map<I, Set<V>>>makeError(ex);
 				} finally {
 					monitor.done();
 				}
 			}
 		};
 	}
-
-	@Override
-	public boolean isPure() {
-		return valueGenerator.isPure();
-	}
-
-	@Override
-	public boolean isLocal() {
-		return valueGenerator.isLocal();
-	}
-
-	@Override
-	public boolean isTransient() {
-		return valueGenerator.isTransient();
-	}
-
 }

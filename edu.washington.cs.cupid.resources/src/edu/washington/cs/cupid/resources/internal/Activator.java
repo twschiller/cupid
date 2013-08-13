@@ -38,8 +38,8 @@ public class Activator implements BundleActivator, ICapabilityPublisher{
 	}
 
 	@Override
-	public ICapability<?, ?>[] publish() {
-		return new ICapability<?, ?>[] { 
+	public ICapability[] publish() {
+		return new ICapability[] { 
 				new LastModifiedCapability(),
 				new ProjectForResourceCapability(),
 		};

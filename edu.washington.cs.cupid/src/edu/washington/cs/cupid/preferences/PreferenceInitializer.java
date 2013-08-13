@@ -33,12 +33,10 @@ public final class PreferenceInitializer extends AbstractPreferenceInitializer {
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = CupidActivator.getDefault().getPreferenceStore();
 		store.setDefault(PreferenceConstants.P_IMPURE, false);
-		store.setDefault(PreferenceConstants.P_JOB_STATUS_LOGGING, true);
-		store.setDefault(PreferenceConstants.P_CACHE_STATUS_LOGGING, true);
+		store.setDefault(PreferenceConstants.P_JOB_STATUS_LOGGING, false);
+		store.setDefault(PreferenceConstants.P_CACHE_STATUS_LOGGING, false);
 		store.setDefault(PreferenceConstants.P_INSPECTOR_KILL_TIME_SECONDS, DEFAULT_INSPECTOR_KILL_TIME_SECONDS);
 		store.setDefault(PreferenceConstants.P_ARROW_DIR, new File(System.getProperty("user.home"), ".cupid").getAbsolutePath());
-	
-		store.setDefault(PreferenceConstants.P_TYPE_VIEWS, new Gson().toJson(new ArrayList<ViewRule>()));
-	
+		store.setDefault(PreferenceConstants.P_TYPE_VIEWS, new Gson().toJson(new ArrayList<ViewRule>()));	
 	}
 }

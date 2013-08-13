@@ -27,7 +27,7 @@ public final class ParseUtil {
 	}
 	
 	protected static CompilationUnit parse(final ICompilationUnit unit, final IProgressMonitor monitor) {
-		ASTParser parser = ASTParser.newParser(AST.JLS3); 
+		ASTParser parser = ASTParser.newParser(AST.JLS4); 
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(unit); // set source
 		parser.setResolveBindings(true); // we need bindings later on

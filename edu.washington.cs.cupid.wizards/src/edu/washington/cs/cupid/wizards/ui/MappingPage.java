@@ -332,7 +332,7 @@ public class MappingPage extends WizardPage {
 					IType selected = TypeUtil.showTypeDialog(getShell());
 					if (selected != null){
 						String newType = selected.getFullyQualifiedName();
-						objectSelect.setText(newType);
+						objectType.setText(newType);
 						updater.updateSuperTypeList(newType);
 					}
 				} catch (JavaModelException ex) {

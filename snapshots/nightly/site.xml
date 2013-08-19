@@ -21,8 +21,10 @@
    <feature url="features/edu.washington.cs.cupid.plugins_1.3.2.v20130813-1830.jar" id="edu.washington.cs.cupid.plugins" version="1.3.2.v20130813-1830">
       <category name="edu.washington.cs.cupid"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.mapview_1.3.0.v20130818-2130.jar" id="edu.washington.cs.cupid.mapview" version="1.3.0.v20130818-2130"/>
-   <feature url="features/edu.washington.cs.cupid.core_1.3.2.v20130818-2130.jar" id="edu.washington.cs.cupid.core" version="1.3.2.v20130818-2130">
+   <feature url="features/edu.washington.cs.cupid.mapview_1.3.0.v20130818-2130.jar" id="edu.washington.cs.cupid.mapview" version="1.3.0.v20130818-2130">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature url="features/edu.washington.cs.cupid.core_1.3.2.v20130818-2200.jar" id="edu.washington.cs.cupid.core" version="1.3.2.v20130818-2200">
       <category name="edu.washington.cs.cupid"/>
    </feature>
    <category-def name="edu.washington.cs.cupid" label="Cupid"/>

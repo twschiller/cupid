@@ -144,7 +144,10 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 	private static IOutput<?> calculateOutputType(List<ICapability> pipe){
 		ICapability last = pipe.get(pipe.size()-1);
 		IOutput<?> lastOut = CapabilityUtil.singleOutput(last);
-		IParameter<?> lastIn = CapabilityUtil.unaryParameter(last);
+		
+		TypeToken<?> tLastIn = CapabilityUtil.isGenerator(last) ?
+				TypeToken.of(Void.class) : CapabilityUtil.unaryParameter(last).getType();
+		
 		Type tLastOut = lastOut.getType().getType();
 		
 		TypeToken<?> resultType = lastOut.getType();
@@ -153,7 +156,7 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 			return lastOut;
 		}else if (tLastOut instanceof TypeVariable){
 			IOutput<?> previous = CapabilityUtil.singleOutput(pipe.get(pipe.size()-2));
-			resultType = TypeToken.of(resolveTypeVariable(previous.getType(), lastIn.getType(), (TypeVariable<?>) tLastOut));
+			resultType = TypeToken.of(resolveTypeVariable(previous.getType(), tLastIn, (TypeVariable<?>) tLastOut));
 		}else if (tLastOut instanceof ParameterizedType){
 			for (Type t : ((ParameterizedType) tLastOut).getActualTypeArguments()){
 				if (!(t instanceof Class)){
@@ -239,7 +242,9 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 
 					List<ICapability> resolved = inorder();
 					
-					final Object mainInput = getInputs().getValueArgument(CapabilityUtil.unaryParameter(getCapability()));
+					final Object mainInput = CapabilityUtil.isGenerator(getCapability()) ?
+							null :
+							getInputs().getValueArgument(CapabilityUtil.unaryParameter(getCapability()));
 					
 					Object result = mainInput;
 					List<Object> intermediateResults = Lists.newArrayList();

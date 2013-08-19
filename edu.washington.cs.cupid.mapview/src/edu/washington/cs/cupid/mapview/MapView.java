@@ -27,11 +27,13 @@ import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.core.viewers.ZoomContributionViewItem;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
+import org.osgi.framework.CapabilityPermission;
 
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.CapabilityExecutor;
 import edu.washington.cs.cupid.TypeManager;
+import edu.washington.cs.cupid.capability.CapabilityArguments;
 import edu.washington.cs.cupid.capability.CapabilityStatus;
 import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
@@ -153,12 +155,10 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 			return;
 		}
 			
-		IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
-		
-		if (input != null && TypeManager.isCompatible(parameter, input)) {
-			ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability,  TypeManager.getCompatible(parameter, input));
+		if (CapabilityUtil.isGenerator(capability)){
+			ICapabilityArguments empty = new CapabilityArguments();
 			
-			CapabilityExecutor.asyncExec(capability, packed, MapView.this, new NullJobListener() {
+			CapabilityExecutor.asyncExec(capability, empty, MapView.this, new NullJobListener() {
 				@Override
 				public void done(final IJobChangeEvent event) {
 					CapabilityStatus status = (CapabilityStatus) event.getResult();
@@ -170,6 +170,26 @@ public class MapView extends ViewPart implements IZoomableWorkbenchPart, ICupidS
 					MapView.this.showBusy(false);
 				}
 			});
+			
+		}else{
+			IParameter<?> parameter = CapabilityUtil.unaryParameter(capability);
+			
+			if (input != null && TypeManager.isCompatible(parameter, input)) {
+				ICapabilityArguments packed = CapabilityUtil.packUnaryInput(capability,  TypeManager.getCompatible(parameter, input));
+				
+				CapabilityExecutor.asyncExec(capability, packed, MapView.this, new NullJobListener() {
+					@Override
+					public void done(final IJobChangeEvent event) {
+						CapabilityStatus status = (CapabilityStatus) event.getResult();
+						
+						if (status.value() != null && status.isOK()) {
+							buildMap((Map<?, ?>) CapabilityUtil.singleOutputValue(capability, status));
+						}
+					
+						MapView.this.showBusy(false);
+					}
+				});
+			}		
 		}
 	}
 	

@@ -50,6 +50,8 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 	
 	private CupidDataCollector collector;
 	
+	private static final boolean USAGE_ENABLED = false;
+	
 	/**
 	 * The constructor
 	 */
@@ -72,12 +74,12 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 		
 		preferences.addPropertyChangeListener(this);
 		
-		if (preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION)){
+		if (USAGE_ENABLED && preferences.getBoolean(PreferenceConstants.P_ENABLE_COLLECTION)){
 			collector.start();
 			collector.upload.schedule(1000 * 10 /* 10 s */);
 		}
 		
-		if (!preferences.getBoolean(PreferenceConstants.P_SHOWN_ENABLE_DIALOG)){
+		if (USAGE_ENABLED && !preferences.getBoolean(PreferenceConstants.P_SHOWN_ENABLE_DIALOG)){
 			new UIJob("Cupid Data Collection Dialog"){
 
 				@Override
@@ -111,7 +113,7 @@ public final class Activator extends AbstractUIPlugin implements IStartup, IProp
 		Date next = new Date(preferences.getLong(PreferenceConstants.P_NEXT_SURVEY_DATE));
 		Date today = new Date();
 		
-		if (doSurvey && today.after(next)){
+		if (USAGE_ENABLED && doSurvey && today.after(next)){
 			new UIJob("Usage Survey Job"){
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor) {

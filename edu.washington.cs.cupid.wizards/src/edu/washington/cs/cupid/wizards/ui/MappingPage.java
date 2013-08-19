@@ -481,8 +481,12 @@ public class MappingPage extends WizardPage {
 		if (keyAsType){
 			return CapabilityUtil.isGenerator(generator);
 		}else if (keySet != null){
-			return CapabilityUtil.isGenerator(generator) || 
-				   TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet).getType());
+			if (CapabilityUtil.isGenerator(keySet)){
+				return CapabilityUtil.isGenerator(generator);
+			}else{
+				return CapabilityUtil.isGenerator(generator) || 
+						   TypeManager.isCompatible(CapabilityUtil.unaryParameter(generator), CapabilityUtil.unaryParameter(keySet).getType());		
+			}
 		}else{
 			return true;
 		}
@@ -647,7 +651,7 @@ public class MappingPage extends WizardPage {
 		String description = descriptionEntry.getText();
 		
 		return new CapabilityMapping(name, description,
-				CapabilityUtil.unaryParameter(keySet).getType(),
+				CapabilityUtil.isGenerator(keySet) ? TypeToken.of(Void.class) : CapabilityUtil.unaryParameter(keySet).getType(),
 				keySet, CapabilityUtil.singleOutput(keySet).getType(), pullComboLink(keyLinkCombo),
 				valueSet, CapabilityUtil.singleOutput(valueSet).getType(), pullComboLink(valueLinkCombo));
 	}

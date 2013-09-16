@@ -17,6 +17,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -187,14 +188,13 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		
 	}
 	
-	private class LoadCapabilitiesJob extends Job{
+	private class LoadCapabilitiesJob extends WorkspaceJob{
 		public LoadCapabilitiesJob() {
 			super("Load Dynamic Capabilities");
-			super.setRule(cupidProject);
 		}
 
 		@Override
-		protected IStatus run(final IProgressMonitor monitor) {
+		public IStatus runInWorkspace(final IProgressMonitor monitor) {
 			try {
 				SubMonitor progress = SubMonitor.convert(monitor, 100);
 				
@@ -216,7 +216,7 @@ public final class CupidScriptingPlugin extends AbstractUIPlugin implements ICap
 		          
 				for (ICompilationUnit clazz : classes) {		
 					try {
-						loadDynamicCapability(clazz, false);
+						loadDynamicCapability(clazz, true);
 					} catch (Exception e) {
 						logError("Error loading class from file " + simpleName(clazz), e);
 					} catch (Error e) {

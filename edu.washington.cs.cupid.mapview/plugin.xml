@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.mapview.MapView"
+            icon="icons/node-magnifier-icon.png"
+            id="edu.washington.cs.cupid.MapView"
+            name="Map View"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.mapview.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.mapview.internal.ShowMappingAction"
+               id="edu.washington.cs.cupid.mapview.ShowMapping"
+               label="Show Mapping"
+               menubarPath="cupidGroup">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

@@ -1,0 +1,26 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Cupid Java Scripting
+Bundle-SymbolicName: edu.washington.cs.cupid.scripting.java;singleton:=true
+Bundle-Version: 1.3.1.v20130809-2300
+Bundle-Activator: edu.washington.cs.cupid.scripting.java.CupidScriptingPlugin
+Bundle-Vendor: University of Washington PLSE
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources;bundle-version="3.7.0",
+ org.eclipse.jdt.core;bundle-version="3.7.0",
+ org.eclipse.ui.ide;bundle-version="3.7.0",
+ edu.washington.cs.cupid,
+ org.eclipse.jdt.launching;bundle-version="3.6.1",
+ org.eclipse.jdt.ui;bundle-version="3.7.0",
+ org.eclipse.jface.text;bundle-version="3.7.0",
+ edu.washington.cs.cupid.usage;bundle-version="1.0.0",
+ org.eclipse.jdt.debug;bundle-version="3.7.0",
+ org.eclipse.jdt.debug.ui;bundle-version="3.6.1",
+ org.eclipse.ui.editors;bundle-version="3.7.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Eclipse-BuddyPolicy: global, app, ext, boot
+Bundle-ClassPath: .,
+ lib/jmte-2.2.jar
+Export-Package: edu.washington.cs.cupid.scripting.java

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="edu.washington.cs.cupid.publishers" name="Capability Publishers" schema="schema/publisher.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.schedulingRules" name="Job Scheduling Rules" schema="schema/schedule-rule.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.typeAdapters" name="Type Adapters" schema="schema/type-adapter.exsd"/>
+   <extension-point id="edu.washington.cs.cupid.capabilities" name="Cupid Capabilities" schema="schema/capability.exsd"/>
+ 
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Cupid"
+            id="edu.washington.cs.cupid">
+      </category>
+      <view
+            allowMultiple="false"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.views.BulletinBoardView"
+            icon="icons/cupid.png"
+            id="edu.washington.cs.cupid.views.BulletinBoardView"
+            name="Cupid Capabilities">
+      </view>
+      <view
+            allowMultiple="false"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.views.InspectorView"
+            icon="icons/magnifying-glass.png"
+            id="edu.washington.cs.cupid.views.InspectorView"
+            name="Selection Inspector"
+            restorable="false">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <view
+               ratio="0.5"
+               relative="org.eclipse.ui.views.TaskList"
+               relationship="right"
+               id="edu.washington.cs.cupid.views.BulletinBoardView">
+         </view>
+         <view
+               id="edu.washington.cs.cupid.views.InspectorView"
+               minimized="false"
+               relationship="right"
+               relative="org.eclipse.ui.views.TaskList">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="edu.washington.cs.cupid.preferences.CupidPreferencePage"
+            id="edu.washington.cs.cupid.preferences"
+            name="Cupid">
+      </page>
+      <page
+            category="edu.washington.cs.cupid.preferences"
+            class="edu.washington.cs.cupid.preferences.AdvancedPreferencePage"
+            id="edu.washington.cs.cupid.preferences.advanced"
+            name="Advanced Options">
+      </page>
+      <page
+            category="edu.washington.cs.cupid.preferences"
+            class="edu.washington.cs.cupid.preferences.SelectionInspectorPreferencePage"
+            id="edu.washington.cs.cupid.preferences.inspector"
+            name="Selection Inspector">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="edu.washington.cs.cupid.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         id="edu.washington.cs.cupid.problemmarker"
+         name="Cupid Problem Marker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+   </extension>
+
+</plugin>

@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Cupid JUnit
+Bundle-SymbolicName: edu.washington.cs.cupid.junit; singleton:=true
+Bundle-Version: 1.0.3
+Bundle-Activator: edu.washington.cs.cupid.junit.internal.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ edu.washington.cs.cupid;bundle-version="1.0.0",
+ org.eclipse.jdt.junit;bundle-version="3.7.0",
+ org.junit;bundle-version="4.8.2",
+ org.eclipse.debug.core;bundle-version="3.7.1",
+ org.eclipse.jdt;bundle-version="3.7.2",
+ org.eclipse.debug.ui;bundle-version="3.7.102",
+ edu.washington.cs.cupid.markers;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.eclipse.jdt.core,
+ org.eclipse.jdt.internal.junit,
+ org.eclipse.jdt.internal.junit.model
+Bundle-ActivationPolicy: lazy

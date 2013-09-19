@@ -11,6 +11,8 @@
         <class>edu.washington.cs.cupid.usage.server.data.CupidUser</class>
         <class>edu.washington.cs.cupid.usage.server.data.SystemData</class>
         
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        
         <properties>
             <property name="datanucleus.NontransactionalRead" value="true"/>
             <property name="datanucleus.NontransactionalWrite" value="true"/>
@@ -18,4 +20,5 @@
             <property name="datanucleus.singletonEMFForName" value="true"/>
         </properties>
     </persistence-unit>
+       
 </persistence>

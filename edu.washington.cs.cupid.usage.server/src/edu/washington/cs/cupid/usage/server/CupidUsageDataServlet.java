@@ -39,7 +39,12 @@ public class CupidUsageDataServlet extends HttpServlet {
 	private Gson gson = new Gson();
 	
 	private void writeSession(final JsonCupidSession raw){
+		if (raw == null) throw new IllegalArgumentException("Received null session data from client");
+		
+		log.info("Received data for uuid " + raw.uuid);
+		
 		EntityManager em = EMFService.get().createEntityManager();
+		if (em == null) throw new RuntimeException("Error loading entity manager");
 		
 		try{
 			EntityTransaction tx = em.getTransaction();
@@ -68,7 +73,10 @@ public class CupidUsageDataServlet extends HttpServlet {
 				em.persist(user);
 				
 				tx.commit();
+				
+				log.info("Recorded data for uuid " + raw.uuid);
 			} catch (RuntimeException ex){
+				log.log(Level.WARNING, "Error recording data for uuid " + raw.uuid, ex);
 				throw ex;
 			} finally {
 				if (tx.isActive()){

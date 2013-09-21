@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.workbench.texteditor.rulerColumns">
+      <column
+            class="edu.washington.cs.cupid.editor.CupidRuler"
+            enabled="true"
+            global="true"
+            id="edu.washington.cs.cupid.editor.ruler"
+            includeInMenu="true"
+            name="Cupid Editor Ruler">
+         <placement
+               gravity="1.0">
+         </placement>
+         <targetClass
+               class="org.eclipse.jdt.internal.ui.javaeditor.JavaEditor">
+         </targetClass>
+      </column>
+   </extension>
+
+</plugin>

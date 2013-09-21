@@ -16,6 +16,7 @@ import org.osgi.framework.BundleContext;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
+import edu.washington.cs.cupid.hg.HgDiffCapability;
 import edu.washington.cs.cupid.hg.HgHeadsCapability;
 import edu.washington.cs.cupid.hg.HgLogCapability;
 import edu.washington.cs.cupid.hg.HgModifiedCapability;
@@ -77,6 +78,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 			new HgLogCapability(),
 			new HgModifiedCapability(),
 			new HgModifiedFilterCapability(),
+			new HgDiffCapability(),
 		};
 	}
 

@@ -18,5 +18,20 @@
          </targetClass>
       </column>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="edu.washington.cs.cupid.preferences"
+            class="edu.washington.cs.cupid.editor.preferences.CupidRulerPreferencePage"
+            id="edu.washington.cs.cupid.editor.preferences.ruler"
+            name="Cupid Editor Ruler">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="edu.washington.cs.cupid.editor.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

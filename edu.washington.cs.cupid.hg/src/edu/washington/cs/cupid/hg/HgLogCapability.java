@@ -40,7 +40,6 @@ public final class HgLogCapability extends AbstractBaseCapability {
 	public static final IParameter<Integer> PARAM_MAX_ENTRIES = new OptionalParameter<Integer>("Maximum Entries", Integer.class, 100);
 	public static final IParameter<Integer> PARAM_START_REVISION = new OptionalParameter<Integer>("Start Revision", Integer.class, 0);
 	public static final IParameter<IResource> PARAM_RESOURCE = new Parameter<IResource>("Resource", IResource.class);
-	
 	public static final Output<List<JHgChangeSet>> OUT_LOG = new Output<List<JHgChangeSet>>("Log", new TypeToken<List<JHgChangeSet>>(){});
 	
 	/**

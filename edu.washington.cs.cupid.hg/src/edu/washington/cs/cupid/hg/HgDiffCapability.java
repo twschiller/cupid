@@ -6,69 +6,79 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import org.eclipse.compare.contentmergeviewer.TokenComparator;
 import org.eclipse.compare.internal.DocLineComparator;
 import org.eclipse.compare.rangedifferencer.RangeDifference;
 import org.eclipse.compare.rangedifferencer.RangeDifferencer;
-import org.eclipse.compare.structuremergeviewer.DiffNode;
-import org.eclipse.compare.structuremergeviewer.Differencer;
-import org.eclipse.compare.structuremergeviewer.IDiffElement;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
-
-import com.google.common.collect.Lists;
-import com.google.common.reflect.TypeToken;
-import com.vectrace.MercurialEclipse.commands.HgClients;
-import com.vectrace.MercurialEclipse.commands.HgLogClient;
-import com.vectrace.MercurialEclipse.compare.HgDifferencer;
-import com.vectrace.MercurialEclipse.compare.RevisionNode;
-import com.vectrace.MercurialEclipse.history.MercurialRevision;
-import com.vectrace.MercurialEclipse.model.ChangeSet;
-import com.vectrace.MercurialEclipse.model.FileFromChangeSet;
-import com.vectrace.MercurialEclipse.model.FileStatus;
-import com.vectrace.MercurialEclipse.model.HgFile;
-import com.vectrace.MercurialEclipse.model.HgRoot;
-import com.vectrace.MercurialEclipse.model.HgWorkspaceFile;
-import com.vectrace.MercurialEclipse.model.JHgChangeSet;
-import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
-
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.source.ILineRange;
 import org.eclipse.jface.text.source.LineRange;
 
-import edu.washington.cs.cupid.capability.ICapability.Flag;
-import edu.washington.cs.cupid.capability.linear.LinearCapability;
-import edu.washington.cs.cupid.capability.linear.LinearJob;
+import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
+import com.vectrace.MercurialEclipse.commands.HgLogClient;
+import com.vectrace.MercurialEclipse.compare.RevisionNode;
+import com.vectrace.MercurialEclipse.model.ChangeSet;
+import com.vectrace.MercurialEclipse.model.FileFromChangeSet;
+import com.vectrace.MercurialEclipse.model.HgFile;
+import com.vectrace.MercurialEclipse.model.HgRoot;
+import com.vectrace.MercurialEclipse.model.JHgChangeSet;
+import com.vectrace.MercurialEclipse.team.cache.MercurialRootCache;
+
+import edu.washington.cs.cupid.capability.AbstractBaseCapability;
+import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.CapabilityOutputs;
+import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.OptionalParameter;
+import edu.washington.cs.cupid.capability.Output;
+import edu.washington.cs.cupid.capability.Parameter;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
-public class HgDiffCapability extends LinearCapability<IFile, List<ILineRange>> {
+public class HgDiffCapability extends AbstractBaseCapability  {
 
+	public static final TypeToken<List<ILineRange>> LINE_CHANGE_TYPE = new TypeToken<List<ILineRange>>(){};
+	
+	public static final IParameter<ITextFileBuffer> PARAM_BUFFER = new Parameter<ITextFileBuffer>("Text Buffer", ITextFileBuffer.class);
+	public static final IParameter<Integer> PARAM_REVISION = new OptionalParameter<Integer>("Revision", Integer.class, -1);
+	
+	public static final Output<List<ILineRange>> OUT_ADDED = new Output<List<ILineRange>>("Lines Added", LINE_CHANGE_TYPE);
+	public static final Output<List<ILineRange>> OUT_MODIFIED = new Output<List<ILineRange>>("Lines Modified", LINE_CHANGE_TYPE);
+	public static final Output<List<ILineRange>> OUT_ALL = new Output<List<ILineRange>>("Lines Add/Modified", LINE_CHANGE_TYPE);
+	
 	/**
 	 * Construct a capability that returns the Hg heads for a resource.
 	 */
 	public HgDiffCapability() {
 		super("Hg Diff",
 			  "Hg diff for current file",
-			  TypeToken.of(IFile.class), new TypeToken<List<ILineRange>>(){}, 
+			  Lists.<IParameter<?>>newArrayList(PARAM_BUFFER, PARAM_REVISION),
+			  Lists.<Output<?>>newArrayList(OUT_ADDED, OUT_MODIFIED, OUT_ALL),
 			  Flag.PURE);
 	}
 	
 	@Override
-	public LinearJob<IFile, List<ILineRange>> getJob(final IFile input) {
-		return new LinearJob<IFile, List<ILineRange>>(this, input) {
+	public CapabilityJob<HgDiffCapability> getJob(final ICapabilityArguments input) {
+		return new CapabilityJob<HgDiffCapability>(this, input) {
 			@Override
-			protected LinearStatus<List<ILineRange>> run(final IProgressMonitor monitor) {
+			protected CapabilityStatus run(final IProgressMonitor monitor) {
 				try {
+					ITextFileBuffer buffer = input.getValueArgument(PARAM_BUFFER);
+					int revision = input.getValueArgument(PARAM_REVISION);
 					
-					int revision = -1;
 					monitor.beginTask(getName(), 100);
-					HgRoot root = MercurialRootCache.getInstance().getHgRoot(input);
+					
+					IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(buffer.getLocation());
+				
+					HgRoot root = MercurialRootCache.getInstance().getHgRoot(file);
 					
 					if (root == null) {
-						return LinearStatus.<List<ILineRange>>makeError(new ResourceNotHgVersionedException(input));
+						return LinearStatus.<List<ILineRange>>makeError(new ResourceNotHgVersionedException(file));
 					}
 					
 					ChangeSet changeSet = revision < 0 ? 
@@ -76,26 +86,33 @@ public class HgDiffCapability extends LinearCapability<IFile, List<ILineRange>> 
 							: HgLogClient.getChangeSet(root, revision);
 							
 					monitor.worked(50);
-							
-
+												
+					HgDiff result = new HgDiff();
 					
-					List<ILineRange> result = Lists.newArrayList();
-					
-					if (changeSet.contains(input)){
+					if (changeSet.contains(file)){
 						for (FileFromChangeSet f : changeSet.getChangesetFiles()){
-							if (f.getPath().equals(input.getProjectRelativePath())){	
-					            HgWorkspaceFile left = HgWorkspaceFile.make(f.getFile());
+							if (f.getPath().equals(file.getProjectRelativePath())){	
 					            HgFile right = HgFile.make((JHgChangeSet) changeSet, f.getFile());
 							
-					            result= doDiff(left, right, new SubProgressMonitor(monitor, 50));
+					            result= doDiff(buffer, right, new SubProgressMonitor(monitor, 50));
 					            break;
 							}
 						}	
 					}
 					
-					return LinearStatus.makeOk(getCapability(), result);
+					CapabilityOutputs outputs = new CapabilityOutputs();
+					outputs.add(OUT_ADDED, result.added);
+					outputs.add(OUT_MODIFIED, result.modified);
+					
+					List<ILineRange> all = Lists.newArrayList();
+					all.addAll(result.added);
+					all.addAll(result.modified);
+					
+					outputs.add(OUT_ALL, all);
+					
+					return  CapabilityStatus.makeOk(outputs);
 				} catch (Exception ex) {
-					return LinearStatus.<List<ILineRange>>makeError(ex);
+					return CapabilityStatus.makeError(ex);
 				} finally {
 					monitor.done();
 				}
@@ -104,22 +121,29 @@ public class HgDiffCapability extends LinearCapability<IFile, List<ILineRange>> 
 		
 	} 
 		
-	private List<ILineRange> doDiff(HgWorkspaceFile current, HgFile rev, IProgressMonitor monitor) throws CoreException{
-		List<ILineRange> result = Lists.newArrayList();
+	private static class HgDiff {
+		private final List<ILineRange> added = Lists.newArrayList();
+		private final List<ILineRange> modified = Lists.newArrayList();
+	}
+	
+	private HgDiff doDiff(ITextFileBuffer current, HgFile rev, IProgressMonitor monitor) throws CoreException{
 		
-	    RevisionNode leftNode = new RevisionNode(current);
-        RevisionNode rightNode = new RevisionNode(rev);
+		HgDiff result = new HgDiff();
 		
-		Document cc = new Document(getStringFromInputStream(leftNode.getContents()));
+	    RevisionNode rightNode = new RevisionNode(rev);
+		
 		Document revc = new Document(getStringFromInputStream(rightNode.getContents()));
 	
         RangeDifference[] diffs = RangeDifferencer.findDifferences(
-        		new DocLineComparator(cc, null, false), 
+        		new DocLineComparator(current.getDocument(), null, false), 
         		new DocLineComparator(revc, null, false));
         
-        
         for (RangeDifference d : diffs){
-        	result.add(new LineRange(d.leftStart(), d.leftLength()));
+        	if (d.rightLength() == 0){
+        		result.added.add(new LineRange(d.leftStart(), d.leftLength()));
+        	}else{
+        		result.modified.add(new LineRange(d.leftStart(), d.leftLength()));
+        	}
         }
         return result;
 	}

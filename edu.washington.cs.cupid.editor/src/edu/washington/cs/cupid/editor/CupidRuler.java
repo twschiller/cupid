@@ -13,7 +13,6 @@ import org.eclipse.jface.text.source.CompositeRuler;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.IAnnotationModelListener;
 import org.eclipse.jface.text.source.ILineRange;
-import org.eclipse.jface.text.source.ISharedTextColors;
 import org.eclipse.jface.text.source.LineRange;
 import org.eclipse.jface.util.Util;
 import org.eclipse.swt.SWT;
@@ -34,6 +33,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.texteditor.rulers.AbstractContributedRulerColumn;
 
+/**
+ * Rule for displaying Cupid capability output. Modified from {@link ChangeRulerColumn}.
+ * @author Todd Schiller
+ */
 public class CupidRuler extends AbstractContributedRulerColumn {
 
 	private static final boolean IS_MAC= Util.isMac();
@@ -61,6 +64,7 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 	}
 	
 	/** This column's parent ruler */
+	@SuppressWarnings("unused")
 	private CompositeRuler fParentRuler;
 	
 	/** Cached text viewer */
@@ -73,7 +77,7 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 	private Canvas fCanvas;
 	
 	/** The width of the change ruler column. */
-	private final int fWidth = 25;
+	private final int fWidth = 10;
 	
 	/** Cache for the actual scroll position in pixels */
 	private int fScrollPos;
@@ -83,7 +87,6 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 	private IAnnotationModel fAnnotationModel;
 	private boolean fSensitiveToTextChanges=false;
 	
-	
 	/**
 	 * The view(port) listener.
 	 */
@@ -91,31 +94,15 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 	
 	private LinePainter fLinePainter;
 	
-	/**
-	 * Creates a new ruler column.
-	 *
-	 * @deprecated since 3.2 use {@link #ChangeRulerColumn(ISharedTextColors)} instead
-	 */
 	public CupidRuler() {
-		fLinePainter= new LinePainter(this, null);
+		fLinePainter= new LinePainter(this);
 	}
 
-	/**
-	 * Creates a new revision ruler column.
-	 *
-	 * @param sharedColors the colors to look up RGBs
-	 * @since 3.2
-	 */
-	public CupidRuler(ISharedTextColors sharedColors) {
-		fLinePainter= new LinePainter(this, null); // no shading
-	}
-	
 	@Override
 	public void setModel(IAnnotationModel model) {
 		if (fAnnotationModel != model){
 			fAnnotationModel= model;
 		}
-		//fDiffPainter.setModel(model);
 	}
 	
 	@Override
@@ -134,7 +121,6 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 
 	public Color getBackground(){
 		return fCachedTextWidget.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
-		
 	}
 	
 	@Override
@@ -158,7 +144,7 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 
 		fCanvas.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
-				//handleDispose();
+				handleDispose();
 				fCachedTextViewer= null;
 				fCachedTextWidget= null;
 			}
@@ -172,10 +158,11 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 		fLinePainter.setParentRuler(parentRuler);
 		fCachedTextViewer.getDocument().addDocumentListener(fLinePainter);
 	
+		postRedraw();
+		
 		return fCanvas;
 	}
 	
-
 	/**
 	 * Double buffer drawing.
 	 *
@@ -266,9 +253,8 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 		fSensitiveToTextChanges= isViewerCompletelyShown();
 		fScrollPos= fCachedTextWidget.getTopPixel();
 		fLinePainter.paint(gc, visibleModelLines, getBackground());
-		fLinePainter.paintRanges(gc, fCanvas.getDisplay().getSystemColor(SWT.COLOR_RED));
+		fLinePainter.paintRanges(gc, fCanvas.getDisplay(), fCanvas.getDisplay().getSystemColor(SWT.COLOR_BLUE));
 	}
-	
 	
 	/**
 	 * Computes the document based line range visible in the text widget.
@@ -321,6 +307,19 @@ public class CupidRuler extends AbstractContributedRulerColumn {
 		return visibleModelLines;
 	}
 
+	/**
+	 * Disposes the column's resources.
+	 */
+	protected void handleDispose() {
+		if (fCachedTextViewer != null) {
+			fCachedTextViewer.removeViewportListener(fInternalListener);
+			fCachedTextViewer.removeTextListener(fInternalListener);
+		}
 
+		if (fBuffer != null) {
+			fBuffer.dispose();
+			fBuffer= null;
+		}
+	}
 }
 

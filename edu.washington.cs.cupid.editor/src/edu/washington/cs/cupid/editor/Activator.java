@@ -1,7 +1,15 @@
 package edu.washington.cs.cupid.editor;
 
+import java.util.List;
+
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import edu.washington.cs.cupid.editor.preferences.PreferenceConstants;
+import edu.washington.cs.cupid.editor.preferences.RulerPreference;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -29,9 +37,7 @@ public class Activator extends AbstractUIPlugin {
 		plugin = null;
 		super.stop(context);
 	}
-	
-
-
+		
 	/**
 	 * Returns the shared instance
 	 *
@@ -41,4 +47,12 @@ public class Activator extends AbstractUIPlugin {
 		return plugin;
 	}
 
+	public List<RulerPreference> getRulerPreferences(){
+		Gson gson = new Gson();
+		String current = getPreferenceStore().getString(PreferenceConstants.P_RULER_PREFERENCES);
+		List<RulerPreference> rules =
+			gson.fromJson(current, new TypeToken<List<RulerPreference>>(){}.getType());
+		return rules;
+	}
+	
 }

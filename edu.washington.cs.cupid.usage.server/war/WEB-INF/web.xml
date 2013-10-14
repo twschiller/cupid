@@ -7,6 +7,11 @@
 		<servlet-name>Cupid Usage Data Servlet</servlet-name>
 		<url-pattern>/CupidUsageData</url-pattern>
 	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Cupid Usage Data Servlet</servlet-name>
+		<url-pattern>/CupidUsageData/Statistics</url-pattern>
+	</servlet-mapping>
+	
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>

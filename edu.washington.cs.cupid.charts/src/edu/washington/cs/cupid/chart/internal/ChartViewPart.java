@@ -2,6 +2,7 @@ package edu.washington.cs.cupid.chart.internal;
 
 import java.awt.Frame;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +47,9 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 	protected ICapability capability;
 	protected ICapability.IOutput<?> output;
 	protected Method outputMethod;
+	protected Method outputElementMethod;
+	
+	protected boolean showListResults = false;
 	
 	protected List<Object> comboModel = Lists.newArrayList();
 	
@@ -103,7 +107,14 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 							outputMethod = null;
 						}else if (selected instanceof Method){
 							output = CapabilityUtil.singleOutput(capability);
-							outputMethod = (Method) selected;
+							
+							if (showListResults){
+								outputElementMethod = (Method) selected;
+								outputMethod = null;
+							}else{
+								outputElementMethod = null;
+								outputMethod = (Method) selected;
+							}
 						}else{
 							throw new RuntimeException("Unexpected output model entry of type " + selected.getClass().getName());
 						}
@@ -126,6 +137,22 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 		setContentDescription("No capability provided.");
 	}
 	
+	private static boolean producesList(ICapability capability){
+		if (CapabilityUtil.hasSingleOutput(capability)){
+			TypeToken<?> outType = CapabilityUtil.singleOutput(capability).getType();
+			return outType.getType() instanceof ParameterizedType &&
+				   List.class.isAssignableFrom(outType.getRawType());
+		}else{
+			return false;
+		}
+	}
+	
+	private static Type elementType(ICapability capability){
+		TypeToken<?> outType = CapabilityUtil.singleOutput(capability).getType();
+		return ((ParameterizedType) outType.getType()).getActualTypeArguments()[0];
+	}
+	
+	
 	public void setCapability(ICapability capability) throws IllegalArgumentException{
 
 		Display.getCurrent().asyncExec(new Runnable() {
@@ -139,8 +166,9 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 			
 			List<ICapability.IOutput<?>> compatible = Lists.newArrayList();
 			List<Method> compatibleMethods = Lists.newArrayList();
+			List<Method> compatibleElementMethods = Lists.newArrayList();
 			
-			for (ICapability.IOutput<?> output : capability.getOutputs()){
+			for (ICapability.IOutput<?> output : capability.getOutputs()){	
 				for (TypeToken<?> type : accepts()){
 					if (TypeManager.isJavaCompatible(type, output.getType())){
 						compatible.add(output);
@@ -148,7 +176,18 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 				}
 			}
 			
-			if (CapabilityUtil.hasSingleOutput(capability)){
+			if (producesList(capability)){	
+				Class<?> eltType = (Class<?>) elementType(capability);
+				for (Method m : eltType.getMethods()){
+					if (m.getParameterTypes().length == 0 && m.getName().startsWith("get")){
+						for (TypeToken<?> type : accepts()){
+							if (TypeManager.isJavaCompatible(type, TypeManager.boxType(TypeToken.of(m.getReturnType())))){
+								compatibleElementMethods.add(m);
+							}
+						}	
+					}
+				}
+			} else if (CapabilityUtil.hasSingleOutput(capability)){
 				ICapability.IOutput<?> output = CapabilityUtil.singleOutput(capability);
 				
 				Type t = output.getType().getType();
@@ -165,15 +204,18 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 				}
 			}
 			
-			if (compatible.isEmpty() && compatibleMethods.isEmpty()){
+			if (compatible.isEmpty() && compatibleMethods.isEmpty() && compatibleElementMethods.isEmpty()){
 				throw new IllegalArgumentException("Capability '" + capability.getName() + "' has no compatible outputs");
 			}
 			
 			this.capability = capability;
 			this.output = !compatible.isEmpty() ? compatible.get(0) : null;	
-			this.outputMethod = compatible.isEmpty() ? compatibleMethods.get(0) : null;
+			this.outputElementMethod = compatible.isEmpty() && !compatibleElementMethods.isEmpty() ? compatibleElementMethods.get(0) : null;
+			this.outputMethod = compatible.isEmpty() && compatibleElementMethods.isEmpty() ? compatibleMethods.get(0) : null;
 			
-			if (compatible.size() + compatibleMethods.size() <= 1){
+			showListResults = !compatibleElementMethods.isEmpty();
+			
+			if (compatible.size() + compatibleMethods.size() + compatibleElementMethods.size() <= 1){
 				this.cSelectOutput.setVisible(false);
 			}else{
 				this.cSelectOutput.setVisible(true);
@@ -181,13 +223,23 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 			
 			this.cOutput.removeAll();
 			this.comboModel.clear();
+			
 			for (ICapability.IOutput<?> o : compatible){
 				this.cOutput.add(o.getName());
 				this.comboModel.add(o);
 			}
-			for (Method m : compatibleMethods){
-				this.cOutput.add(m.getName());
-				this.comboModel.add(m);
+			
+			if (!showListResults){
+				
+				for (Method m : compatibleMethods){
+					this.cOutput.add(m.getName());
+					this.comboModel.add(m);
+				}
+			}else{
+				for (Method m : compatibleElementMethods){
+					this.cOutput.add(m.getName());
+					this.comboModel.add(m);
+				}
 			}
 			
 			this.cOutput.select(0);
@@ -227,7 +279,21 @@ public abstract class ChartViewPart extends ViewPart implements ICupidSelectionL
 									? status.value().getOutput(output)
 									: status.getException();
 						
-						if (outputMethod != null){
+						if (outputElementMethod != null){
+							List<?> resultList = (List<?>) result;
+							List<Object> transformed = Lists.newArrayList();
+							for (Object elt : resultList){
+								try {
+									transformed.add(outputElementMethod.invoke(elt));
+								} catch (IllegalArgumentException e) {
+									throw new RuntimeException("Incompatible output of type " + result.getClass() + " for method " + outputMethod.getName());
+								} catch (Exception e) {
+									result = e;
+									break;
+								}
+							}
+							result = transformed;
+						}else if (outputMethod != null){
 							try {
 								result = outputMethod.invoke(result);
 							} catch (IllegalArgumentException e) {

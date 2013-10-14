@@ -41,7 +41,7 @@ public class CreatePieChartAction implements IObjectActionDelegate {
 					PieChartView v = (PieChartView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PieChartView.ID);
 					v.setCapability(capability); 
 				} catch (PartInitException e) {
-					Activator.getDefault().logError("Error creating histogram for capability: " + capability.getName(), e);;
+					Activator.getDefault().logError("Error creating pie chart for capability: " + capability.getName(), e);;
 				}
 			}
 		}

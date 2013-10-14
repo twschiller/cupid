@@ -17,6 +17,7 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.egit.GitHistoryCapability;
+import edu.washington.cs.cupid.egit.GitModifiedResources;
 import edu.washington.cs.cupid.egit.GitWasModifiedCapability;
 import edu.washington.cs.cupid.egit.GitModifiedFilter;
 import edu.washington.cs.cupid.egit.GitProjectRepositoriesCapability;
@@ -74,10 +75,11 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	public ICapability[] publish() {
 		return new ICapability[] {
 			new GitHistoryCapability(),
-			new GitProjectRepositoriesCapability(),
+			//new GitProjectRepositoriesCapability(),
 			new GitModifiedFilter(),
 			new GitWasModifiedCapability(),
 			new LastProjectRevision(),
+			new GitModifiedResources(),
 		};
 	}
 

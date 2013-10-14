@@ -1,6 +1,8 @@
 package edu.washington.cs.cupid.chart;
 
 import java.awt.Color;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.swt.widgets.Display;
@@ -11,6 +13,7 @@ import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
@@ -38,10 +41,22 @@ public class PieChartView extends ChartViewPart{
 		// determine relative frequencies
 		DefaultPieDataset dataset = new DefaultPieDataset();
 		
-		Set<?> unique = Sets.newHashSet(results.values());
+		Collection<Object> unrolled = Lists.newArrayList();
+		
+		if (super.showListResults){
+			// flatten the results if the capability returns a list
+			for (Object value : results.values()){
+				Collection<?> valueSet = (Collection<?>) value;
+				unrolled.addAll(valueSet);
+			}
+		}else{
+			unrolled = results.values();
+		}
+		
+		Set<?> unique = Sets.newHashSet(unrolled);
 		
 		for (Object result : unique){
-			dataset.setValue(result.toString(), Iterables.frequency(results.values(), result) / (double) results.size());
+			dataset.setValue(result.toString(), Iterables.frequency(unrolled, result) / (double) unrolled.size());
 		}
 		
 		// create the chart

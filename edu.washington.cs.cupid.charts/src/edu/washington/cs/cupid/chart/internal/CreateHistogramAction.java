@@ -46,11 +46,11 @@ public class CreateHistogramAction implements IObjectActionDelegate {
 					HistogramView h = (HistogramView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistogramView.ID);
 					h.setCapability(capability); 
 				} catch (IllegalArgumentException e){
-					ErrorDialog.openError(shell, "Error creating histogtam", msg,
+					ErrorDialog.openError(shell, "Error creating histogram", msg,
 							new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 					Activator.getDefault().logError(msg, e);	
 				} catch (Exception e) {
-					ErrorDialog.openError(shell, "Error creating histogtam", msg,
+					ErrorDialog.openError(shell, "Error creating histogram", msg,
 							new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 					Activator.getDefault().logError(msg, e);
 				}

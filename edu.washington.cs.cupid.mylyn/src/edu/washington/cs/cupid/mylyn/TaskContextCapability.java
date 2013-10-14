@@ -1,7 +1,10 @@
 package edu.washington.cs.cupid.mylyn;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -14,7 +17,16 @@ import org.eclipse.mylyn.tasks.ui.TasksUi;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.capability.AbstractBaseCapability;
+import edu.washington.cs.cupid.capability.CapabilityJob;
+import edu.washington.cs.cupid.capability.CapabilityStatus;
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.ICapabilityArguments;
+import edu.washington.cs.cupid.capability.OptionalParameter;
+import edu.washington.cs.cupid.capability.Output;
+import edu.washington.cs.cupid.capability.Parameter;
+import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.capability.linear.LinearStatus;
@@ -22,24 +34,32 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 /**
  * @author Todd Schiller
  */
-public class TaskContextCapability extends LinearCapability<AbstractTask, List<IResource>>{
+public class TaskContextCapability extends AbstractBaseCapability{
 
+	public static final IParameter<AbstractTask> TASK = new Parameter<AbstractTask>("Task", new TypeToken<AbstractTask>(){});
+	public static final IParameter<Boolean> INCLUDE_FOLDERS = new OptionalParameter<Boolean>("Include Folders", Boolean.class, false);
+	public static final IParameter<Boolean> INCLUDE_FILES = new OptionalParameter<Boolean>("Include Files", Boolean.class, true);
+	public static final Output<List<IResource>> CONTEXT = new Output<List<IResource>>("Context", new TypeToken<List<IResource>>(){});
+		
 	public TaskContextCapability() {
 		super(
 			"Mylyn Task Context", "Returns the Resources in the Context for the Task",
-			TypeToken.of(AbstractTask.class), new TypeToken<List<IResource>>(){},
+			Lists.newArrayList(TASK, INCLUDE_FOLDERS, INCLUDE_FILES),
+			Lists.newArrayList(CONTEXT),
 			ICapability.Flag.PURE);
 	}
 
 	@Override
-	public LinearJob<AbstractTask, List<IResource>> getJob(final AbstractTask input) {
-		return new LinearJob<AbstractTask, List<IResource>>(this, input) {
+	public CapabilityJob<TaskContextCapability> getJob(final ICapabilityArguments input) {
+		return new CapabilityJob<TaskContextCapability>(this, input) {
 			@Override
-			protected LinearStatus<List<IResource>> run(final IProgressMonitor monitor) {
+			protected CapabilityStatus run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 				
-					AbstractTask task = getInput();
+					AbstractTask task = input.getValueArgument(TASK);
+					boolean includeFolders = input.getValueArgument(INCLUDE_FOLDERS);
+					boolean includeFiles = input.getValueArgument(INCLUDE_FILES);
 					
 					IInteractionContext context = null;
 					
@@ -55,15 +75,22 @@ public class TaskContextCapability extends LinearCapability<AbstractTask, List<I
 					for (IInteractionElement x : context.getAllElements()){
 						if (x.getContentType().equals("resource")){
 							IResource r = ResourcesPlugin.getWorkspace().getRoot().findMember(x.getHandleIdentifier());
+							
 							if (r != null){
-								result.add(r);
+								
+								if ((includeFiles && r instanceof IFile) || 
+									(includeFolders && r instanceof IFolder && ResourcesPlugin.getWorkspace().getRoot() != r)){
+									
+									result.add(r);
+								}
 							}
 						}
 					}
 					
-					return LinearStatus.makeOk(getCapability(), result);
+					return CapabilityStatus.makeOk(CapabilityUtil.packSingleOutputValue(CONTEXT, result));
+					
 				} catch (Exception ex) {
-					return LinearStatus.<List<IResource>>makeError(ex);
+					return CapabilityStatus.makeError(ex);
 				} finally {
 					monitor.done();
 				}

@@ -39,8 +39,11 @@ import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.jobs.ICupidSchedulingRule;
 import edu.washington.cs.cupid.select.CupidSelectionService;
+import edu.washington.cs.cupid.standard.Any;
 import edu.washington.cs.cupid.standard.Count;
+import edu.washington.cs.cupid.standard.Distinct;
 import edu.washington.cs.cupid.standard.Empty;
+import edu.washington.cs.cupid.standard.Last;
 import edu.washington.cs.cupid.standard.Max;
 import edu.washington.cs.cupid.standard.MostFrequent;
 import edu.washington.cs.cupid.standard.NonEmpty;
@@ -98,7 +101,10 @@ public final class CupidActivator extends AbstractUIPlugin {
 				new Empty(),
 				new Max(),
 				new MostFrequent(),
-				new NonEmpty());
+				new Last(),
+				new Distinct(),
+				new NonEmpty(),
+				new Any());
 		
 		for (ICapability capability : standard) {
 			CupidPlatform.getCapabilityRegistry().registerStaticCapability(capability);			

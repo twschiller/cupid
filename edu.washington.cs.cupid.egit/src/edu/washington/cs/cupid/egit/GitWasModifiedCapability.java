@@ -20,7 +20,7 @@ import edu.washington.cs.cupid.capability.OptionalParameter;
 import edu.washington.cs.cupid.capability.Output;
 import edu.washington.cs.cupid.capability.Parameter;
 
-public class GitModifiedCapability extends AbstractBaseCapability {
+public class GitWasModifiedCapability extends AbstractBaseCapability {
 
 	public static final IParameter<IResource> PARAM_RESOURCE = new Parameter<IResource>("Resource", IResource.class);
 	public static final IParameter<String> PARAM_REVISION = new OptionalParameter<String>("Revision", String.class, "");
@@ -30,8 +30,8 @@ public class GitModifiedCapability extends AbstractBaseCapability {
 	 * Construct a capability that returns <tt>true</tt> if the given resource was modified in the
 	 * given revision.
 	 */
-	public GitModifiedCapability() {
-		super("Git Modified",
+	public GitWasModifiedCapability() {
+		super("Git Modified?",
 			  "True if the resource was modified in the specified revision",
 			  Lists.<IParameter<?>>newArrayList(PARAM_RESOURCE, PARAM_REVISION),
 			  Lists.<Output<?>>newArrayList(OUT_MODIFIED),
@@ -39,8 +39,8 @@ public class GitModifiedCapability extends AbstractBaseCapability {
 	}
 	
 	@Override
-	public CapabilityJob<GitModifiedCapability> getJob(final ICapabilityArguments input) {
-		return new CapabilityJob<GitModifiedCapability>(this, input) {
+	public CapabilityJob<GitWasModifiedCapability> getJob(final ICapabilityArguments input) {
+		return new CapabilityJob<GitWasModifiedCapability>(this, input) {
 			@Override
 			protected CapabilityStatus run(IProgressMonitor monitor) {
 				try {

@@ -757,7 +757,8 @@ public class InspectorView extends ViewPart {
 			if (!Modifier.isStatic(method.getModifiers())) {
 				if (method.getParameterTypes().length == 0 
 					&& method.getName().startsWith("get")
-					&& !method.getName().equalsIgnoreCase("getClass")) {
+					//&& !method.getName().equalsIgnoreCase("getClass")
+					) {
 					
 					try {
 						if (!method.isAccessible()){

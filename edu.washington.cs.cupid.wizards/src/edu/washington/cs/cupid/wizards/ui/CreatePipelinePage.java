@@ -11,6 +11,8 @@
 package edu.washington.cs.cupid.wizards.ui;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -77,6 +79,7 @@ import edu.washington.cs.cupid.views.OptionEditorFactory;
 import edu.washington.cs.cupid.views.OptionEditorFactory.OptionEditor;
 import edu.washington.cs.cupid.views.OptionEditorFactory.ValueChangedListener;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
+import edu.washington.cs.cupid.wizards.internal.LiftedCapability;
 
 /**
  * Wizard for creating a linear chain of capabilities
@@ -169,7 +172,16 @@ public class CreatePipelinePage extends WizardPage{
 						return;
 					}
 					
-					current.add((ICapability) selected);
+					ICapability c = (ICapability) selected;
+					
+					if (current.size() > 0 &&
+						isListCompatible(c, CapabilityUtil.singleOutput(current.get(current.size() - 1)).getType())){
+					
+						current.add(new LiftedCapability(c));
+						
+					}else{
+						current.add(c);
+					}
 				}else if (selected instanceof DerivedCapability){
 					current.add(((DerivedCapability) selected).toPipeline());
 				}
@@ -371,6 +383,18 @@ public class CreatePipelinePage extends WizardPage{
 		return result;
 	}
 	
+	private boolean isListCompatible(ICapability capability, TypeToken<?> input){
+		if (List.class.isAssignableFrom(input.getRawType()) &&
+			input.getType() instanceof ParameterizedType){
+			
+			Type elementType = ((ParameterizedType) input.getType()).getActualTypeArguments()[0];
+			if (elementType instanceof Class){
+				return TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), TypeToken.of(elementType));
+			}
+		}
+		return false;
+	}
+	
 	private class TreeLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider{
 
 		@Override
@@ -388,7 +412,7 @@ public class CreatePipelinePage extends WizardPage{
 				throw new RuntimeException("Unexpected tree element of type " + element.getClass());
 			}
 		}
-
+		
 		@Override
 		public Color getForeground(Object element, int columnIndex) {
 			if (current.isEmpty()){
@@ -401,7 +425,9 @@ public class CreatePipelinePage extends WizardPage{
 				ICapability last = current.get(current.size()-1);
 						
 				if (CapabilityUtil.isGenerator(capability)
-					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())){
+					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())
+					|| isListCompatible(capability, CapabilityUtil.singleOutput(last).getType()))
+				{
 					return null;
 				}else{
 					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);

@@ -27,11 +27,14 @@ public class ColorPickerButton extends Composite {
 	private final Button button;
 	
 	private RGB color;
-	private List<ChangeListener> listeners = Lists.newArrayList();
-	final ColorDialog dialog = new ColorDialog(Display.getCurrent().getActiveShell());
+	private final List<ChangeListener> listeners = Lists.newArrayList();
+	private final ColorDialog dialog;
 	
 	public ColorPickerButton(Composite parent, RGB color) {
 		super(parent, SWT.NONE);
+		
+		this.dialog = new ColorDialog(parent.getShell());
+		
 		this.setLayout(new GridLayout());
 		this.button = new Button(this, SWT.PUSH);
 		this.setButtonColor(color);

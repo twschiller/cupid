@@ -12,11 +12,15 @@ package edu.washington.cs.cupid.usage.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Query;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -88,6 +92,74 @@ public class CupidUsageDataServlet extends HttpServlet {
 		}
 	}
 	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		
+		resp.setContentType("text/html");
+		
+		if (req.getRequestURL().toString().contains("Statistics")){
+			EntityManager em = EMFService.get().createEntityManager();
+			if (em == null) throw new RuntimeException("Error loading entity manager");
+			
+			List<CupidUser> users;
+			
+			try{    
+				Query q = em.createQuery("select u from " + CupidUser.class.getName() + " u");
+				users = new ArrayList(q.getResultList());
+
+				if (users.isEmpty()){
+					resp.getWriter().println("No Users");
+				}else{
+					resp.getWriter().println("<ul>");
+					for (CupidUser user : users){
+						
+						int events = 0;
+						long first = -1;
+						long last = -1;
+						
+						boolean isFirst = true;
+						
+						for (CupidSession s : user.getSessions()){
+							
+							for (CupidEvent e : s.getEvents()){
+								if (isFirst){
+									first = e.getWhen();
+									last = e.getWhen();
+								}else{
+									first = Math.min(first, e.getWhen());
+									last = Math.max(last, e.getWhen());
+								}
+								isFirst = false;
+							}
+						
+							events += s.getEvents().size();
+						}
+						
+						resp.getWriter().println("<li>" + user.getUUID() + ": <ul>");
+						resp.getWriter().println("<li># Sessions: " + user.getSessions().size() + "</li>");
+						resp.getWriter().println("<li># Events: " + events + "</li>");
+						if (events > 0){
+							resp.getWriter().println("<li>First: " + (new Date(first).toString())  + "</li>");
+							resp.getWriter().println("<li>Last: " + (new Date(last).toString())  + "</li>");	
+						}
+						
+						resp.getWriter().println("</ul></li>");
+						
+					}
+					resp.getWriter().println("</ul>");		
+				}
+				
+			}finally{
+				em.close();
+			}
+		}else{
+			resp.setContentType("text/html");
+			resp.getWriter().println("Hello World!");
+			log.log(Level.INFO, "Unexpected GET request");
+		}
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {

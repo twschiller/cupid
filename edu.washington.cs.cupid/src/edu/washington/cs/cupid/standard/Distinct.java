@@ -32,7 +32,7 @@ public final class Distinct<V> extends GenericLinearCapability<Collection<V>, Se
 	 */
 	public Distinct() {
 		super(
-				"Disinct", 
+				"Distinct", 
 				"Returns the distinct elements in a collection",
 				Flag.PURE);
 	}

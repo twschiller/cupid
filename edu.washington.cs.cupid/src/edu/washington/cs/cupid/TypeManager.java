@@ -126,6 +126,10 @@ public final class TypeManager {
 		}
 	}
 	
+	public static boolean isBoxedType(TypeToken<?> type){
+		return BOXED_TYPES.values().contains(type.getRawType());
+	}
+	
 	/**
 	 * Returns <code>true</code> iff <code>lhs</code> can be assigned to <code>rhs</code> according to
 	 * Java's standard typing rules. Uses {@link TypeToken#isAssignableFrom(TypeToken)}.

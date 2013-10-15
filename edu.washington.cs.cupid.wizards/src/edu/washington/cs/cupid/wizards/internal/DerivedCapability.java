@@ -108,6 +108,8 @@ public class DerivedCapability{
 	public static List<DerivedCapability> derivedFields(ICapability capability, IOutput<?> output){
 		List<DerivedCapability> result = Lists.newLinkedList();
 		
+		if (TypeManager.isBoxedType(output.getType())) return result;
+		
 		Class<?> clazz = output.getType().getRawType();
 
 		for (Method method : clazz.getMethods()){

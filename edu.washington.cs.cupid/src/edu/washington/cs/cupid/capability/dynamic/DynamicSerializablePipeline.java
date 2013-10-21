@@ -114,12 +114,54 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 		}	
 	}
 	
+	/**
+	 * Returns the parameterized type with the type parameters resolved.
+	 */
+	private static Type resolveTypeVariables(TypeToken<?> outToken, TypeToken<?> inToken, final ParameterizedType type){
+		ParameterizedType pIn = (ParameterizedType) inToken.getType();
+		
+		if (type.getActualTypeArguments().length != 1){
+			throw new IllegalArgumentException("Multi-parameter generic types output currently not supported");
+		}
+		
+		Type v = type.getActualTypeArguments()[0];
+		
+		for (TypeToken<?> s : outToken.getTypes()){
+			if (s.getRawType() == inToken.getRawType()){
+				ParameterizedType pOut = (ParameterizedType) s.getType();
+				
+				for (int i = 0; i < pIn.getActualTypeArguments().length; i++){
+					if (pIn.getActualTypeArguments()[i].equals(v)){
+						final Type arg = pOut.getActualTypeArguments()[i];
+						
+						return new ParameterizedType(){
+							@Override
+							public Type[] getActualTypeArguments() {
+								return new Type[] { arg };
+							}
+
+							@Override
+							public Type getOwnerType() {
+								return type.getOwnerType();
+							}
+
+							@Override
+							public Type getRawType() {
+								return type.getRawType();
+							}
+						};
+					}
+				}
+				
+				throw new RuntimeException("Error matching type variable for " + type.toString());
+			}
+		}
+		
+		throw new RuntimeException("Output type " + outToken + " not compatible with input type " + inToken);
+	}
 	
 	/**
-	 * Returns <tt>inToken</tt> with the type variable instantiated
-	 * @param outToken
-	 * @param inToken
-	 * @return
+	 * @return <tt>inToken</tt> with the type variable instantiated.
 	 */
 	private static Type resolveTypeVariable(TypeToken<?> outToken, TypeToken<?> inToken, TypeVariable<?> v){
 		ParameterizedType pIn = (ParameterizedType) inToken.getType();
@@ -141,6 +183,12 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 		throw new RuntimeException("Output type " + outToken + " not compatible with input type " + inToken);
 	}
 	
+	/**
+	 * Compute the output type of a dynamic capability. If the output type of the last capability
+	 * includes a type variable, try to resolve the type variable.
+	 * @param pipe
+	 * @return
+	 */
 	private static IOutput<?> calculateOutputType(List<ICapability> pipe){
 		ICapability last = pipe.get(pipe.size()-1);
 		IOutput<?> lastOut = CapabilityUtil.singleOutput(last);
@@ -158,10 +206,21 @@ public class DynamicSerializablePipeline extends AbstractDynamicSerializableCapa
 			IOutput<?> previous = CapabilityUtil.singleOutput(pipe.get(pipe.size()-2));
 			resultType = TypeToken.of(resolveTypeVariable(previous.getType(), tLastIn, (TypeVariable<?>) tLastOut));
 		}else if (tLastOut instanceof ParameterizedType){
-			for (Type t : ((ParameterizedType) tLastOut).getActualTypeArguments()){
-				if (!(t instanceof Class)){
-					throw new RuntimeException("Support for type variables in final capability output not supported");
+			
+			ParameterizedType tt = (ParameterizedType) tLastOut;
+			
+			boolean hasVar = false;
+			
+			for (Type arg : tt.getActualTypeArguments()){
+				if (!(arg instanceof Class)){
+					hasVar = true;
+					break;
 				}
+			}
+			
+			if (hasVar){
+				IOutput<?> previous = CapabilityUtil.singleOutput(pipe.get(pipe.size()-2));
+				resultType = TypeToken.of(resolveTypeVariables(previous.getType(), tLastIn, (ParameterizedType) tLastOut));			
 			}
 		}else{
 			throw new RuntimeException("Unexpected output type for capability " + last.getName());

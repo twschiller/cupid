@@ -35,8 +35,9 @@ public class CreatePipelineWizard extends Wizard{
 	
 	@Override
 	public boolean performFinish() {
-		DynamicSerializablePipeline pipe = page.createPipeline();
+		
 		try {
+			DynamicSerializablePipeline pipe = page.createPipeline();
 			File file = Activator.getDefault().getHydrationService().store(pipe);
 			Activator.getDefault().registerCapability(pipe, file);
 			CupidDataCollector.record(
@@ -45,7 +46,7 @@ public class CreatePipelineWizard extends Wizard{
 					.create());
      		return true;
 		} catch (Exception e) {
-			String msg = "Error saving capability " + pipe.getName() + ": " + e.getMessage();
+			String msg = "Error saving capability: " + e.getMessage();
 					
 			ErrorDialog.openError(
 					this.getShell(), msg,

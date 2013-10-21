@@ -27,7 +27,7 @@
    <feature url="features/edu.washington.cs.cupid.plugins_1.3.4.v20131014-1100.jar" id="edu.washington.cs.cupid.plugins" version="1.3.4.v20131014-1100">
       <category name="edu.washington.cs.cupid"/>
    </feature>
-   <feature url="features/edu.washington.cs.cupid.core_1.3.3.v20131014-2200.jar" id="edu.washington.cs.cupid.core" version="1.3.3.v20131014-2200">
+   <feature url="features/edu.washington.cs.cupid.core_1.3.3.v20131021-1230.jar" id="edu.washington.cs.cupid.core" version="1.3.3.v20131021-1230">
       <category name="edu.washington.cs.cupid"/>
    </feature>
    <category-def name="edu.washington.cs.cupid" label="Cupid"/>

@@ -29,6 +29,14 @@
             name="Selection Inspector"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            category="edu.washington.cs.cupid"
+            class="edu.washington.cs.cupid.views.ReportView"
+            id="edu.washington.cs.cupid.views.ReportView"
+            name="Report View"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
@@ -87,6 +95,20 @@
       <super
             type="org.eclipse.core.resources.problemmarker">
       </super>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="edu.washington.cs.cupid.charts.capabilityContribution"
+            objectClass="edu.washington.cs.cupid.capability.ICapability">
+         <action
+               class="edu.washington.cs.cupid.internal.CreateReportAction"
+               id="edu.washington.cs.cupid.charts.CreateReport"
+               label="Create Report"
+               menubarPath="cupidGroup">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>

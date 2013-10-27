@@ -19,7 +19,6 @@ import edu.washington.cs.cupid.internal.CupidActivator;
  * {@link #value()} to get the result of the computation. If the status is <code>Status.ERROR</code>
  * call {@link #getException()} to get the exception.
  * @author Todd Schiller (tws@cs.washington.edu)
- * @param <V> result type
  */
 public class CapabilityStatus extends Status {
 

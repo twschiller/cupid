@@ -10,20 +10,12 @@
  ******************************************************************************/
 package edu.washington.cs.cupid.standard;
 
-import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 import com.google.common.reflect.TypeToken;
 
 import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
-import edu.washington.cs.cupid.capability.linear.LinearJob;
-import edu.washington.cs.cupid.capability.linear.LinearStatus;
 
 /**
  * A capability that computes the most frequent element in a collection.

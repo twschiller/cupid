@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.TaskList;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
+import org.eclipse.mylyn.tasks.core.ITask;
 
 import com.google.common.reflect.TypeToken;
 
@@ -28,7 +29,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
  * Capability that returns all Mylyn tasks.
  * @author Todd Schiller
  */
-public final class MylynTaskCapability extends LinearCapability<Void, List<AbstractTask>> {
+public final class MylynTaskCapability extends LinearCapability<Void, List<ITask>> {
 
 	// http://wiki.eclipse.org/Mylyn_Integrator_Reference#Integrating_with_Mylyn.27s_Task_List_vs._using_a_custom_view
 	
@@ -38,22 +39,22 @@ public final class MylynTaskCapability extends LinearCapability<Void, List<Abstr
 	public MylynTaskCapability() {
 		super("Mylyn Tasks",
 			  "All Mylyn tasks",
-			  TypeToken.of(Void.class), new TypeToken<List<AbstractTask>>() {},
+			  TypeToken.of(Void.class), new TypeToken<List<ITask>>() {},
 			  Flag.PURE);
 	}
 
 	@Override
-	public LinearJob<Void, List<AbstractTask>> getJob(final Void input) {
-		return new LinearJob<Void, List<AbstractTask>>(this, input) {
+	public LinearJob<Void, List<ITask>> getJob(final Void input) {
+		return new LinearJob<Void, List<ITask>>(this, input) {
 			@Override
-			protected LinearStatus<List<AbstractTask>> run(final IProgressMonitor monitor) {
+			protected LinearStatus<List<ITask>> run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(getName(), 100);
 					TaskList taskList = TasksUiPlugin.getTaskList();
-					List<AbstractTask> tasks = new ArrayList<AbstractTask>(taskList.getAllTasks());
+					List<ITask> tasks = new ArrayList<ITask>(taskList.getAllTasks());
 					return LinearStatus.makeOk(getCapability(), tasks);
 				} catch (Exception ex) {
-					return LinearStatus.<List<AbstractTask>>makeError(ex);
+					return LinearStatus.<List<ITask>>makeError(ex);
 				} finally {
 					monitor.done();
 				}

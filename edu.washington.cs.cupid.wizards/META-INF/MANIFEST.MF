@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Cupid Pipeline Wizards
 Bundle-SymbolicName: edu.washington.cs.cupid.wizards;singleton:=true
-Bundle-Version: 1.3.3.v20131021-1230
+Bundle-Version: 1.3.3.v20131030-1130
 Bundle-Activator: edu.washington.cs.cupid.wizards.internal.Activator
 Bundle-Vendor: University of Washington PLSE
 Require-Bundle: org.eclipse.ui,

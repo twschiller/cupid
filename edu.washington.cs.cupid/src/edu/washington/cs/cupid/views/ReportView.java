@@ -178,6 +178,14 @@ public class ReportView extends ViewPart implements ICupidSelectionListener  {
 		root.layout(true);
 	}
 	
+	private String firstLine(String original){
+		if (original == null || original.equals("")){
+			return original;
+		}else{
+			return original.split(System.getProperty("line.separator"))[0];
+		}
+	}
+	
 	public void setData(Object [] data){
 		if (capability == null) return;
 		ICapability.IParameter<?> param = CapabilityUtil.unaryParameter(capability);
@@ -185,7 +193,7 @@ public class ReportView extends ViewPart implements ICupidSelectionListener  {
 		List<ReportRow> rows = Lists.newArrayList();
 		for (Object x : data){
 			if (TypeManager.isCompatible(param, x)){
-				rows.add(new ReportRow(x.toString(), x));
+				rows.add(new ReportRow(firstLine(x.toString()), x));
 			}
 		}
 		

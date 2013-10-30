@@ -20,6 +20,8 @@ import edu.washington.cs.cupid.mylyn.ActiveContextCapability;
 import edu.washington.cs.cupid.mylyn.InActiveContextCapability;
 import edu.washington.cs.cupid.mylyn.MylynTaskCapability;
 import edu.washington.cs.cupid.mylyn.TaskContextCapability;
+import edu.washington.cs.cupid.mylyn.TaskFilter;
+import edu.washington.cs.cupid.mylyn.TasksForResource;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -75,6 +77,8 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 			new TaskContextCapability(),
 			new ActiveContextCapability(),
 			new InActiveContextCapability(),
+			new TasksForResource(),
+			new TaskFilter(),
 		};
 	}
 }

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.TaskList;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 import org.eclipse.mylyn.tasks.core.ITask;
@@ -36,6 +35,7 @@ public final class MylynTaskCapability extends LinearCapability<Void, List<ITask
 	/**
 	 * Construct a capability that returns all Mylyn tasks.
 	 */
+	@SuppressWarnings("serial")
 	public MylynTaskCapability() {
 		super("Mylyn Tasks",
 			  "All Mylyn tasks",

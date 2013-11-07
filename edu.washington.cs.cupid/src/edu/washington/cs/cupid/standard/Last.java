@@ -31,7 +31,7 @@ public final class Last<V> extends GenericLinearCapability<List<V>, V> {
 	 */
 	public Last() {
 		super(
-				"Last", 
+				"Last Element", 
 				"Gets the last item in a list",
 				Flag.PURE);
 	}

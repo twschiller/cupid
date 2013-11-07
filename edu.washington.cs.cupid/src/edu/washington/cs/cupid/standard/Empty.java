@@ -29,7 +29,7 @@ public final class Empty<V> extends GenericLinearCapability<Collection<V>, Boole
 	 * A capability that indicates whether or not a collection is empty.
 	 */
 	public Empty() {
-		super("Empty", 
+		super("Is Empty", 
 			  "True if the input is empty",
 			  Flag.PURE);
 	}

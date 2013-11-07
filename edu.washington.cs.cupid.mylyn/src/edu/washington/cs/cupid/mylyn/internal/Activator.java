@@ -19,6 +19,7 @@ import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.mylyn.ActiveContextCapability;
 import edu.washington.cs.cupid.mylyn.InActiveContextCapability;
 import edu.washington.cs.cupid.mylyn.MylynTaskCapability;
+import edu.washington.cs.cupid.mylyn.TaskCommentsCapability;
 import edu.washington.cs.cupid.mylyn.TaskContextCapability;
 import edu.washington.cs.cupid.mylyn.TaskFilter;
 import edu.washington.cs.cupid.mylyn.TasksForResource;
@@ -73,6 +74,7 @@ public class Activator extends AbstractUIPlugin implements ICapabilityPublisher{
 	@Override
 	public ICapability[] publish() {
 		return new ICapability[]{
+			new TaskCommentsCapability(),
 			new MylynTaskCapability(),
 			new TaskContextCapability(),
 			new ActiveContextCapability(),

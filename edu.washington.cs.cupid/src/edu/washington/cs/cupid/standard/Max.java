@@ -33,7 +33,7 @@ public final class Max<V extends Comparable<V>> extends GenericLinearCapability<
 	 */
 	public Max() {
 		super(
-				"Max", 
+				"Maximum Element", 
 				"Get the maximum element in a collection",
 				Flag.PURE);
 	}

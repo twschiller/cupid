@@ -16,7 +16,7 @@ public class Any extends LinearCapability<Collection<Boolean>, Boolean> {
 	 * A capability that indicates whether any of the elements in the collection are true
 	 */
 	public Any() {
-		super("Any", 
+		super("Any (One or More)", 
 			  "True if any of the elements are true",
 			  new TypeToken<Collection<Boolean>>(){},
 			  TypeToken.of(Boolean.class),

@@ -16,7 +16,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.egit.core.internal.storage.GitFileHistoryProvider;
-import org.eclipse.egit.core.op.RevertCommitOperation;
 import org.eclipse.team.core.history.IFileHistory;
 import org.eclipse.team.core.history.IFileHistoryProvider;
 import org.eclipse.team.core.history.IFileRevision;
@@ -41,7 +40,7 @@ public final class GitHistoryCapability extends LinearCapability<IResource, List
 	 */
 	public GitHistoryCapability() {
 		super("Git History",
-			  "Git log entries for the resource",
+			  "Git log entries for the resource. The most recent commit is FIRST.",
 			  TypeToken.of(IResource.class), new TypeToken<List<IFileRevision>>() {},
 			  Flag.PURE, Flag.TRANSIENT);
 	}

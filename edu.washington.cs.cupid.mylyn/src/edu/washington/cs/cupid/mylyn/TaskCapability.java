@@ -10,7 +10,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
 public class TaskCapability extends LinearCapability<ITask, ITask> {
 
 	public TaskCapability(){
-		super("Task (Identity)", "Returns the tasks itself, or the corresponding task",
+		super("Mylyn Task (Identity)", "Returns the tasks itself, or the corresponding task",
 			  ITask.class, ITask.class, 
 			  ICapability.Flag.PURE);
 	}

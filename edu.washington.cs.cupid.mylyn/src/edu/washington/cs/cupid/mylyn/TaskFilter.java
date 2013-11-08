@@ -27,7 +27,7 @@ public class TaskFilter extends AbstractBaseCapability {
 	public static final Output<Collection<AbstractTask>> FILTERED = new Output<Collection<AbstractTask>>("Filtered", new TypeToken<Collection<AbstractTask>>(){});
 		
 	public TaskFilter() {
-		super("Task Filter", "Filters tasks according to the selected options", 
+		super("Mylyn Task Filter", "Filters tasks according to the selected options", 
 			  Lists.newArrayList(TASKS, FILTER_COMPLETE, FILTER_INCOMPLETE), Lists.newArrayList(FILTERED),
 			  ICapability.Flag.PURE);
 	}

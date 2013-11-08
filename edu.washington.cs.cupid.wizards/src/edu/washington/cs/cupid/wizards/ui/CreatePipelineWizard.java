@@ -16,7 +16,10 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
+import edu.washington.cs.cupid.CupidPlatform;
+import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
+import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
 import edu.washington.cs.cupid.usage.CupidDataCollector;
 import edu.washington.cs.cupid.usage.events.CupidEventBuilder;
 import edu.washington.cs.cupid.wizards.internal.Activator;
@@ -38,6 +41,17 @@ public class CreatePipelineWizard extends Wizard{
 		
 		try {
 			DynamicSerializablePipeline pipe = page.createPipeline();
+			
+			ICapability existing = null;
+			try{
+				existing = CupidPlatform.getCapabilityRegistry().findCapability(pipe.getName());
+			}catch(NoSuchCapabilityException ex){
+				// good
+			}
+			if (existing != null) {
+				throw new IllegalArgumentException(String.format("Capability already exists with name '%s'; choose a different name.", pipe.getName()));
+			}
+				
 			File file = Activator.getDefault().getHydrationService().store(pipe);
 			Activator.getDefault().registerCapability(pipe, file);
 			CupidDataCollector.record(

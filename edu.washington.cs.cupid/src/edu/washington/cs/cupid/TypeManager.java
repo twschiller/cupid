@@ -25,7 +25,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
+import edu.washington.cs.cupid.capability.CapabilityUtil;
 import edu.washington.cs.cupid.capability.ICapability;
+import edu.washington.cs.cupid.capability.Output;
+import edu.washington.cs.cupid.capability.ICapability.IOutput;
 import edu.washington.cs.cupid.internal.TypeAdapterRegistry;
 import edu.washington.cs.cupid.types.ITypeAdapter;
 import edu.washington.cs.cupid.types.ITypeAdapterRegistry;

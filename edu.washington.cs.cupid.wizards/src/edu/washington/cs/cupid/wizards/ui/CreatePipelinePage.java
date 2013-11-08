@@ -32,7 +32,6 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -366,6 +365,22 @@ public class CreatePipelinePage extends WizardPage{
 		}
 	}
 	
+	private boolean canAttach(ICapability capability){
+		try{
+			TypeToken<?> outputType = CapabilityUtil.singleOutput(createPipeline()).getType();
+
+			if (CapabilityUtil.isGenerator(capability)
+					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), outputType)
+					|| isListCompatible(capability, outputType))
+			{
+				return true;
+			}else{
+				return false;
+			}	
+		}catch(Exception ex){
+			return false;
+		}
+	}
 	
 	private class InvalidFilter extends ViewerFilter{
 		@Override
@@ -374,21 +389,9 @@ public class CreatePipelinePage extends WizardPage{
 					?  (ICapability) element
 					:  ((DerivedCapability) element).getCapability();
 			
-			if (current.isEmpty()) return true;
-					
-			ICapability last = current.get(current.size()-1);
-					
-			if (CapabilityUtil.isGenerator(capability)
-				|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())
-				|| isListCompatible(capability, CapabilityUtil.singleOutput(last).getType()))
-			{
-				return true;
-			}else{
-				return false;
-			}	
+			return current.isEmpty() || canAttach(capability);
 		}
 	}
-	
 	
 	private class DeleteListener implements KeyListener{
 		@Override
@@ -495,26 +498,33 @@ public class CreatePipelinePage extends WizardPage{
 	private List<String> typeErrors(){
 		List<String> result = Lists.newArrayList();
 		
-		if (!current.isEmpty()){
-			
-			TypeToken<?> last = CapabilityUtil.singleOutput(current.get(0)).getType();
-			
-			for (int i = 1; i < current.size(); i++){
-				ICapability next = current.get(i);
-				
-				if (!CapabilityUtil.isGenerator(next)){
-					IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
-					if (!TypeManager.isCompatible(nextParameter, last)){
-						result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(last));
-					}	
-				}
-				
-				last = CapabilityUtil.singleOutput(next).getType();
+		for (int i = 1; i < current.size(); i++){
+
+			ICapability next = current.get(i);
+			ICapability prior = null;
+
+			try{
+				prior = createPipeline(current.subList(0, i));
+			}catch(Exception ex){
+				continue; // sub-pipeline capability is invalid
 			}
+
+			TypeToken<?> priorOutput = CapabilityUtil.singleOutput(prior).getType();
+
+			if (CapabilityUtil.isGenerator(next)
+				|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(next), priorOutput)
+				|| isListCompatible(next, priorOutput))
+			{
+				continue;
+			}else{
+				ICapability.IParameter<?> nextParameter = CapabilityUtil.unaryParameter(next);
+				
+				result.add("Capability " + next.getName() + " with input " + TypeManager.simpleTypeName(nextParameter.getType()) + " is not compatible with type " + TypeManager.simpleTypeName(priorOutput.getType()));
+			}	
 		}
-		
 		return result;
 	}
+
 	
 	private boolean isListCompatible(ICapability capability, TypeToken<?> input){
 		if (List.class.isAssignableFrom(input.getRawType()) &&
@@ -538,16 +548,7 @@ public class CreatePipelinePage extends WizardPage{
 						?  (ICapability) element
 						:  ((DerivedCapability) element).getCapability();
 				
-				ICapability last = current.get(current.size()-1);
-						
-				if (CapabilityUtil.isGenerator(capability)
-					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), CapabilityUtil.singleOutput(last).getType())
-					|| isListCompatible(capability, CapabilityUtil.singleOutput(last).getType()))
-				{
-					return null;
-				}else{
-					return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
-				}	
+				return canAttach(capability) ? null : Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
 			}
 		}
 
@@ -750,8 +751,12 @@ public class CreatePipelinePage extends WizardPage{
 	}
 	
 	public DynamicSerializablePipeline createPipeline(){
+		return createPipeline(current);
+	}
+	
+	private DynamicSerializablePipeline createPipeline(List<ICapability> capabilities){
 		List<Serializable> descriptors = Lists.newArrayList();
-		for (Object x : current){
+		for (Object x : capabilities){
 			if (x instanceof ICapability && CapabilityUtil.isSerializable((ICapability) x)){
 				descriptors.add((Serializable) x);
 			}else if (!(x instanceof ICapability) && x instanceof Serializable){

@@ -22,7 +22,7 @@ import edu.washington.cs.cupid.capability.linear.LinearStatus;
 public final class TaskCommentsCapability extends LinearCapability<ITask, List<ITaskComment>> {
 
 	public TaskCommentsCapability(){
-		super("Task Comments", "Get the comments for a Mylyn task",
+		super("Mylyn Task Comments", "Get the comments for a Mylyn task",
 			TypeToken.of(ITask.class), new TypeToken<List<ITaskComment>>(){},
 			ICapability.Flag.PURE);
 	}

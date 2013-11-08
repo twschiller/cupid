@@ -28,7 +28,7 @@ public class TasksForResource extends LinearCapability<IResource, List<AbstractT
 
 	@SuppressWarnings("serial")
 	public TasksForResource() {
-		super("Tasks for Resource", "Returns the tasks that include the resource in their context",
+		super("Mylyn Tasks for Resource", "Returns the tasks that include the resource in their context",
 			  TypeToken.of(IResource.class), new TypeToken<List<AbstractTask>>(){}, ICapability.Flag.PURE);
 	}
 

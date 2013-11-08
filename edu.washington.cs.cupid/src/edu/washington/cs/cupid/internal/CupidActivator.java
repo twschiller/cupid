@@ -43,6 +43,7 @@ import edu.washington.cs.cupid.standard.Any;
 import edu.washington.cs.cupid.standard.Count;
 import edu.washington.cs.cupid.standard.Distinct;
 import edu.washington.cs.cupid.standard.Empty;
+import edu.washington.cs.cupid.standard.First;
 import edu.washington.cs.cupid.standard.Flatten;
 import edu.washington.cs.cupid.standard.Last;
 import edu.washington.cs.cupid.standard.Max;
@@ -103,6 +104,7 @@ public final class CupidActivator extends AbstractUIPlugin {
 				new Max(),
 				new MostFrequent(),
 				new Last(),
+				new First(),
 				new Distinct(),
 				new Flatten(),
 				new NonEmpty(),

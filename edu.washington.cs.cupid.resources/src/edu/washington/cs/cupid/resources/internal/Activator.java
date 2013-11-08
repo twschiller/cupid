@@ -18,6 +18,7 @@ import edu.washington.cs.cupid.capability.ICapabilityChangeListener;
 import edu.washington.cs.cupid.capability.ICapabilityPublisher;
 import edu.washington.cs.cupid.resources.LastModifiedCapability;
 import edu.washington.cs.cupid.resources.ProjectForResourceCapability;
+import edu.washington.cs.cupid.resources.TimestampToDateCapability;
 
 public class Activator implements BundleActivator, ICapabilityPublisher{
 
@@ -40,6 +41,7 @@ public class Activator implements BundleActivator, ICapabilityPublisher{
 	@Override
 	public ICapability[] publish() {
 		return new ICapability[] { 
+				new TimestampToDateCapability(),
 				new LastModifiedCapability(),
 				new ProjectForResourceCapability(),
 		};

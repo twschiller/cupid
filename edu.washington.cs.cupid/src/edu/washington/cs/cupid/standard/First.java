@@ -18,19 +18,19 @@ import edu.washington.cs.cupid.capability.linear.GenericLinearCapability;
 import edu.washington.cs.cupid.capability.linear.ImmediateJob;
 
 /**
- * A capability that computes the last element in a collection.
+ * A capability that computes the first element in the collection.
  * @author Todd Schiller
  * @param <V> the collection element type
  */
-public final class Last<V> extends GenericLinearCapability<List<V>, V> {
+public final class First<V> extends GenericLinearCapability<List<V>, V> {
 	
 	/**
 	 * A capability that computes the most last element in a collection.
 	 */
-	public Last() {
+	public First() {
 		super(
-				"Last Element", 
-				"Gets the last item in a list",
+				"First Element", 
+				"Gets the first item in a list",
 				Flag.PURE);
 	}
 	
@@ -39,7 +39,7 @@ public final class Last<V> extends GenericLinearCapability<List<V>, V> {
 		if (input.isEmpty()){
 			return new ImmediateJob<List<V>, V>(this, input, new IllegalArgumentException("Input cannot be empty"));
 		}else{
-			return new ImmediateJob<List<V>, V>(this, input, input.get(input.size()-1));
+			return new ImmediateJob<List<V>, V>(this, input, input.get(0));
 		}
 	}
 
@@ -52,5 +52,4 @@ public final class Last<V> extends GenericLinearCapability<List<V>, V> {
 	public TypeToken<V> getOutputType() {
 		return new TypeToken<V>(getClass()) {};
 	}
-
 }

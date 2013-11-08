@@ -61,7 +61,11 @@ public final class ListGetter<I,V> extends GenericLinearSerializableCapability<L
 							method.setAccessible(true);
 						}
 						
-						if (ListGetter.this.result.isAssignableFrom(method.getGenericReturnType())) {
+						
+						
+						if (TypeManager.isBoxedType(ListGetter.this.result) || 
+							ListGetter.this.result.isAssignableFrom(method.getGenericReturnType())) {
+							
 							Object out = method.invoke(x);
 							result.add((V) out);
 						} else {

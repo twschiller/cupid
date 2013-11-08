@@ -144,7 +144,7 @@ public class ReportWidget extends Composite {
 						
 						if (status.isOK() && status.getException() == null){
 							Object result = status.value().getOutput(output);
-							return result.toString();
+							return firstLine(result.toString());
 						}else{
 							return status.getMessage();
 						}

@@ -30,7 +30,7 @@ public final class Count<V> extends GenericLinearCapability<Collection<V>, Integ
 	 */
 	public Count() {
 		super(
-				"Size/ Count / Number of Elements)", 
+				"Size / Count / Number of Elements", 
 				"Returns the number of elements in a collection",
 				Flag.PURE);
 	}

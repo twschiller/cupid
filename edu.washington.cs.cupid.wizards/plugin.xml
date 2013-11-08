@@ -77,6 +77,13 @@
                label="Create &amp;Formatting Rule"
                menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
          </action>
+         <action
+               class="edu.washington.cs.cupid.wizards.popup.actions.CreatePipelineContextAction"
+               enablesFor="+"
+               id="edu.washington.cs.cupid.wizards.capability.input"
+               label="Create Pipeline"
+               menubarPath="edu.washington.cs.cupid.wizards.menu/cupidGroup">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"

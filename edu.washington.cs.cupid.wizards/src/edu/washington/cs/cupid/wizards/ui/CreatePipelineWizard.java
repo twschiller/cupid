@@ -16,6 +16,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.wizard.Wizard;
 
+import com.google.common.reflect.TypeToken;
+
 import edu.washington.cs.cupid.CupidPlatform;
 import edu.washington.cs.cupid.capability.ICapability;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
@@ -29,10 +31,18 @@ import edu.washington.cs.cupid.wizards.internal.Activator;
  */
 public class CreatePipelineWizard extends Wizard{
 
-	private CreatePipelinePage page = new CreatePipelinePage();
+	private CreatePipelinePage page; 
 	
 	public CreatePipelineWizard(){
 		this.setWindowTitle("New Cupid Pipeline");
+		this.page = new CreatePipelinePage();
+		this.addPage(page);
+		
+	}
+	
+	public CreatePipelineWizard(TypeToken<?> inputType, Object [] previewInput){
+		this.setWindowTitle("New Cupid Pipeline");
+		this.page = new CreatePipelinePage(inputType, previewInput);
 		this.addPage(page);
 	}
 	

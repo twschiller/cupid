@@ -77,6 +77,7 @@ import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
+import edu.washington.cs.cupid.standard.Exceptional;
 import edu.washington.cs.cupid.standard.Identity;
 import edu.washington.cs.cupid.views.OptionEditorFactory;
 import edu.washington.cs.cupid.views.OptionEditorFactory.OptionEditor;
@@ -150,10 +151,13 @@ public class CreatePipelinePage extends WizardPage{
 		super("Create pipeline");
 		this.inputType = inputType;
 		
-		this.previewInput = new Object[Math.min(previewInput.length, 10)];
-		
-		for (int i = 0; i < this.previewInput.length; i++){
-			this.previewInput[i] = previewInput[i];
+		// Trim so that updates don't take too long
+		if (previewInput != null){
+			this.previewInput = new Object[Math.min(previewInput.length, 10)];
+			
+			for (int i = 0; i < this.previewInput.length; i++){
+				this.previewInput[i] = previewInput[i];
+			}
 		}
 	}
     
@@ -215,9 +219,7 @@ public class CreatePipelinePage extends WizardPage{
 				pipelineTable.setInput(current);
 				capabilityTree.refresh(true);
 				
-				if (previewWidget != null){
-					previewWidget.init(createPipeline(),previewInput);
-				}
+				refreshPreview();
 				
 				refreshMessage();
 				
@@ -463,21 +465,32 @@ public class CreatePipelinePage extends WizardPage{
 					pipelineTable.setInput(current);
 					pipelineTable.getTable().select(index == current.size() ? current.size()-1 : index);
 					
-					if (previewWidget != null){
-						if (current.size() > 0){
-							try{
-								previewWidget.init(createPipeline(),previewInput);
-							}catch (Exception ex){
-								// leave the old stuff up?
-							}
-						}
-					}
+					refreshPreview();
 					
 					break;
 				}
 				
 				refreshMessage();
 				capabilityTree.refresh();
+			}
+		}
+	}
+	
+	private void refreshPreview(){
+		if (previewWidget != null){
+			if (current.size() > 0 && typeErrors().isEmpty()){
+				ICapability pipe = null;
+				try{
+					 pipe = createPipeline();	
+				}catch (Exception ex){
+					// leave the old stuff up?
+				}
+				
+				if (pipe != null){
+					previewWidget.init(pipe, previewInput);
+				}
+			}else{
+				previewWidget.init(new Exceptional(), previewInput);
 			}
 		}
 	}
@@ -489,6 +502,7 @@ public class CreatePipelinePage extends WizardPage{
 			this.setMessage(DEFAULT_MESSAGE);
 			this.setPageComplete(false);
 		}else if (errors.isEmpty()){
+			this.setErrorMessage(null);
 			this.setMessage("Capability is well-typed.");
 			this.setPageComplete(true);
 		}else{

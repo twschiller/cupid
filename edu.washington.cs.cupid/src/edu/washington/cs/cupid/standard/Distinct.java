@@ -11,8 +11,10 @@
 package edu.washington.cs.cupid.standard;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
@@ -25,7 +27,7 @@ import edu.washington.cs.cupid.capability.linear.LinearJob;
  * @author Todd Schiller
  * @param <V> element type
  */
-public final class Distinct<V> extends GenericLinearCapability<Collection<V>, Set<V>> {
+public final class Distinct<V> extends GenericLinearCapability<Collection<V>, List<V>> {
 
 	/**
 	 * A capability that returns the number of elements in a collection.
@@ -45,15 +47,15 @@ public final class Distinct<V> extends GenericLinearCapability<Collection<V>, Se
 	}
 
 	@Override
-	public TypeToken<Set<V>> getOutputType() {
-		return new TypeToken<Set<V>>(getClass()) {
+	public TypeToken<List<V>> getOutputType() {
+		return new TypeToken<List<V>>(getClass()) {
 			private static final long serialVersionUID = 1L;
 		};
 	}
 
 	@Override
-	public LinearJob<Collection<V>, Set<V>> getJob(final Collection<V> input) {
-		return new ImmediateJob<Collection<V>, Set<V>>(this, input, Sets.newHashSet(input));
+	public LinearJob<Collection<V>, List<V>> getJob(final Collection<V> input) {
+		return new ImmediateJob<Collection<V>, List<V>>(this, input, Lists.newArrayList(Sets.newHashSet(input)));
 	}
 
 }

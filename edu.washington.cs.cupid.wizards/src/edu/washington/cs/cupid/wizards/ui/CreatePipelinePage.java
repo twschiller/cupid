@@ -77,9 +77,11 @@ import edu.washington.cs.cupid.capability.ICapability.IParameter;
 import edu.washington.cs.cupid.capability.OutputSelector;
 import edu.washington.cs.cupid.capability.dynamic.DynamicSerializablePipeline;
 import edu.washington.cs.cupid.capability.exception.NoSuchCapabilityException;
+import edu.washington.cs.cupid.standard.Identity;
 import edu.washington.cs.cupid.views.OptionEditorFactory;
 import edu.washington.cs.cupid.views.OptionEditorFactory.OptionEditor;
 import edu.washington.cs.cupid.views.OptionEditorFactory.ValueChangedListener;
+import edu.washington.cs.cupid.views.ReportWidget;
 import edu.washington.cs.cupid.wizards.internal.DerivedCapability;
 import edu.washington.cs.cupid.wizards.internal.LiftedCapability;
 
@@ -89,13 +91,6 @@ import edu.washington.cs.cupid.wizards.internal.LiftedCapability;
  */
 public class CreatePipelinePage extends WizardPage{
 	
-	
-	// http://www.vogella.com/articles/EclipseDialogs/article.html#tutorialswt
-	
-	protected CreatePipelinePage() {
-		super("Create pipeline");
-	}
-
 	private static final String DEFAULT_MESSAGE = "Select capabilities to form a pipeline.";
 	
 	//
@@ -139,6 +134,29 @@ public class CreatePipelinePage extends WizardPage{
     
     private InvalidFilter invalidFilter = new InvalidFilter();
     
+	private Object [] previewInput = null;
+    
+	private Group previewGroup;
+	private ReportWidget previewWidget;
+	private TypeToken<?> inputType;
+	
+	// http://www.vogella.com/articles/EclipseDialogs/article.html#tutorialswt
+	
+	public CreatePipelinePage() {
+		this(null, null);
+	}
+	
+	protected CreatePipelinePage(TypeToken<?> inputType, Object [] previewInput) {
+		super("Create pipeline");
+		this.inputType = inputType;
+		
+		this.previewInput = new Object[Math.min(previewInput.length, 10)];
+		
+		for (int i = 0; i < this.previewInput.length; i++){
+			this.previewInput[i] = previewInput[i];
+		}
+	}
+    
 	@Override
 	public void createControl(Composite parent) {
 		this.setTitle("New Pipeline");
@@ -165,8 +183,9 @@ public class CreatePipelinePage extends WizardPage{
 		
 		buildCapabilityTree(composite);
 		buildPipelineTable(composite);
+		createPreviewGroup(composite);
 		buildOptionEditor(composite);
-		
+
 		capabilityTree.addDoubleClickListener(new IDoubleClickListener(){
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
@@ -195,6 +214,11 @@ public class CreatePipelinePage extends WizardPage{
 				
 				pipelineTable.setInput(current);
 				capabilityTree.refresh(true);
+				
+				if (previewWidget != null){
+					previewWidget.init(createPipeline(),previewInput);
+				}
+				
 				refreshMessage();
 				
 				search.setText("");
@@ -241,7 +265,7 @@ public class CreatePipelinePage extends WizardPage{
 		this.setMessage(DEFAULT_MESSAGE);
 		
 		capabilityTree.addFilter(invalidFilter);
-		
+			
 		setControl(composite);
 	}
 
@@ -366,19 +390,35 @@ public class CreatePipelinePage extends WizardPage{
 	}
 	
 	private boolean canAttach(ICapability capability){
-		try{
-			TypeToken<?> outputType = CapabilityUtil.singleOutput(createPipeline()).getType();
-
+	
+		
+		if (current.size() == 0 && inputType != null){
 			if (CapabilityUtil.isGenerator(capability)
-					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), outputType)
-					|| isListCompatible(capability, outputType))
+					|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), inputType)
+					|| isListCompatible(capability, inputType))
 			{
 				return true;
 			}else{
 				return false;
 			}	
-		}catch(Exception ex){
-			return false;
+		} else if (current.isEmpty()){
+			return true;
+		}else{
+
+			try{
+				TypeToken<?> outputType = CapabilityUtil.singleOutput(createPipeline()).getType();
+
+				if (CapabilityUtil.isGenerator(capability)
+						|| TypeManager.isCompatible(CapabilityUtil.unaryParameter(capability), outputType)
+						|| isListCompatible(capability, outputType))
+				{
+					return true;
+				}else{
+					return false;
+				}	
+			}catch(Exception ex){
+				return false;
+			}
 		}
 	}
 	
@@ -389,7 +429,7 @@ public class CreatePipelinePage extends WizardPage{
 					?  (ICapability) element
 					:  ((DerivedCapability) element).getCapability();
 			
-			return current.isEmpty() || canAttach(capability);
+			return canAttach(capability);
 		}
 	}
 	
@@ -422,6 +462,17 @@ public class CreatePipelinePage extends WizardPage{
 					currentOptions.remove(index);
 					pipelineTable.setInput(current);
 					pipelineTable.getTable().select(index == current.size() ? current.size()-1 : index);
+					
+					if (previewWidget != null){
+						if (current.size() > 0){
+							try{
+								previewWidget.init(createPipeline(),previewInput);
+							}catch (Exception ex){
+								// leave the old stuff up?
+							}
+						}
+					}
+					
 					break;
 				}
 				
@@ -541,15 +592,13 @@ public class CreatePipelinePage extends WizardPage{
 	private class CapabilityTreeLabelProvider extends BaseLabelProvider implements ITableLabelProvider, ITableColorProvider{		
 		@Override
 		public Color getForeground(Object element, int columnIndex) {
-			if (current.isEmpty()){
-				return null;
-			}else{
-				ICapability capability = element instanceof ICapability 
-						?  (ICapability) element
-						:  ((DerivedCapability) element).getCapability();
-				
-				return canAttach(capability) ? null : Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
-			}
+
+			ICapability capability = element instanceof ICapability 
+					?  (ICapability) element
+					:  ((DerivedCapability) element).getCapability();
+
+			return canAttach(capability) ? null : Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+
 		}
 
 		@Override
@@ -719,6 +768,22 @@ public class CreatePipelinePage extends WizardPage{
 		}
 	}
 	
+	private void createPreviewGroup(Composite container){
+		if (previewInput != null && previewInput.length > 0){
+			previewGroup = new Group(container, SWT.SHADOW_ETCHED_IN);
+			GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+			previewGroup.setText("Pipeline Results Preview");
+			previewGroup.setLayoutData(data);
+			
+			previewGroup.setLayout(new GridLayout());
+			
+			previewWidget = new ReportWidget(previewGroup, SWT.NONE);
+			previewWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			
+			previewWidget.init(new Identity(), previewInput);
+		}
+	}
+	
 	private void createMetaGroup(Composite parent){
 		Group metaGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
@@ -781,8 +846,10 @@ public class CreatePipelinePage extends WizardPage{
 		capabilityTree.setLabelProvider(new CapabilityTreeLabelProvider());
 		
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-		data.minimumHeight = 450;
-		data.verticalSpan = 2;
+		data.minimumHeight = 325;
+		if (previewInput == null || previewInput.length == 0){
+			data.verticalSpan = 2;
+		}
 		capabilityTree.getTree().setLayoutData(data);
 		
 		capabilityTree.getTree().setHeaderVisible(true);
@@ -823,7 +890,6 @@ public class CreatePipelinePage extends WizardPage{
 		pipelineTable.setContentProvider(new TableContentProvider());
 		pipelineTable.setLabelProvider(new TableLabelProvider());
 		
-		
 		TableColumn nameColumn = new TableColumn(pipelineTable.getTable(), SWT.LEFT);
 		nameColumn.setText("Capability");
 		
@@ -857,8 +923,11 @@ public class CreatePipelinePage extends WizardPage{
 	private void buildOptionEditor(Composite composite){
 		optionGroup = new Group(composite, SWT.BORDER);
 		optionGroup.setText("Capability Options");
-		optionGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
+		
+		GridData dGroup = new GridData(SWT.FILL, SWT.FILL, true, true);
+		dGroup.minimumHeight = 200;
+		optionGroup.setLayoutData(dGroup);
+		
 		optionGroup.setLayout(new GridLayout());
 		
 		optionContainer = new ScrolledComposite(optionGroup, SWT.V_SCROLL | SWT.H_SCROLL);

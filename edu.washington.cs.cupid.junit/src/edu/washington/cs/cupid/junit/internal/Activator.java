@@ -71,7 +71,29 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 			@Override
 			public void propertyChange(final PropertyChangeEvent event) {
 				if (event.getProperty().equals(PreferenceConstants.P_ACTIVE)) {
-					CHANGE_NOTIFIER.onChange(Activator.this);
+					
+					Set<String> current = readActiveConfigs();
+					
+					Set<ICapability> activated = Sets.newHashSet();
+					for (String config : current){
+						if (!LAUNCH_CONFIGURATIONS.containsKey(config)){
+							addCapabilitiesForConfiguration(config);
+							activated.addAll(LAUNCH_CONFIGURATIONS.get(config));
+						}
+					}
+					for (ICapability c : activated){
+						CHANGE_NOTIFIER.onCapabilityAdded(c);
+					}
+					
+					Set<String> configs = LAUNCH_CONFIGURATIONS.keySet();
+					for (String config : configs){
+						if (!current.contains(config)){
+							for (ICapability c : LAUNCH_CONFIGURATIONS.get(config)){
+								CHANGE_NOTIFIER.onCapabilityRemoved(c);
+							}
+							LAUNCH_CONFIGURATIONS.remove(config);
+						}
+					}
 				}
 			}
 		});
@@ -110,26 +132,34 @@ public final class Activator extends AbstractUIPlugin implements ICapabilityPubl
 	}
 
 	@SuppressWarnings("rawtypes")
+	private void addCapabilitiesForConfiguration(String config){
+		Set<ICapability> cs = Sets.newHashSet();
+		
+		cs.add(new LinearPipeline<IJavaProject, Integer>(
+				"Test Failure Count (" + config + ")", "The number of JUnit test failures (" + config + ")",
+				new JUnitCapability(config), new JUnitFailures(), new Count()));
+		
+		cs.add(new LinearPipeline<IJavaProject, Collection<IMarkerBuilder>>(
+				"JUnit Test Failure Markers (" + config + ")", "JUnit test failure markers (" + config + ")",
+				new JUnitCapability(config), new JUnitMarkers()));
+		
+		LAUNCH_CONFIGURATIONS.put(config, cs);
+	}
+	
+	private Set<String> readActiveConfigs(){
+		String val = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE);
+		return "".equals(val) ? Sets.<String>newHashSet() : Sets.newHashSet(val.split(";"));
+	}
+	
 	@Override
 	public ICapability[] publish() {
 		List<ICapability> capabilities = Lists.newArrayList();
 		
-		Set<String> current = Sets.newHashSet(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_ACTIVE).split(";"));
-		
-		for (String config : current) {
+		for (String config : readActiveConfigs()) {
 			if (!config.isEmpty()) {
 				if (!LAUNCH_CONFIGURATIONS.containsKey(config)) {
-					LAUNCH_CONFIGURATIONS.put(config, Sets.<ICapability>newHashSet());
-					
-					LAUNCH_CONFIGURATIONS.get(config).add(new LinearPipeline<IJavaProject, Integer>(
-							"Test Failure Count (" + config + ")", "The number of JUnit test failures (" + config + ")",
-							new JUnitCapability(config), new JUnitFailures(), new Count()));
-					
-					LAUNCH_CONFIGURATIONS.get(config).add(new LinearPipeline<IJavaProject, Collection<IMarkerBuilder>>(
-							"JUnit Test Failure Markers (" + config + ")", "JUnit test failure markers (" + config + ")",
-							new JUnitCapability(config), new JUnitMarkers()));
+					addCapabilitiesForConfiguration(config);
 				}
-				
 				capabilities.addAll(LAUNCH_CONFIGURATIONS.get(config));
 			}
 		}

@@ -13,8 +13,6 @@ package edu.washington.cs.cupid.junit.internal;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.junit.model.TestRunSession;
 
-import edu.washington.cs.cupid.capability.AbstractCapability;
-import edu.washington.cs.cupid.capability.CapabilityJob;
 import edu.washington.cs.cupid.capability.linear.LinearCapability;
 import edu.washington.cs.cupid.capability.linear.LinearJob;
 import edu.washington.cs.cupid.junit.JUnitJob;
@@ -33,8 +31,7 @@ public final class JUnitCapability extends LinearCapability<IJavaProject, TestRu
 	 * @param configuration the configuration to run
 	 */
 	public JUnitCapability(final String configuration) {
-		super("JUnit",
-			  "edu.washington.cs.cupid.junit." + configuration,
+		super("JUnit (" + configuration + ")",
 			  "JUnit test failures",	
 			  IJavaProject.class, TestRunSession.class,
 			  Flag.PURE);

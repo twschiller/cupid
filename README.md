@@ -10,7 +10,7 @@ Cupid can help answer many questions that arise during development, for example:
 Generally, to answer these types of questions, you'd need to click around multiple views and dialogs, which is tedious and interrupts your flow. For commonly occurring questions, you might write a plug-in, but this requires learning the Eclipse plug-in system and finding the right API hooks for the plug-in (if it has any public hooks!). Cupid enables you to answer these questions <i>in a few clicks, not hours.</i>
 
 <table cellpadding='0' border='0' cellspacing='0'>
-<blockquote><tr><td><b>View <a href='Installation.md'>Installation Options</a></b> or <b>Install via Eclipse Marketplace:</b></td><td><a href='http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=635597' title='Drag and drop into a running Eclipse Indigo workspace to install Cupid'><img src='http://marketplace.eclipse.org/sites/all/modules/custom/marketplace/images/installbutton.png' align='top' /></a></td></tr>
+<blockquote><tr><td><b>View <a href='Installation.md'>Installation Options</a></b> or <b>Install via Eclipse Marketplace:</b></td><td><a href="http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=635597" class="drag" title="Drag to your running Eclipse workspace to install Cupid Information Mash-Up and Visualization Plug-in"><img src="http://marketplace.eclipse.org/sites/all/themes/solstice/_themes/solstice_marketplace/public/images/btn-install.png" alt="Drag to your running Eclipse workspace to install Cupid Information Mash-Up and Visualization Plug-in" /></a></td></tr>
 </table></blockquote>
 
 <h3>Feature Highlights</h3>
@@ -35,7 +35,7 @@ Cupid requires Eclipse 3.7.2 (Indigo SR2), Eclipse 4.x, or later.<br>
 <br>
 <h2>Project History</h2>
 
-Cupid is developed at the <a href='http://cs.washington.edu'>University of Washington</a> by <a href='http://toddschiller.com'>Todd Schiller</a>.<br>
+Cupid is developed at the <a href='http://cs.washington.edu'>University of Washington</a> by <a href='https://toddschiller.com'>Todd Schiller</a>.<br>
 <br>
 <ul><li>August, 2013: We've released a Beta version of Cupid. We welcome bug reports, comments, and feature requests!<br>
 </li><li>July, 2013: We're finishing up a major new release of Cupid. Major improvements include support for multiple inputs / outputs per component, and snippet editing for formatting rules.

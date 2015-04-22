@@ -38,7 +38,7 @@ Cupid requires Eclipse 3.7.2 (Indigo SR2), Eclipse 4.x, or later.<br>
 Cupid is developed at the <a href='http://cs.washington.edu'>University of Washington</a> by <a href='http://toddschiller.com'>Todd Schiller</a>.<br>
 <br>
 <ul><li>August, 2013: We've released a Beta version of Cupid. We welcome bug reports, comments, and feature requests!<br>
-</li><li>July, 2013: We're finishing up a major new release of Cupid. Major improvements include support for multiple inputs / outputs per component, and snippet editing for formatting rules. You can download nightly builds on the <a href='Installation.md'>Installation</a> page.<br>
+</li><li>July, 2013: We're finishing up a major new release of Cupid. Major improvements include support for multiple inputs / outputs per component, and snippet editing for formatting rules.
 </li><li>January, 2013: We released an alpha version of Cupid that only supports single input / output capabilities and scripts<br>
 </li><li>November, 2012: A proof-of-concept version of Cupid is available that illustrates pipe-lining and visualization (see video above)</li></ul>
 

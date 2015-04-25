@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Cupid Mylyn Capabilities
 Bundle-SymbolicName: edu.washington.cs.cupid.mylyn;singleton:=true
-Bundle-Version: 1.3.3.v20131106-2245
+Bundle-Version: 1.3.3.qualifier
 Bundle-Activator: edu.washington.cs.cupid.mylyn.internal.Activator
 Bundle-Vendor: University of Washington PLSE
 Require-Bundle: org.eclipse.core.runtime,

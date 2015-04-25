@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.washington.cs.cupid.junit"
+      id="edu.washington.cs.cupid.junit.feature"
       label="Cupid JUnit Capabilities"
-      version="1.0.1"
+      version="1.0.1.qualifier"
       provider-name="University of Washington PLSE"
       plugin="edu.washington.cs.cupid"
       license-feature="edu.washington.cs.cupid.license"

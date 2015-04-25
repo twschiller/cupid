@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="Cupid (Snapshot Build)">
+      Cupid is an information mash-up and visualization plug-in for Eclipse. The goal of Cupid is to give you immediate access to the information you need to gain insight into your project and team.
+   </description>
+   <feature id="edu.washington.cs.cupid.markers.feature">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature id="edu.washington.cs.cupid.mapview.feature">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature id="edu.washington.cs.cupid.editor.feature">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+  <feature id="edu.washington.cs.cupid.charts.feature">
+      <category name="edu.washington.cs.cupid.visualize"/>
+   </feature>
+   <feature id="edu.washington.cs.cupid.plugins.feature">
+      <category name="edu.washington.cs.cupid"/>
+   </feature>
+   <feature id="edu.washington.cs.cupid.mylyn.feature">
+      <category name="edu.washington.cs.cupid.discover"/>
+   </feature>
+   <feature id="edu.washington.cs.cupid.egit.feature">
+      <category name="edu.washington.cs.cupid.discover"/>
+   </feature>
+   <!-- Not working in the Tycho build at this time
+       <feature id="edu.washington.cs.cupid.hg">
+       <category name="edu.washington.cs.cupid.discover"/>
+       </feature>
+    -->
+   <feature id="edu.washington.cs.cupid.core">
+      <category name="edu.washington.cs.cupid"/>
+   </feature>
+   <category-def name="edu.washington.cs.cupid" label="Cupid"/>
+   <category-def name="edu.washington.cs.cupid.discover" label="Integration (Information Discovery)"/>
+   <category-def name="edu.washington.cs.cupid.visualize" label="Visualization"/>
+</site>
+

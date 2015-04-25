@@ -1,0 +1,92 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>edu.washington.cs.cupid</groupId>
+  <artifactId>cupid-root</artifactId>
+  <packaging>pom</packaging>
+  <version>1.3.5-SNAPSHOT</version>
+
+  <properties>
+    <tycho-version>0.22.0</tycho-version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>kepler</id>
+      <layout>p2</layout>
+      <url>http://download.eclipse.org/releases/kepler</url>
+    </repository>
+  </repositories>
+  
+  <modules>
+
+    <!-- Plugins -->
+    <module>edu.washington.cs.cupid.usage</module>
+    <module>edu.washington.cs.cupid</module>
+    <module>edu.washington.cs.cupid.charts</module>
+    <module>edu.washington.cs.cupid.markers</module>
+    <module>edu.washington.cs.cupid.scripting.java</module>
+    <module>edu.washington.cs.cupid.conditional</module>
+    <module>edu.washington.cs.cupid.editor</module>
+    <module>edu.washington.cs.cupid.jdt</module>
+    <module>edu.washington.cs.cupid.junit</module>
+    <module>edu.washington.cs.cupid.resources</module>
+    <module>edu.washington.cs.cupid.wizards</module>
+    <module>edu.washington.cs.cupid.egit</module>
+    <!-- Not in the P2 format
+	 <module>edu.washington.cs.cupid.hg</module>
+	 <module>edu.washington.cs.cupid.svn</module>
+    -->
+    <module>edu.washington.cs.cupid.mylyn</module>
+    <module>edu.washington.cs.cupid.mapview</module>
+
+    <!-- Features -->
+    <module>edu.washington.cs.cupid.license.feature</module>
+    <module>edu.washington.cs.cupid.core.feature</module>
+    <module>edu.washington.cs.cupid.charts.feature</module>
+    <module>edu.washington.cs.cupid.markers.feature</module>
+    <module>edu.washington.cs.cupid.mapview.feature</module>
+    <module>edu.washington.cs.cupid.conditional.feature</module>
+    <module>edu.washington.cs.cupid.egit.feature</module>
+    <module>edu.washington.cs.cupid.mylyn.feature</module>
+    <module>edu.washington.cs.cupid.scripting.java.feature</module>
+    <!-- Requires plugins above
+	 <module>edu.washington.cs.cupid.hg.feature</module>
+	 <module>edu.washington.cs.cupid.svn.feature</module>
+    -->
+    <module>edu.washington.cs.cupid.editor.feature</module>
+    <module>edu.washington.cs.cupid.plugins</module>
+
+    <!-- Update site P2 repository -->
+    <module>repository</module>
+ </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-repository-plugin</artifactId>
+        <version>${tycho-version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <pomDependencies>consider</pomDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  
+</project>

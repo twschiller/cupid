@@ -2,7 +2,7 @@
 <feature
       id="edu.washington.cs.cupid.license"
       label="Cupid License"
-      version="1.0.0"
+      version="1.0.0.qualifier"
       provider-name="University of Washington PLSE">
 
    <description url="http://cupidplugin.com">

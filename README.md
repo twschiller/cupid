@@ -1,5 +1,7 @@
 <h2>Cupid gives you the information you need <i>when</i>, <i>where</i>, and <i>how</i> you need it.</h2>
 
+[![Build Status](https://travis-ci.org/twschiller/cupid.svg)](https://travis-ci.org/twschiller/cupid)
+
 Cupid is an information mash-up and visualization plug-in for Eclipse. The goal of Cupid is to give you immediate access to the information you need to gain insight into your project and team.<br>
 <br>
 Cupid can help answer many questions that arise during development, for example:<br>
